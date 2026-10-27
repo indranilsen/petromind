@@ -1,0 +1,11 @@
+.venv/
+.env
+.env.*
+!.env.example
+__pycache__/
+data/
+*.parquet
+*.csv
+*.joblib
+*.pkl
+.DS_Store
