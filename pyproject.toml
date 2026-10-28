@@ -17,6 +17,7 @@ experiments = ["scikit-learn>=1.2,<2"]
 [project.scripts]
 petromind-demo = "petromind.cli:main"
 petromind-muse = "petromind.muse_cli:main"
+petromind-evaluate = "petromind.eval_cli:main"
 
 [tool.setuptools.packages.find]
 include = ["petromind*"]

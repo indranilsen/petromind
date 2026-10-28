@@ -20,7 +20,7 @@ class TrainingRecord:
 
 
 class IncidentRetriever:
-    def __init__(self, incidents, split: WellSplit):
+    def __init__(self, incidents, split: WellSplit, *, case_ids=None):
         records = []
         # Fail closed if a caller accidentally supplies ANY non-training incident.
         for incident in incidents:
@@ -28,7 +28,10 @@ class IncidentRetriever:
                 raise ValueError("Retrieval accepts training wells only")
             summaries = MappingProxyType({s: summarize(incident.measurements[s])
                                           for s in incident.measurements})
-            records.append(TrainingRecord(uuid4().hex, incident.well, incident.event, summaries))
+            case_id = case_ids[incident.path] if case_ids is not None else uuid4().hex
+            if not isinstance(case_id, str) or len(case_id) != 32 or any(c not in "0123456789abcdef" for c in case_id):
+                raise ValueError("Retrieval identifiers must be opaque UUID hex values")
+            records.append(TrainingRecord(case_id, incident.well, incident.event, summaries))
         self._records = tuple(records)
         self._train_wells = frozenset(split.train_wells)
         self._test_wells = frozenset(split.test_wells)

@@ -6,8 +6,9 @@ Source blob SHA: 4c4799e80e04a9cf8b10cb3f9a23f1c487797cc9 (CC BY 4.0).
 These definitions are constant; no target labels or target metadata are used.
 """
 from .audit import canonical
+from .variants import VARIANT_TOOLS
 
-PROMPT_VERSION = "petromind-muse-v1"
+PROMPT_VERSION = "petromind-muse-v2-quality-ablation"
 FAULT_TYPES = {
     1: "Abrupt Increase of BSW", 2: "Spurious Closure of DHSV",
     3: "Severe Slugging", 4: "Flow Instability", 5: "Rapid Productivity Loss",
@@ -57,18 +58,24 @@ uncalibrated confidence in [0,1], and the exact names of available observed sens
 supporting it. Text alone is not a submitted diagnosis. If evidence is inadequate,
 do not fabricate measurements or evidence. Never request labels, filenames, paths,
 evaluator access, web search, filesystem access, or execution of arbitrary code.
+Only tools offered in this run may be used; graph/retrieval access may be absent.
+Constant measurements and legitimate zero values remain available, with quality
+metadata distinguishing missing samples from rejected readings. Constant is not
+automatically faulty or missing; judge it in context, with appropriate uncertainty.
 Keep any visible commentary brief; no private reasoning transcript is requested.
 Public 3W fault taxonomy: """ + canonical(FAULT_TYPES) + "\nPublic sensor context: " + canonical(SENSOR_CONTEXT)
 
 
-def tool_definitions() -> list[dict]:
+def tool_definitions(variant="graphrag") -> list[dict]:
+    if variant not in VARIANT_TOOLS:
+        raise ValueError("Unknown investigation variant")
     def tool(name, description, properties):
         return {"type": "function", "name": name, "description": description, "strict": True,
                 "parameters": {"type": "object", "properties": properties,
                                "required": list(properties), "additionalProperties": False}}
 
     sensor = {"sensor_name": {"type": "string", "description": "Exact name returned by list_sensors"}}
-    return [
+    tools = [
         tool("list_sensors", "List public sensor names without target availability information", {}),
         tool("get_sensor_history", "Query a sensor summary; each new sensor costs one, including missing readings", sensor),
         tool("get_equipment_neighbors", "Inspect illustrative generic equipment associations, not verified per-well topology", sensor),
@@ -80,3 +87,4 @@ def tool_definitions() -> list[dict]:
               "evidence": {"type": "array", "items": {"type": "string"},
                            "minItems": 1, "maxItems": 5}}),
     ]
+    return [t for t in tools if t["name"] in VARIANT_TOOLS[variant]]

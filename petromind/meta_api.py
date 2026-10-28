@@ -28,7 +28,8 @@ class MetaResponsesClient:
     ENDPOINT = "https://api.meta.ai/v1/responses"
 
     def __init__(self, *, max_requests=24, max_output_budget=40960, timeout=60,
-                 max_retries=2, transport=None, sleep=time.sleep, clock=time.monotonic):
+                 max_retries=2, transport=None, sleep=time.sleep, clock=time.monotonic,
+                 request_guard=None):
         key = os.environ.get("MODEL_API_KEY", "").strip()
         if not key or not key.isascii() or any(c.isspace() for c in key):
             raise MetaAPIError("missing_or_invalid_api_key")
@@ -44,6 +45,7 @@ class MetaResponsesClient:
         self._max_requests, self._max_output_budget = max_requests, max_output_budget
         self._timeout, self._max_retries = timeout, max_retries
         self._sleep, self._clock = sleep, clock
+        self._request_guard = request_guard
         self.requests = 0
         self.reserved_output_tokens = 0
 
@@ -79,6 +81,8 @@ class MetaResponsesClient:
             if self.reserved_output_tokens + cap > self._max_output_budget:
                 raise MetaAPIError("output_reservation_exhausted")
             # Reserve even failed/ambiguous attempts: retries may incur API charges.
+            if self._request_guard is not None:
+                self._request_guard(cap)
             self.requests += 1
             self.reserved_output_tokens += cap
             try:

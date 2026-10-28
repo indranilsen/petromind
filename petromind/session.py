@@ -18,6 +18,7 @@ import pandas as pd
 from .audit import AuditEntry, canonical
 from .equipment import EquipmentGraph
 from .measurements import summarize, valid_sensor_name
+from .variants import VARIANT_TOOLS
 
 
 @dataclass(frozen=True)
@@ -30,9 +31,12 @@ class Diagnosis:
 
 class DiagnosticSession:
     def __init__(self, measurements: pd.DataFrame, sensor_names, budget: int = 5,
-                 retriever=None):
+                 retriever=None, *, variant="graphrag"):
         if type(budget) is not int or not 1 <= budget <= 5:
             raise ValueError("budget must be an integer from 1 to 5")
+        if variant not in VARIANT_TOOLS:
+            raise ValueError("Unknown investigation variant")
+        self._variant = variant
         names = tuple(sorted(sensor_names))
         if not names or len(set(names)) != len(names) or not all(map(valid_sensor_name, names)):
             raise ValueError("Declare a unique public sensor catalog")
@@ -53,6 +57,10 @@ class DiagnosticSession:
         self._graph_queries = 0
         self._retrieval_queries = 0
         self._lock = RLock()
+
+    @property
+    def variant(self):
+        return self._variant
 
     @property
     def case_id(self):
@@ -125,6 +133,8 @@ class DiagnosticSession:
     def get_equipment_neighbors(self, sensor_name):
         with self._lock:
             tool, args = "get_equipment_neighbors", self._sensor_args(sensor_name)
+            if tool not in VARIANT_TOOLS[self._variant]:
+                return self._error(tool, args, "tool_not_available")
             if self._diagnosis:
                 return self._error(tool, args, "investigation_closed")
             if args["sensor_name"] == "<invalid>":
@@ -140,6 +150,8 @@ class DiagnosticSession:
         with self._lock:
             tool = "search_similar_incidents"
             args = {"top_k": top_k if type(top_k) is int and 1 <= top_k <= 10 else "<invalid>"}
+            if tool not in VARIANT_TOOLS[self._variant]:
+                return self._error(tool, args, "tool_not_available")
             if self._diagnosis:
                 return self._error(tool, args, "investigation_closed")
             if type(top_k) is not int or not 1 <= top_k <= 10:
