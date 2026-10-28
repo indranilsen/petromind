@@ -22,6 +22,7 @@ def main(argv=None):
     prepare.add_argument("--out", type=Path, required=True)
     prepare.add_argument("--cases", type=int, default=16)
     prepare.add_argument("--pilot-cases", type=int, default=2)
+    prepare.add_argument("--cohort-from", type=Path, help="Validation revision: preserve cases, IDs, order, model, prompts and gate")
     for name in ("pilot", "full"):
         run = commands.add_parser(name)
         run.add_argument("--dataset", type=Path, required=True)
@@ -43,7 +44,8 @@ def main(argv=None):
         if args.command == "prepare":
             if args.out.exists() and any(args.out.iterdir()):
                 raise ValueError("Use a new empty output directory")
-            protocol = freeze_development(args.dataset, args.split, n_cases=args.cases, pilot_cases=args.pilot_cases)
+            protocol = freeze_development(args.dataset, args.split, n_cases=args.cases, pilot_cases=args.pilot_cases,
+                cohort_from=json.loads(args.cohort_from.read_text()) if args.cohort_from else None)
             args.out.mkdir(parents=True, exist_ok=True)
             with (args.out / "protocol.json").open("x") as stream:
                 stream.write(json.dumps(protocol, indent=2) + "\n")

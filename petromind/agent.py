@@ -131,7 +131,7 @@ def run_agent(session, client, config: AgentConfig | None = None, *, on_event=No
 
 
 def run_tool_agent(session, client, config, *, instructions, tools, initial_history,
-                   prompt_version, on_event=None, clock=time.monotonic, submission_reason="diagnosis_submitted", is_complete=None):
+                   prompt_version, on_event=None, clock=time.monotonic, submission_reason="diagnosis_submitted", is_complete=None, stop_reason=None, decode_arguments=None):
     """Trusted composition hook; only the supplied dispatcher reaches model tools.
 
     Reuses bounded transport/replay/usage safeguards. Callers must construct a
@@ -228,13 +228,17 @@ def run_tool_agent(session, client, config, *, instructions, tools, initial_hist
         seen_ids.update(current_ids)
         for call in calls:
             n_calls += 1
-            arguments = _arguments(call["arguments"])
+            arguments = (decode_arguments(call["name"], call["arguments"]) if decode_arguments
+                         else _arguments(call["arguments"]))
             # Invalid JSON is routed through the normal sanitized session audit too.
             result = session.dispatch(call["name"], arguments)
             audit = session.audit_trail[-1]
             emit("tool_result", {"turn": turn, "tool": audit.tool,
                  "arguments": json.loads(audit.arguments_json), "result": result,
                  "audit_sequence": audit.sequence, "audit_digest": audit.digest})
+            reason = stop_reason() if stop_reason else None
+            if reason is not None:
+                return finish(reason)
             if is_complete():
                 return finish(submission_reason, result)
             history.append({"type": "function_call_output", "call_id": call["call_id"],

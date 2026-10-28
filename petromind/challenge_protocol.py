@@ -8,6 +8,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from .agent import AgentConfig
+from .assessment import ASSESSMENT_VERSION, MAX_REPAIRS
 from .baselines import GaussianEvidence
 from .challenger import INSTRUCTIONS, PROMPT_VERSION, observe_adaptively
 from .data import load_incidents
@@ -44,7 +45,7 @@ def _pick_stratified(pool, count, seed):
 
 
 def freeze_development(dataset, split_path, *, n_cases=16, pilot_cases=2, seconds=600,
-                       seed=104, initial_queries=2, config=None):
+                       seed=104, initial_queries=2, config=None, cohort_from=None):
     if (type(n_cases) is not int or not 12 <= n_cases <= 20 or type(pilot_cases) is not int
             or not 1 <= pilot_cases <= n_cases or type(initial_queries) is not int or initial_queries != 2
             or type(seed) is not int):
@@ -103,7 +104,7 @@ def freeze_development(dataset, split_path, *, n_cases=16, pilot_cases=2, second
         "development_wells": list(dev_wells), "records": list(rows.values()),
         "selected": selected, "pilot_case_ids": pilot[:pilot_cases], "seed": seed,
         "seconds": seconds, "budget": 5, "initial_queries": initial_queries,
-        "methods": list(METHODS), "agent_config": asdict(config),
+        "methods": list(METHODS), "agent_config": asdict(config), "assessment_contract_version": ASSESSMENT_VERSION, "assessment_repair_limit": MAX_REPAIRS,
         "prompt_version": PROMPT_VERSION, "prompt_digest": digest(INSTRUCTIONS),
         "prices": dict(DEFAULT_PRICES), "gate": dict(GATE),
         "fit_classes": [int(c) for c in model.classes], "requested_cases": n_cases,
@@ -117,6 +118,27 @@ def freeze_development(dataset, split_path, *, n_cases=16, pilot_cases=2, second
                       "enriched": True, "population_accuracy_claim_allowed": False},
         "per_run_transport": {"max_requests": config.max_turns + 4,
             "max_output_budget": config.max_turns * config.max_output_tokens, "max_retries": 2, "timeout": 60}}
+    if cohort_from is not None:
+        parent = cohort_from
+        if digest({k: v for k, v in parent.items() if k != "protocol_id"}) != parent["protocol_id"]:
+            raise ValueError("Parent protocol was modified")
+        fields = ("study", "original_split", "retrieval_split", "development_wells", "seconds", "budget",
+                  "initial_queries", "methods", "seed", "agent_config", "prompt_digest", "gate", "prices",
+                  "fit_classes", "selection", "requested_cases", "per_run_transport", "runtime")
+        if any(digest(parent[k]) != digest(protocol[k]) for k in fields):
+            raise ValueError("A validation revision must preserve cohort, settings and criteria")
+        old_records = [{k: v for k, v in r.items() if k != "case_id"} for r in parent["records"]]
+        new_records = [{k: v for k, v in r.items() if k != "case_id"} for r in protocol["records"]]
+        old_selected = [{k: v for k, v in r.items() if k != "case_id"} for r in parent["selected"]]
+        new_selected = [{k: v for k, v in r.items() if k != "case_id"} for r in protocol["selected"]]
+        if digest(old_records) != digest(new_records) or digest(old_selected) != digest(new_selected):
+            raise ValueError("Parent data or cohort differs")
+        protocol["records"] = parent["records"]
+        protocol["selected"] = parent["selected"]
+        protocol["pilot_case_ids"] = parent["pilot_case_ids"]
+        if len(protocol["pilot_case_ids"]) != pilot_cases:
+            raise ValueError("Parent pilot size differs")
+        protocol["parent_protocol_id"] = parent["protocol_id"]
     protocol["protocol_id"] = digest(protocol)
     return protocol
 
@@ -124,6 +146,9 @@ def freeze_development(dataset, split_path, *, n_cases=16, pilot_cases=2, second
 def validate_development(protocol, dataset):
     if digest({k: v for k, v in protocol.items() if k != "protocol_id"}) != protocol["protocol_id"]:
         raise ValueError("Protocol was modified")
+    if (protocol.get("assessment_contract_version") != ASSESSMENT_VERSION
+            or protocol.get("assessment_repair_limit") != MAX_REPAIRS):
+        raise ValueError("A new protocol with the current assessment contract is required")
     if protocol["source_digest"] != source_digest() or protocol["runtime"] != runtime_versions():
         raise ValueError("Frozen code/runtime changed")
     raw = protocol["original_split"]

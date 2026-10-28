@@ -6,17 +6,20 @@ validity of an interpretation. Interpretations require an independent reviewer.
 from __future__ import annotations
 
 import json
+import hashlib
 import math
 from dataclasses import replace
 from numbers import Real
 
 import numpy as np
 
-from .agent import AgentConfig, run_tool_agent
+from .agent import AgentConfig, run_tool_agent, _arguments
 from .agent_tools import FAULT_TYPES, SENSOR_CONTEXT, tool_definitions
 from .audit import canonical
 from .baselines import posterior
 from .session import DiagnosticSession
+from .assessment import (ASSESSMENT_VERSION, MAX_REPAIRS, FIELDS, CATEGORIES, DECISIONS,
+                         RELATIONSHIPS, ValidationIssue, RejectedSubmission, decode_submission, validate_assessment)
 
 PROMPT_VERSION = "petromind-challenger-v1"
 INSTRUCTIONS = """You are PetroMind's evidence investigator. Assess the supplied statistical
@@ -48,11 +51,6 @@ known transient onset; this is retrospective evidence assessment, not forecastin
 No private reasoning transcript is requested.
 Public fault taxonomy: """ + canonical(FAULT_TYPES) + "\nPublic sensor context: " + canonical(SENSOR_CONTEXT)
 
-FIELDS = ("available", "median", "std", "first", "last", "delta", "change", "count",
-          "total", "missing_count", "nonfinite_count", "nonnumeric_count", "extreme_count",
-          "zero_count", "is_constant", "constant_value", "quality_status")
-CATEGORIES = ("supporting", "contradictory", "unavailable", "uncertainty")
-DECISIONS = ("SUPPORT", "CHALLENGE", "INSUFFICIENT_EVIDENCE")
 
 
 def observe_adaptively(model, session, steps):
@@ -82,10 +80,17 @@ def assessment_tools(variant):
     def obj(properties):
         return {"type": "object", "properties": properties, "required": list(properties),
                 "additionalProperties": False}
-    claim = obj({"category": {"type": "string", "enum": list(CATEGORIES)},
-        "sensor_name": {"type": "string"}, "field": {"type": "string", "enum": list(FIELDS)},
+    claim = obj({"source_id": {"type": "string", "description": "Exact source_id from initial evidence_sources or a sensor/verified graph tool result"},
+        "hypothesis_fault_type": {"type": "integer", "minimum": 1, "maximum": 9,
+                                  "description": "The fault hypothesis this particular claim evaluates"},
+        "category": {"type": "string", "enum": list(CATEGORIES),
+                     "description": "supporting=supports; contradictory=contradicts; unavailable/uncertainty=inconclusive"},
+        "sensor_name": {"type": ["string", "null"], "description": "Observed sensor for measurement source; null for verified graph source"},
+        "field": {"anyOf": [{"type": "string", "enum": list(FIELDS)}, {"type": "null"}]},
         "value": {"anyOf": [{"type": t} for t in ("number", "boolean", "string", "null")]},
-        "interpretation": {"type": "string"}})
+        "interpretation": {"type": "string", "description": "A substantive link from the cited fact to the identified hypothesis, not a review recommendation"},
+        "expected_if_hypothesis_true": {"type": ["string", "null"],
+            "description": "For contradiction, state the expected observation separately from the actual citation. Unverified expectations still require expert review."}})
     relation = obj({k: {"type": "string"} for k in ("sensor", "equipment", "relation", "verification")})
     parameters = obj({"decision": {"type": "string", "enum": list(DECISIONS)},
         "confidence": {"type": "number", "minimum": 0, "maximum": 1},
@@ -105,6 +110,37 @@ class ChallengeSession(DiagnosticSession):
         super().__init__(*args, **kwargs)
         self._hypothesis = None
         self._assessment = None
+        self.validation_failures = 0
+        self._invalid_fingerprints = set()
+        self._assessment_stop_reason = None
+        self._evidence_sources = {}
+        self._sensor_sources = {}
+
+    @property
+    def evidence_sources(self):
+        with self._lock:
+            return json.loads(canonical(self._evidence_sources))
+
+    def _record(self, tool, arguments, result):
+        # Only returned, already charged measurements enter the source catalog.
+        sequence = len(self._audit) + 1
+        if isinstance(result, dict) and "error" not in result:
+            if tool == "get_sensor_history":
+                sensor = result["sensor"]
+                source_id = self._sensor_sources.setdefault(sensor, f"measurement:{sequence}")
+                self._evidence_sources.setdefault(source_id, {"source_id": source_id, "kind": "measurement",
+                    "sensor_name": sensor, "audit_sequence": sequence})
+                result = {**result, "source_id": source_id}
+            elif tool == "get_equipment_neighbors":
+                ids = []
+                for index, relation in enumerate(result["relationships"]):
+                    if relation["verification"] == "verified_generic":
+                        source_id = f"graph:{sequence}:{index}"
+                        self._evidence_sources[source_id] = {"source_id": source_id, "kind": "graph_relationship",
+                            "audit_sequence": sequence, "relationship": dict(relation)}
+                        ids.append(self._evidence_sources[source_id])
+                result = {**result, "evidence_sources": ids}
+        return super()._record(tool, arguments, result)
 
     def bind_hypothesis(self, hypothesis):
         with self._lock:
@@ -139,84 +175,80 @@ class ChallengeSession(DiagnosticSession):
 
     def dispatch(self, tool, arguments):
         with self._lock:
-            if self._assessment is not None:
+            if self._assessment is not None or self._sealed:
                 return self._error("dispatch", {}, "investigation_closed")
             if tool == "submit_assessment":
                 return self._submit_assessment(arguments)
             return super().dispatch(tool, arguments)
 
     def _submit_assessment(self, args):
-        error = lambda: self._error("submit_assessment", {}, "invalid_assessment")
-        required = {"decision", "confidence", "alternative_fault_type", "claims", "relationships", "uncertainty"}
-        if self._hypothesis is None or not isinstance(args, dict) or set(args) != required:
-            return error()
-        decision, confidence, alt = args["decision"], args["confidence"], args["alternative_fault_type"]
-        if (decision not in DECISIONS or not isinstance(confidence, Real) or isinstance(confidence, bool)
-                or not math.isfinite(confidence) or not 0 <= confidence <= 1
-                or not isinstance(args["uncertainty"], str) or not 1 <= len(args["uncertainty"]) <= 1000):
-            return error()
-        if alt is not None and (decision != "CHALLENGE" or type(alt) is not int or not 1 <= alt <= 9
-                                or alt == json.loads(self._hypothesis)["prediction"]):
-            return error()
-        claims = args["claims"]
-        if not isinstance(claims, list) or not 1 <= len(claims) <= 12:
-            return error()
-        for claim in claims:
-            if (not isinstance(claim, dict) or set(claim) != {"category", "sensor_name", "field", "value", "interpretation"}
-                    or claim["category"] not in CATEGORIES or not isinstance(claim["sensor_name"], str)
-                    or claim["sensor_name"] not in self.observations or claim["field"] not in FIELDS
-                    or not isinstance(claim["interpretation"], str) or not 1 <= len(claim["interpretation"]) <= 1000):
-                return error()
-            obs = self.observations[claim["sensor_name"]].to_dict()
-            actual, quoted = obs[claim["field"]], claim["value"]
-            # Distinguish boolean/number equality, reject NaN and containers.
-            if type(actual) is not type(quoted):
-                if (isinstance(actual, bool) or isinstance(quoted, bool)
-                        or not isinstance(actual, Real) or not isinstance(quoted, Real)):
-                    return error()
-            if isinstance(quoted, Real) and not math.isfinite(quoted):
-                return error()
-            if quoted != actual:
-                return error()
-            if claim["category"] in {"supporting", "contradictory"} and (not obs["available"]
-                    or claim["field"] not in {"median", "std", "first", "last", "delta", "change", "constant_value"}
-                    or actual is None):
-                return error()
-            if claim["category"] == "unavailable" and obs["available"]:
-                return error()
-        categories = {c["category"] for c in claims}
-        if ((decision == "CHALLENGE" and "contradictory" not in categories)
-                or (decision == "SUPPORT" and "supporting" not in categories)):
-            return error()
-        relations = args["relationships"]
-        if not isinstance(relations, list) or len(relations) > 8:
-            return error()
-        observed_relations = []
+        fingerprint = None
+        if isinstance(args, RejectedSubmission):
+            fingerprint = args.fingerprint
+        elif isinstance(args, dict):
+            try:
+                fingerprint = hashlib.sha256(canonical(args).encode()).hexdigest()
+            except (ValueError, TypeError, RecursionError):
+                pass
+        repeated = fingerprint is not None and fingerprint in self._invalid_fingerprints
+        returned_relationships = []
         for entry in self.audit_trail:
             if entry.tool == "get_equipment_neighbors":
-                for relation in json.loads(entry.result_json).get("relationships", []):
-                    observed_relations.append({k: relation[k] for k in ("sensor", "equipment", "relation", "verification")})
-        if any(not isinstance(r, dict) or r not in observed_relations for r in relations):
-            return error()
-        result = {**args, "baseline_prediction": json.loads(self._hypothesis)["prediction"],
-                  "remaining_budget": self.remaining_budget,
+                returned_relationships.extend({k: r[k] for k in ("sensor", "equipment", "relation", "verification")}
+                    for r in json.loads(entry.result_json).get("relationships", []))
+        if isinstance(args, RejectedSubmission):
+            issue = args.issue
+        elif self._hypothesis is None:
+            issue = ValidationIssue("hypothesis_not_bound", "$", "A trusted caller must bind the public hypothesis first.")
+        else:
+            issue = validate_assessment(args, json.loads(self._hypothesis)["prediction"],
+                {s: o.to_dict() for s, o in self.observations.items()}, self._evidence_sources, returned_relationships)
+        if issue:
+            if repeated:
+                issue = ValidationIssue("repeated_invalid_submission", "$",
+                                        "Stop: this identical submission is still invalid; the investigation has failed.")
+            self.validation_failures += 1
+            if fingerprint is not None:
+                self._invalid_fingerprints.add(fingerprint)  # Memory-only; no rejected text or fingerprints exported.
+            if repeated:
+                self._assessment_stop_reason = "assessment_repeated_invalid_submission"
+            elif self.validation_failures >= 1 + MAX_REPAIRS:
+                self._assessment_stop_reason = "assessment_repair_limit"
+            if self._assessment_stop_reason:
+                self._sealed = True
+            result = {"error": "invalid_assessment", "validation_code": issue.code,
+                "field": issue.field, "correction": issue.correction,
+                "submission_attempt": self.validation_failures,
+                "repairs_remaining": 0 if self._sealed else 1 + MAX_REPAIRS - self.validation_failures,
+                "remaining_budget": self.remaining_budget, "contract_version": ASSESSMENT_VERSION}
+            # Codes and field paths come only from the validator, never from untrusted keys.
+            safe_metadata = {k: result[k] for k in ("validation_code", "field", "submission_attempt", "contract_version")}
+            return self._record("submit_assessment", safe_metadata, result)
+        claims = [{**c, "relationship": RELATIONSHIPS[c["category"]]} for c in args["claims"]]
+        cited_sources = {c["source_id"]: self._evidence_sources[c["source_id"]] for c in claims}
+        result = {**args, "claims": claims, "baseline_prediction": json.loads(self._hypothesis)["prediction"],
+                  "remaining_budget": self.remaining_budget, "evidence_provenance": cited_sources,
+                  "contract_version": ASSESSMENT_VERSION, "physical_correctness_verified": False,
                   "mechanical_citations_valid": True, "interpretation_review": "required"}
         self._assessment = canonical(result)
-        self._sealed = True  # Seal inherited methods without creating/overriding a diagnosis.
+        self._sealed = True
         return self._record("submit_assessment", args, result)
 
 
 def run_challenger(session, client, config=None, *, on_event=None):
     config = config or AgentConfig(max_output_tokens=4096, variant=session.variant)
-    if session.variant != config.variant or session._hypothesis is None or session.assessment:
+    if session.variant != config.variant or session._hypothesis is None or session.assessment or session._sealed:
         raise ValueError("Challenger requires a bound open session with matching capabilities")
     context = {"task": "Actively test the statistical hypothesis against evidence",
                "hypothesis": json.loads(session._hypothesis),
                "observations": {s: obs.to_dict() for s, obs in session.observations.items()},
+               "evidence_sources": session.evidence_sources, "assessment_contract_version": ASSESSMENT_VERSION,
                "sensor_budget": session.budget, "remaining_budget": session.remaining_budget,
                "sensor_names": session.list_sensors(), "known_transient_onset": True}
     return run_tool_agent(session, client, replace(config, variant=session.variant),
         instructions=INSTRUCTIONS, tools=assessment_tools(session.variant),
         initial_history=[{"role": "user", "content": [{"type": "input_text", "text": canonical(context)}]}],
         prompt_version=PROMPT_VERSION, on_event=on_event, submission_reason="assessment_submitted",
-        is_complete=lambda: session.assessment is not None)
+        is_complete=lambda: session.assessment is not None,
+        stop_reason=lambda: session._assessment_stop_reason,
+        decode_arguments=lambda name, raw: decode_submission(raw) if name == "submit_assessment" else _arguments(raw))

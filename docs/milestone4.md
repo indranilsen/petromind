@@ -1,9 +1,10 @@
 # Milestone 4: hypothesis challenger feasibility
 
-Status: implementation and synthetic transport tests complete; **real development
-cohort, live pilot, expert review and GO decision pending**. This execution
-workspace has neither the 3W Parquet dataset nor `MODEL_API_KEY`. No real Muse M4
-requests have been made. Synthetic tests are not evidence of diagnostic ability.
+Status: the user executed the original two-case live pilot; see the
+[trace review](milestone4-pilot-review.md). The full development evaluation and
+expert review are paused. This execution workspace has neither the 3W Parquet
+dataset nor `MODEL_API_KEY`, and has made no real M4 requests. Synthetic tests
+are not evidence of diagnostic ability.
 The November 4 submission should use the observed gate outcome, not a presumed
 improvement. No UI or new infrastructure is included.
 
@@ -91,7 +92,10 @@ SUPPORT requires a supporting citation. Missing evidence cannot be cited as a
 supporting/contradictory reading. Every decision includes uncertainty. A valid
 schema does not establish a meaningful contradiction: that is a scored human
 review question. Invalid submissions stay in the audit and may be corrected
-within the same bounded run. A failed run is retained, never selectively retried.
+within the same bounded run. The [v2 reliability contract](assessment-contract.md)
+allows an initial submission plus at most two corrections and immediately stops
+an identical still-invalid repeat. Structured codes, field paths and static
+correction instructions guide repairs without echoing rejected payloads. A failed run is retained, never selectively retried.
 
 ## Small live pilot first
 
@@ -132,7 +136,9 @@ be disclosed; no automatic best-of retries or favorable condition selection.
 
 ## Evidence checks and expert review
 
-Python mechanically verifies exact observed sensor names, summary fields and
+The v2 contract binds each claim to an audited source and evaluated hypothesis.
+It checks baseline/alternative claim consistency and rejects stock review requests
+as contradictory evidence. Python mechanically verifies exact observed sensor names, summary fields and
 values (including numeric-vs-boolean distinctions), available-vs-unavailable
 categories, and graph relationships actually returned in this session. Graph
 verification cannot be upgraded from illustrative to verified. Unknown sensors,
@@ -201,3 +207,14 @@ Do not tune these thresholds after seeing outcomes. If the pilot exposes a
 protocol flaw, preserve its results and document a new study. Subsequent feature
 or prompt development uses these development wells only. Original M3 held-out
 labels never enter fitting, prompt selection or parameter optimization.
+
+## Validation revision after the original pilot
+
+The original v1 run stays frozen. Updated code cannot resume it because of the
+source hash. If a new pilot is justified after reviewing the original claims,
+`prepare --cohort-from .petromind/challenge-m4-v1/protocol.json` with a fresh output
+directory preserves all cases, IDs, pilot order, model, prompts, evidence, runtime
+and scientific criteria, while recording the versioned submission contract,
+validation feedback and two-repair limit. Use the original requested case/pilot counts.
+Never copy original result rows into the revision or selectively rerun failures.
+No additional live run is recommended solely because schema feedback improves.

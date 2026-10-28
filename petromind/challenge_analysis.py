@@ -1,6 +1,7 @@
 """Predeclared challenge metrics. Mechanically valid quotations are not physics."""
 from __future__ import annotations
 
+from collections import Counter
 import itertools
 import statistics
 
@@ -78,6 +79,10 @@ def build_challenge_report(protocol, rows, case_ids, reviews=()):
             "insufficient_count": sum(r["assessment"]["decision"] == "INSUFFICIENT_EVIDENCE" for r in successes),
             "mechanical_accepted_claims_rate": mechanical,
             "rejected_assessment_attempts": sum(r.get("rejected_assessment_attempts", 0) for r in part),
+            "validation_error_codes": dict(Counter(e["validation_code"] for r in part
+                for e in r.get("assessment_validation_errors", []) if "validation_code" in e)),
+            "validation_error_fields": dict(Counter(e["field"] for r in part
+                for e in r.get("assessment_validation_errors", []) if "field" in e)),
             "expert_reviewed_cases": reviewed_cases, "expert_claim_coverage": _rate(reviewed_claims, claims),
             "expert_meaningful_challenge_precision": _rate(expert_challenges, len(challenges)),
             "expert_useful_case_rate": _rate(useful, len(part)), "unsupported_claims": unsupported,

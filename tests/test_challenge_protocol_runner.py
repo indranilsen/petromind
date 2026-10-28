@@ -77,7 +77,9 @@ def factory(monkeypatch):
         steps.append(("submit_assessment", {"decision": "INSUFFICIENT_EVIDENCE", "confidence": .4,
             "alternative_fault_type": None, "relationships": [], "uncertainty": "Synthetic test only.",
             "claims": [{"category": "uncertainty", "sensor_name": sensor, "field": "median",
-                        "value": obs[sensor]["median"], "interpretation": "Requires review."}]}))
+                        "value": obs[sensor]["median"], "interpretation": "Requires review.",
+                        "source_id": next(k for k,v in context["evidence_sources"].items() if v.get("sensor_name") == sensor),
+                        "hypothesis_fault_type": context["hypothesis"]["prediction"], "expected_if_hypothesis_true": None}]}))
         name, args = steps[done]
         return httpx.Response(200, json={"status": "completed", "error": None,
             "usage": {"input_tokens": 100, "output_tokens": 20}, "output": [{"type": "function_call",
@@ -159,3 +161,23 @@ def test_cli_requires_fresh_output_and_explicit_full_review(dataset, prepared_pr
     with pytest.raises(SystemExit):
         main(["full", "--dataset", str(dataset), "--out", str(out)])
     assert main(["analyze", "--out", str(out)]) == 0
+
+
+def test_validation_revision_preserves_cohort_ids_pilot_settings_and_gate(dataset, development, prepared_protocol):
+    parent, _ = development
+    parent = json.loads(json.dumps(parent))
+    parent.pop("assessment_repair_limit")
+    parent.pop("assessment_contract_version")  # The real original protocol predates this operational bound.
+    parent["protocol_id"] = digest({k: v for k, v in parent.items() if k != "protocol_id"})
+    revised = freeze_development(dataset, prepared_protocol[2], n_cases=12, pilot_cases=1, cohort_from=parent)
+    assert revised["parent_protocol_id"] == parent["protocol_id"]
+    for key in ("records", "selected", "pilot_case_ids", "gate", "agent_config", "prompt_digest", "retrieval_split"):
+        assert digest(revised[key]) == digest(parent[key])
+    assert revised["assessment_repair_limit"] == 2
+    assert revised["assessment_contract_version"] == "assessment-contract-v2"
+    assert revised["protocol_id"] != parent["protocol_id"]
+    with pytest.raises(ValueError, match="preserve"):
+        freeze_development(dataset, prepared_protocol[2], n_cases=16, pilot_cases=1, cohort_from=parent)
+    parent["gate"]["false_challenge_rate_max"] = .9
+    with pytest.raises(ValueError, match="modified"):
+        freeze_development(dataset, prepared_protocol[2], n_cases=12, pilot_cases=1, cohort_from=parent)
