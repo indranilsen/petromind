@@ -259,3 +259,12 @@ hypothesis, without replacing its prediction. Model and Muse share five sensor
 queries. See [the protocol, pilot commands and predeclared decision gate](docs/milestone4.md)
 and [the unchanged Milestone 3 offline findings](docs/milestone3-failure-analysis.md).
 Live M4 feasibility is unestablished until real pilot results and expert review.
+
+### Physical knowledge and offline grounding study
+
+The optional source-backed knowledge layer and zero-API development comparisons
+are described in [grounding-development.md](docs/grounding-development.md). The
+short [evidence-coverage report](docs/physical-evidence-coverage.md) distinguishes
+documented semantics, example signatures, unknown physics and actual v4 findings.
+The existing investigation policies and assessment tools remain unchanged by
+default. No new paid grounding evaluation is enabled.
