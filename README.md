@@ -250,3 +250,12 @@ full runner/CLI, replay, validation, limits, retries, refusal and failure paths.
 No tests spend API credits. The user's authentication smoke test succeeded with
 Muse Spark 1.3; a complete real-model tool investigation must still be run locally
 to validate account-specific API behavior. No model accuracy gain is claimed.
+
+## Hypothesis challenger feasibility (Milestone 4)
+
+The isolated development experiment tests whether Muse can seek contradictory
+evidence and SUPPORT, CHALLENGE, or declare INSUFFICIENT_EVIDENCE for a statistical
+hypothesis, without replacing its prediction. Model and Muse share five sensor
+queries. See [the protocol, pilot commands and predeclared decision gate](docs/milestone4.md)
+and [the unchanged Milestone 3 offline findings](docs/milestone3-failure-analysis.md).
+Live M4 feasibility is unestablished until real pilot results and expert review.

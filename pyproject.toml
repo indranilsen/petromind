@@ -18,6 +18,7 @@ experiments = ["scikit-learn>=1.2,<2"]
 petromind-demo = "petromind.cli:main"
 petromind-muse = "petromind.muse_cli:main"
 petromind-evaluate = "petromind.eval_cli:main"
+petromind-challenger = "petromind.challenge_cli:main"
 
 [tool.setuptools.packages.find]
 include = ["petromind*"]

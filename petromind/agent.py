@@ -121,6 +121,23 @@ def run_agent(session, client, config: AgentConfig | None = None, *, on_event=No
         raise ValueError("Session capabilities must match agent variant")
     if session.audit_trail or session.diagnosis is not None:
         raise ValueError("Muse requires a fresh investigation session")
+    initial_history = [{"role": "user", "content": [{"type": "input_text", "text": canonical({
+        "task": "Investigate this historical case and submit a supported fault-type diagnosis",
+        "case_id": session.case_id, "sensor_budget": session.budget,
+        "known_transient_onset": True})}]}]
+    return run_tool_agent(session, client, config, instructions=INSTRUCTIONS,
+        tools=tool_definitions(config.variant), initial_history=initial_history,
+        prompt_version=PROMPT_VERSION, on_event=on_event, clock=clock)
+
+
+def run_tool_agent(session, client, config, *, instructions, tools, initial_history,
+                   prompt_version, on_event=None, clock=time.monotonic, submission_reason="diagnosis_submitted", is_complete=None):
+    """Trusted composition hook; only the supplied dispatcher reaches model tools.
+
+    Reuses bounded transport/replay/usage safeguards. Callers must construct a
+    label-blinded context and enforce their own terminal submission schema.
+    """
+    is_complete = is_complete or (lambda: session.diagnosis is not None)
     events = []
     def emit(kind, details):
         event = RunEvent(len(events) + 1, kind, canonical(details))
@@ -133,19 +150,16 @@ def run_agent(session, client, config: AgentConfig | None = None, *, on_event=No
                       "reserved_output_tokens": client.reserved_output_tokens})
         return AgentResult(status, reason, canonical(diagnosis) if diagnosis else None,
                            tuple(events), client.requests, client.reserved_output_tokens)
-    emit("configuration", {**asdict(config), "prompt_version": PROMPT_VERSION,
-         "prompt_sha256": hashlib.sha256(INSTRUCTIONS.encode()).hexdigest(),
+    emit("configuration", {**asdict(config), "prompt_version": prompt_version,
+         "prompt_sha256": hashlib.sha256(instructions.encode()).hexdigest(),
          "sensor_budget": session.budget, "stateless_replay": True,
          "confidence_calibrated": False})
-    history = [{"role": "user", "content": [{"type": "input_text", "text": canonical({
-        "task": "Investigate this historical case and submit a supported fault-type diagnosis",
-        "case_id": session.case_id, "sensor_budget": session.budget,
-        "known_transient_onset": True})}]}]
+    history = list(initial_history)
     deadline = clock() + config.run_timeout
     seen_ids, n_calls, stalls = set(), 0, 0
     for turn in range(1, config.max_turns + 1):
-        payload = {"model": config.model, "instructions": INSTRUCTIONS, "input": history,
-                   "tools": tool_definitions(config.variant), "tool_choice": "auto", "parallel_tool_calls": False,
+        payload = {"model": config.model, "instructions": instructions, "input": history,
+                   "tools": tools, "tool_choice": "auto", "parallel_tool_calls": False,
                    "store": False, "include": ["reasoning.encrypted_content"],
                    "reasoning": {"effort": config.reasoning_effort},
                    "max_output_tokens": config.max_output_tokens}
@@ -202,10 +216,13 @@ def run_agent(session, client, config: AgentConfig | None = None, *, on_event=No
         if not calls:
             stalls += 1
             if stalls >= 3:
-                return finish("no_submitted_diagnosis")
+                return finish("no_submitted_diagnosis" if submission_reason == "diagnosis_submitted"
+                              else "no_submitted_assessment")
             history.append({"role": "user", "content": [{"type": "input_text", "text":
-                "No diagnosis has been submitted. Use the registered tools to gather evidence, "
-                "then call submit_diagnosis. Plain text is not a submission."}]})
+                ("No diagnosis has been submitted. Use the registered tools to gather evidence, "
+                 "then call submit_diagnosis. Plain text is not a submission."
+                 if submission_reason == "diagnosis_submitted" else
+                 "No terminal assessment has been submitted. Use submit_assessment; plain text is not a submission.")}]})
             continue
         stalls = 0
         seen_ids.update(current_ids)
@@ -218,8 +235,8 @@ def run_agent(session, client, config: AgentConfig | None = None, *, on_event=No
             emit("tool_result", {"turn": turn, "tool": audit.tool,
                  "arguments": json.loads(audit.arguments_json), "result": result,
                  "audit_sequence": audit.sequence, "audit_digest": audit.digest})
-            if session.diagnosis is not None:
-                return finish("diagnosis_submitted", result)
+            if is_complete():
+                return finish(submission_reason, result)
             history.append({"type": "function_call_output", "call_id": call["call_id"],
                             "output": canonical(result)})
     return finish("turn_limit")

@@ -52,6 +52,7 @@ class DiagnosticSession:
         self._observed = {}
         self._audit = ()
         self._diagnosis = None
+        self._sealed = False
         self._graph = EquipmentGraph()
         self._retriever = retriever
         self._graph_queries = 0
@@ -106,7 +107,7 @@ class DiagnosticSession:
 
     def list_sensors(self):
         with self._lock:
-            if self._diagnosis:
+            if self._sealed or self._diagnosis:
                 return self._error("list_sensors", {}, "investigation_closed")
             return self._record("list_sensors", {}, list(self._sensors))
 
@@ -117,7 +118,7 @@ class DiagnosticSession:
     def get_sensor_history(self, sensor_name):
         with self._lock:
             tool, args = "get_sensor_history", self._sensor_args(sensor_name)
-            if self._diagnosis:
+            if self._sealed or self._diagnosis:
                 return self._error(tool, args, "investigation_closed")
             if args["sensor_name"] == "<invalid>":
                 return self._error(tool, args, "unknown_sensor")
@@ -135,7 +136,7 @@ class DiagnosticSession:
             tool, args = "get_equipment_neighbors", self._sensor_args(sensor_name)
             if tool not in VARIANT_TOOLS[self._variant]:
                 return self._error(tool, args, "tool_not_available")
-            if self._diagnosis:
+            if self._sealed or self._diagnosis:
                 return self._error(tool, args, "investigation_closed")
             if args["sensor_name"] == "<invalid>":
                 return self._error(tool, args, "unknown_sensor")
@@ -152,7 +153,7 @@ class DiagnosticSession:
             args = {"top_k": top_k if type(top_k) is int and 1 <= top_k <= 10 else "<invalid>"}
             if tool not in VARIANT_TOOLS[self._variant]:
                 return self._error(tool, args, "tool_not_available")
-            if self._diagnosis:
+            if self._sealed or self._diagnosis:
                 return self._error(tool, args, "investigation_closed")
             if type(top_k) is not int or not 1 <= top_k <= 10:
                 return self._error(tool, args, "invalid_top_k")
@@ -175,7 +176,7 @@ class DiagnosticSession:
                      and all(isinstance(s, str) and s in self._observed
                              and self._observed[s].available for s in evidence))
             valid = valid and len(set(evidence)) == len(evidence)
-            if self._diagnosis:
+            if self._sealed or self._diagnosis:
                 return self._error(tool, {}, "investigation_closed")
             if not valid:
                 return self._error(tool, {}, "invalid_diagnosis")
