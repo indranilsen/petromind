@@ -55,7 +55,7 @@ def inventory(dataset, incidents, split):
 
 
 def freeze_protocol(dataset, split_path, *, budgets=(5,), seconds=600, expected_test=33,
-                    pilot_cases=2, config=None):
+                    pilot_cases=2, config=None, cohort_from=None):
     # Never generate a new split here. Preserve the exact prior experiment.
     split = WellSplit.load(Path(split_path))
     incidents = load_incidents(Path(dataset), seconds)
@@ -73,6 +73,31 @@ def freeze_protocol(dataset, split_path, *, budgets=(5,), seconds=600, expected_
     test_records = [r for r in records if r["partition"] == "test"]
     # Label-independent selection; protocol persists it before any new API requests.
     pilot = sorted(test_records, key=lambda r: digest([split.seed, r["locator_hash"]]))[:pilot_cases]
+    parent_id = None
+    if cohort_from is not None:
+        parent = cohort_from
+        if digest({k: v for k, v in parent.items() if k != "protocol_id"}) != parent["protocol_id"]:
+            raise ValueError("Parent protocol was modified")
+        previous = {r["locator_hash"]: {k: v for k, v in r.items() if k != "case_id"}
+                    for r in parent["records"]}
+        if (previous != rows or canonical(parent["split"]) != canonical(asdict(split))
+                or parent["seconds"] != seconds or parent["budgets"] != sorted(budgets)
+                or parent["methods"] != list(METHODS)):
+            raise ValueError("Parent cohort or sensor budgets do not match")
+        old_config = {k: v for k, v in parent["agent_config"].items() if k != "max_output_tokens"}
+        new_config = {k: v for k, v in asdict(config).items() if k != "max_output_tokens"}
+        if (old_config != new_config or parent["quality_version"] != QUALITY_VERSION
+                or parent["prompt_digest"] != hashlib.sha256(INSTRUCTIONS.encode()).hexdigest()):
+            raise ValueError("A token-limit revision must preserve prompts, quality and other agent settings")
+        records = [dict(r) for r in parent["records"]]
+        if len(records) != len(rows) or len({r["case_id"] for r in records}) != len(rows):
+            raise ValueError("Parent cohort identifiers must be unique")
+        pilot_ids = parent["pilot_case_ids"]
+        test_ids = {r["case_id"] for r in records if r["partition"] == "test"}
+        if len(pilot_ids) != pilot_cases or len(set(pilot_ids)) != pilot_cases or not set(pilot_ids) <= test_ids:
+            raise ValueError("Parent pilot must be preserved exactly")
+        pilot = [{"case_id": identifier} for identifier in pilot_ids]
+        parent_id = parent["protocol_id"]
     protocol = {"version": 1, "quality_version": QUALITY_VERSION, "source_digest": source_digest(),
                 "runtime": runtime_versions(), "split": asdict(split), "seconds": seconds,
                 "budgets": sorted(budgets), "methods": list(METHODS), "records": records,
@@ -81,9 +106,12 @@ def freeze_protocol(dataset, split_path, *, budgets=(5,), seconds=600, expected_
                 "prompt_digest": hashlib.sha256(INSTRUCTIONS.encode()).hexdigest(),
                 "prices": dict(DEFAULT_PRICES), "training_classes": sorted({r.event for r in incidents
                                                                   if r.well in split.train_wells}),
-                "per_run_transport": {"max_requests": 24, "max_output_budget": 40960,
+                "per_run_transport": {"max_requests": config.max_turns + 4,
+                                      "max_output_budget": config.max_turns * config.max_output_tokens,
                                       "max_retries": 2, "timeout": 60},
                 "generation_note": "One stochastic model run per case/method/budget; no reproducibility seed supported"}
+    if parent_id is not None:
+        protocol["parent_protocol_id"] = parent_id
     protocol["protocol_id"] = digest(protocol)
     return protocol
 
