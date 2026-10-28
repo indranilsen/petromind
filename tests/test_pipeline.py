@@ -53,6 +53,15 @@ def test_loader_strips_labels_paths_and_time_index(dataset):
     assert "class" not in record.measurements and "state" not in record.measurements
 
 
+@pytest.mark.parametrize("unit", ["s", "us", "ns"])
+def test_loader_cadence_is_independent_of_timestamp_resolution(dataset, unit):
+    path = next(dataset.rglob("*.parquet"))
+    frame = pd.read_parquet(path)
+    frame.index = frame.index.as_unit(unit)
+    frame.to_parquet(path)
+    assert len(read_incident(path).measurements) == 600
+
+
 @pytest.mark.parametrize("damage", ["no_transient", "mixed_labels", "short", "bad_cadence", "nan_labels"])
 def test_loader_rejects_bad_windows(dataset, damage):
     path = next(dataset.rglob("*.parquet"))

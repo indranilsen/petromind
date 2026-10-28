@@ -49,8 +49,8 @@ def read_incident(path: Path, seconds: int = 600) -> Incident:
         raise IneligibleIncident("Insufficient contiguous transient samples")
     if (not isinstance(window.index, pd.DatetimeIndex) or window.index.hasnans
             or not window.index.is_unique or not window.index.is_monotonic_increasing
-            or (len(window) > 1 and not (window.index.to_series().diff().iloc[1:]
-                                       == pd.Timedelta(seconds=1)).all())):
+            or (len(window) > 1 and not
+                (np.diff(window.index.as_unit("ns").asi8) == 1_000_000_000).all())):
         raise IneligibleIncident("Expected ordered 1 Hz timestamps")
     names = sorted(c for c in frame.columns if valid_sensor_name(c))
     if not names:
