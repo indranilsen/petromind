@@ -268,3 +268,12 @@ short [evidence-coverage report](docs/physical-evidence-coverage.md) distinguish
 documented semantics, example signatures, unknown physics and actual v4 findings.
 The existing investigation policies and assessment tools remain unchanged by
 default. No new paid grounding evaluation is enabled.
+
+### Milestone 5: grounded diagnostic test design
+
+The [one-test feasibility study](docs/milestone5.md) compares conventional expected
+information gain with Muse planning without/with source-backed physical context.
+It precommits expectations before Python executes a sensor-budgeted test, then
+checks numeric interpretation separately from physical inference. See the
+[execution status and limitations](docs/milestone5-status.md). No live scientific
+capability or improvement is claimed from offline/mock tests.

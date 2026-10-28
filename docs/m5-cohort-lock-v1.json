@@ -1,0 +1,47 @@
+{
+  "version": "m5-cohort-lock-v1",
+  "parent_protocol_id": "bfdbed9e48a822cf20e64046d7aee6f7a1da1ff08b2f0a96411f9cc944ba6493",
+  "case_ids": [
+    "15ff37b71d0a42dfa2fbf249c625630e",
+    "c25d67d471554d42861ed6b1e0adf83d",
+    "ef59c17b112d41409cd89b5a33fc15d7",
+    "986075045b3e4ee092b67babfae93a43",
+    "528afb51d7334c7e9c80bc0b91e4f1f4",
+    "b8f08548f8234103af7b10706b03f0dc"
+  ],
+  "pilot_case_ids": [
+    "15ff37b71d0a42dfa2fbf249c625630e",
+    "c25d67d471554d42861ed6b1e0adf83d"
+  ],
+  "class_counts": {
+    "1": 1,
+    "2": 1,
+    "5": 1,
+    "7": 1,
+    "8": 1,
+    "9": 1
+  },
+  "initial_correct": 3,
+  "selected_well_count": 5,
+  "selection": "Alternating wrong/correct; prefer new classes and wells; hash seed 501. Outcome-stratified, not population accuracy.",
+  "gate": {
+    "min_cases": 6,
+    "min_correct_initial": 3,
+    "min_wrong_initial": 3,
+    "completion": 0.8,
+    "physically_justified_planning": 0.8,
+    "faithful_interpretation": 0.8,
+    "useful_discrimination": 0.5,
+    "unsupported_plan_claims_max": 0,
+    "unsupported_interpretation_claims_max": 0,
+    "additional_correct_vs_information_gain_min": 1,
+    "additional_discriminating_tests_vs_information_gain_min": 1,
+    "all_completed_cases_independently_reviewed": true
+  },
+  "registry_digest": "7571597b02c81aa7cf64bc963878f61c7cad680ae049a46fb064c695ff197079",
+  "knowledge_digest": "ad3192a87e7e9287d2dc39b72145bad80d3fa5ec250d2748282a72d7acceab78",
+  "prompt_digest": "1008002376e3dcc56f8afdc571fe0d06400b0d8e2c3056e157ffb6d7c94ff53f",
+  "tool_digest": "0be7c849516b45fc6488251bedc84690c3e318c50ce9a885a00f5c7e753e2e3a",
+  "api_requests": 0,
+  "cohort_lock_id": "41e0e873b0ea7680082f98de52ad41c4caaca1804aac189c7339d1b6f2b3c808"
+}
