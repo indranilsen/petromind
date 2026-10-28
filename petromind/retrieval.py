@@ -20,7 +20,11 @@ class TrainingRecord:
 
 
 class IncidentRetriever:
-    def __init__(self, incidents, split: WellSplit, *, case_ids=None):
+    def __init__(self, incidents, split: WellSplit, *, case_ids=None, min_shared=1, informative_sensors=None):
+        if type(min_shared) is not int or not 1 <= min_shared <= 5:
+            raise ValueError("min_shared must be 1–5")
+        self.min_shared = min_shared
+        self.informative_sensors = None if informative_sensors is None else frozenset(informative_sensors)
         records = []
         # Fail closed if a caller accidentally supplies ANY non-training incident.
         for incident in incidents:
@@ -56,13 +60,15 @@ class IncidentRetriever:
             shared = []
             distances = []
             for sensor, a in sorted(observed.items()):
+                if self.informative_sensors is not None and sensor not in self.informative_sensors:
+                    continue
                 b = record.summaries.get(sensor)
                 if a.available and b is not None and b.available:
                     # Preserve prototype distance. This is NOT a probability or causal metric.
                     denominator = max(1.0, abs(a.median), abs(b.median))
                     distances.append(min(1.0, abs(a.median - b.median) / denominator))
                     shared.append(sensor)
-            if distances:
+            if len(distances) >= self.min_shared:
                 scored.append((math.fsum(distances) / len(distances), order, record, shared))
         scored.sort(key=lambda item: (item[0], item[1]))
         # NO unqueried historical sensor values, well IDs or filenames in results.

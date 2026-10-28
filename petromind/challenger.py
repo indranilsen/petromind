@@ -169,6 +169,10 @@ class ChallengeSession(DiagnosticSession):
                 result = {**result, "evidence_sources": ids}
         return super()._record(tool, arguments, result)
 
+    def prepare_investigation_context(self):
+        """Trusted optional grounding hook; default experiments remain unchanged."""
+        return None
+
     def bind_hypothesis(self, hypothesis):
         with self._lock:
             if self._hypothesis is not None or self._assessment is not None:
@@ -324,6 +328,7 @@ def run_challenger(session, client, config=None, *, on_event=None):
     config = config or AgentConfig(max_output_tokens=4096, variant=session.variant)
     if session.variant != config.variant or session._hypothesis is None or session.assessment or session._sealed:
         raise ValueError("Challenger requires a bound open session with matching capabilities")
+    grounding = session.prepare_investigation_context()
     context = {"task": "Actively test the statistical hypothesis against evidence",
                "hypothesis": json.loads(session._hypothesis),
                "observations": {s: obs.to_dict() for s, obs in session.observations.items()},
@@ -331,6 +336,8 @@ def run_challenger(session, client, config=None, *, on_event=None):
                "tool_contract_version": TOOL_CONTRACT_VERSION,
                "sensor_budget": session.budget, "remaining_budget": session.remaining_budget,
                "sensor_names": session.list_sensors(), "known_transient_onset": True}
+    if grounding is not None:
+        context["grounding"] = grounding
     return run_tool_agent(session, client, replace(config, variant=session.variant),
         instructions=MODEL_INSTRUCTIONS, tools=assessment_tools(session.variant),
         initial_history=[{"role": "user", "content": [{"type": "input_text", "text": canonical(context)}]}],
