@@ -18,10 +18,17 @@ from .agent_tools import FAULT_TYPES, SENSOR_CONTEXT, tool_definitions
 from .audit import canonical
 from .baselines import posterior
 from .session import DiagnosticSession
-from .assessment import (ASSESSMENT_VERSION, MAX_REPAIRS, FIELDS, CATEGORIES, DECISIONS,
+from .assessment import (ASSESSMENT_VERSION, MAX_REPAIRS, FIELDS, CATEGORIES,
                          RELATIONSHIPS, ValidationIssue, RejectedSubmission, decode_submission, normalize_fault_id, validate_assessment)
 
-PROMPT_VERSION = "petromind-challenger-v1"
+PROMPT_VERSION = "petromind-challenger-v2-tools"
+TOOL_CONTRACT_VERSION = "assessment-tools-v3"
+SUBMISSION_TOOLS = {
+    "submit_support": ("SUPPORT", False),
+    "submit_insufficient_evidence": ("INSUFFICIENT_EVIDENCE", False),
+    "submit_challenge_without_alternative": ("CHALLENGE", False),
+    "submit_challenge_with_alternative": ("CHALLENGE", True),
+}
 INSTRUCTIONS = """You are PetroMind's evidence investigator. Assess the supplied statistical
 hypothesis; do not merely explain or endorse it. Consider alternatives and seek
 measurements that could contradict it. The candidate probabilities are uncalibrated
@@ -51,6 +58,15 @@ known transient onset; this is retrospective evidence assessment, not forecastin
 No private reasoning transcript is requested.
 Public fault taxonomy: """ + canonical(FAULT_TYPES) + "\nPublic sensor context: " + canonical(SENSOR_CONTEXT)
 
+
+# Preserve the original diagnostic policy verbatim; replace only the tool-selection
+# sentence for this fresh, separately hashed interface revision.
+MODEL_INSTRUCTIONS = INSTRUCTIONS.replace(
+    "one decision using submit_assessment: SUPPORT, CHALLENGE, or INSUFFICIENT_EVIDENCE.",
+    "one decision using submit_support, submit_insufficient_evidence, "
+    "submit_challenge_without_alternative, or submit_challenge_with_alternative. "
+    "Only the last tool takes an alternative_fault_type and requires its own "
+    "separate supporting claim. Never add decision or alternative fields to other tools.")
 
 
 def observe_adaptively(model, session, steps):
@@ -92,18 +108,26 @@ def assessment_tools(variant):
         "expected_if_hypothesis_true": {"type": ["string", "null"],
             "description": "For contradiction, state the expected observation separately from the actual citation. Unverified expectations still require expert review."}})
     relation = obj({k: {"type": "string"} for k in ("sensor", "equipment", "relation", "verification")})
-    parameters = obj({"decision": {"type": "string", "enum": list(DECISIONS),
-        "description": "SUPPORT needs baseline support with no unresolved baseline contradiction. CHALLENGE needs a contradiction targeting the baseline itself. INSUFFICIENT_EVIDENCE may abstain. Only CHALLENGE may propose an alternative."},
-        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
-        "alternative_fault_type": {"anyOf": [{"type": "integer", "minimum": 1, "maximum": 9}, {"type": "null"}],
-            "description": "Optional: prefer JSON null unless proposing a supported alternative. SUPPORT and INSUFFICIENT_EVIDENCE require null. For CHALLENGE, a non-null alternative must differ from the baseline AND have its own supporting claim targeting that fault; no claim may contradict it. Zero and the string null are not JSON null."},
+    common = {"confidence": {"type": "number", "minimum": 0, "maximum": 1},
         "claims": {"type": "array", "items": claim, "minItems": 1, "maxItems": 12,
-            "description": "Bind every claim to a source and fault hypothesis. CHALLENGE needs baseline contradiction; any proposed alternative additionally needs separate supporting evidence targeting that alternative. Contradicting an alternative does not challenge the baseline. Use inconclusive categories when evidence does not establish a direction."},
-        "relationships": {"type": "array", "items": relation, "maxItems": 8},
-        "uncertainty": {"type": "string"}})
-    tools.append({"type": "function", "name": "submit_assessment", "strict": True,
-                  "description": "Seal an assessment using sourced claims. No alternative is required: use null if unsupported. A proposed alternative requires its own supporting claim and cannot be contradicted by your claims. The baseline prediction is never overwritten.",
-                  "parameters": parameters})
+            "description": "Cite observed sources and exact readings. Identify the hypothesis each claim evaluates; no unqueried evidence."},
+        "relationships": {"type": "array", "items": relation, "maxItems": 8,
+            "description": "Returned graph context only; use [] if none. Illustrative edges are not proof."},
+        "uncertainty": {"type": "string", "minLength": 1, "maxLength": 1000,
+            "description": "Missing or inconclusive information and limitations of this assessment."}}
+    descriptions = {
+        "submit_support": "Seal SUPPORT: cite supporting evidence for the baseline and no unresolved baseline contradiction. No alternative argument.",
+        "submit_insufficient_evidence": "Seal INSUFFICIENT_EVIDENCE: cite observed evidence and describe missing or inconclusive information in uncertainty. No alternative argument. This must be a valid sourced assessment, not a fallback for invalid input.",
+        "submit_challenge_without_alternative": "Seal CHALLENGE without proposing another fault: cite evidence contradicting the baseline, including the expected observation. No alternative argument.",
+        "submit_challenge_with_alternative": "Seal CHALLENGE with a proposed alternative kept separate from the baseline: cite baseline contradiction AND a separate supporting claim whose hypothesis_fault_type equals the alternative. No claim may contradict that alternative. Python checks these requirements; citation validity does not prove physical correctness."}
+    for name, (_, has_alternative) in SUBMISSION_TOOLS.items():
+        properties = dict(common)
+        if has_alternative:
+            properties["alternative_fault_type"] = {"type": "integer", "minimum": 1, "maximum": 9,
+                "description": "Required proposed fault, different from the baseline, with its own separate supporting claim targeting this fault. If unsupported use submit_challenge_without_alternative."}
+            properties["claims"] = {**common["claims"], "minItems": 2}
+        tools.append({"type": "function", "name": name, "strict": True,
+                      "description": descriptions[name], "parameters": obj(properties)})
     return tools
 
 
@@ -180,17 +204,53 @@ class ChallengeSession(DiagnosticSession):
         with self._lock:
             if self._assessment is not None or self._sealed:
                 return self._error("dispatch", {}, "investigation_closed")
-            if tool == "submit_assessment":
-                return self._submit_assessment(arguments)
+            if tool in SUBMISSION_TOOLS:
+                return self._submit_tool(tool, arguments)
             return super().dispatch(tool, arguments)
 
-    def _submit_assessment(self, args):
+    def _submit_tool(self, tool, arguments):
+        decision, has_alternative = SUBMISSION_TOOLS[tool]
+        # Validate exact surface fields BEFORE normalizing. Never silently drop a
+        # stray alternative, decision override, unknown key or private metadata.
+        expected = {"confidence", "claims", "relationships", "uncertainty"}
+        if has_alternative:
+            expected.add("alternative_fault_type")
+        if isinstance(arguments, dict):
+            missing = next((key for key in sorted(expected) if key not in arguments), None)
+            issue = None
+            if missing:
+                issue = ValidationIssue("missing_submission_field", missing,
+                    "Include this required field using the selected tool's schema.")
+            elif set(arguments) != expected:
+                issue = ValidationIssue("invalid_submission_fields", "$",
+                    "Use exactly the selected tool's fields. Do not add decision or alternative fields to tools that omit them.")
+            elif has_alternative and arguments["alternative_fault_type"] is None:
+                issue = ValidationIssue("alternative_required", "alternative_fault_type",
+                    "Provide an integer fault from 1 to 9 with separate supporting evidence, or use submit_challenge_without_alternative.")
+            if issue:
+                try:
+                    fingerprint = hashlib.sha256(canonical(arguments).encode()).hexdigest()
+                except (ValueError, TypeError, RecursionError):
+                    # Non-JSON direct callers still get safe feedback. Transport
+                    # decoding rejects these before reaching this adapter.
+                    fingerprint = "non-json-surface"
+                arguments = RejectedSubmission(issue, fingerprint)
+            else:
+                arguments = {**arguments, "decision": decision,
+                             "alternative_fault_type": arguments.get("alternative_fault_type")}
+        return self._submit_assessment(arguments, submission_tool=tool)
+
+    def _submit_assessment(self, args, *, submission_tool="submit_assessment"):
+        # Private canonical validator also used by offline regression fixtures;
+        # the old universal tool is never registered or accepted by dispatch.
+        if self._sealed:
+            return self._error("dispatch", {}, "investigation_closed")
         fingerprint = None
         if isinstance(args, RejectedSubmission):
-            fingerprint = args.fingerprint
+            fingerprint = hashlib.sha256(canonical([submission_tool, args.fingerprint]).encode()).hexdigest()
         elif isinstance(args, dict):
             try:
-                fingerprint = hashlib.sha256(canonical(args).encode()).hexdigest()
+                fingerprint = hashlib.sha256(canonical([submission_tool, args]).encode()).hexdigest()
             except (ValueError, TypeError, RecursionError):
                 pass
         repeated = fingerprint is not None and fingerprint in self._invalid_fingerprints
@@ -207,6 +267,16 @@ class ChallengeSession(DiagnosticSession):
             issue = validate_assessment(args, json.loads(self._hypothesis)["prediction"],
                 {s: o.to_dict() for s, o in self.observations.items()}, self._evidence_sources, returned_relationships)
         if issue:
+            if submission_tool in SUBMISSION_TOOLS:
+                correction = issue.correction.replace(
+                    "leave alternative_fault_type null", "use submit_challenge_without_alternative").replace(
+                    "leave the alternative null", "use submit_challenge_without_alternative")
+                if issue.code in {"alternative_wrong_type", "alternative_out_of_range",
+                                  "alternative_not_integer", "alternative_matches_baseline"}:
+                    correction = ("Provide a whole-number fault ID 1–9 different from the baseline, "
+                                  "with separate supporting evidence; otherwise choose "
+                                  "submit_challenge_without_alternative. Null and strings are invalid here.")
+                issue = replace(issue, correction=correction)
             underlying_issue = issue
             if repeated:
                 issue = ValidationIssue("repeated_invalid_submission", "$",
@@ -225,27 +295,29 @@ class ChallengeSession(DiagnosticSession):
                 "field": issue.field, "correction": issue.correction,
                 "submission_attempt": self.validation_failures,
                 "repairs_remaining": 0 if self._sealed else 1 + MAX_REPAIRS - self.validation_failures,
-                "remaining_budget": self.remaining_budget, "contract_version": ASSESSMENT_VERSION}
+                "remaining_budget": self.remaining_budget, "contract_version": ASSESSMENT_VERSION,
+                "tool_contract_version": TOOL_CONTRACT_VERSION, "submission_tool": submission_tool}
             if issue.diagnostics_json is not None:
                 result["validation_context"] = json.loads(issue.diagnostics_json)
             if repeated:
                 result["underlying_validation_code"] = underlying_issue.code
                 result["underlying_field"] = underlying_issue.field
             # Codes and field paths come only from the validator, never from untrusted keys.
-            safe_metadata = {k: result[k] for k in ("validation_code", "field", "submission_attempt", "contract_version")}
+            safe_metadata = {k: result[k] for k in ("validation_code", "field", "submission_attempt", "contract_version", "tool_contract_version", "submission_tool")}
             safe_metadata.update({k: result[k] for k in ("validation_context", "underlying_validation_code", "underlying_field") if k in result})
-            return self._record("submit_assessment", safe_metadata, result)
+            return self._record(submission_tool, safe_metadata, result)
         claims = [{**c, "hypothesis_fault_type": normalize_fault_id(c["hypothesis_fault_type"]),
                    "relationship": RELATIONSHIPS[c["category"]]} for c in args["claims"]]
         cited_sources = {c["source_id"]: self._evidence_sources[c["source_id"]] for c in claims}
         result = {**args, "alternative_fault_type": normalize_fault_id(args["alternative_fault_type"]),
                   "claims": claims, "baseline_prediction": json.loads(self._hypothesis)["prediction"],
                   "remaining_budget": self.remaining_budget, "evidence_provenance": cited_sources,
-                  "contract_version": ASSESSMENT_VERSION, "physical_correctness_verified": False,
+                  "contract_version": ASSESSMENT_VERSION, "tool_contract_version": TOOL_CONTRACT_VERSION,
+                  "submission_tool": submission_tool, "physical_correctness_verified": False,
                   "mechanical_citations_valid": True, "interpretation_review": "required"}
         self._assessment = canonical(result)
         self._sealed = True
-        return self._record("submit_assessment", args, result)
+        return self._record(submission_tool, args, result)
 
 
 def run_challenger(session, client, config=None, *, on_event=None):
@@ -256,12 +328,13 @@ def run_challenger(session, client, config=None, *, on_event=None):
                "hypothesis": json.loads(session._hypothesis),
                "observations": {s: obs.to_dict() for s, obs in session.observations.items()},
                "evidence_sources": session.evidence_sources, "assessment_contract_version": ASSESSMENT_VERSION,
+               "tool_contract_version": TOOL_CONTRACT_VERSION,
                "sensor_budget": session.budget, "remaining_budget": session.remaining_budget,
                "sensor_names": session.list_sensors(), "known_transient_onset": True}
     return run_tool_agent(session, client, replace(config, variant=session.variant),
-        instructions=INSTRUCTIONS, tools=assessment_tools(session.variant),
+        instructions=MODEL_INSTRUCTIONS, tools=assessment_tools(session.variant),
         initial_history=[{"role": "user", "content": [{"type": "input_text", "text": canonical(context)}]}],
         prompt_version=PROMPT_VERSION, on_event=on_event, submission_reason="assessment_submitted",
         is_complete=lambda: session.assessment is not None,
         stop_reason=lambda: session._assessment_stop_reason,
-        decode_arguments=lambda name, raw: decode_submission(raw) if name == "submit_assessment" else _arguments(raw))
+        decode_arguments=lambda name, raw: decode_submission(raw) if name in SUBMISSION_TOOLS else _arguments(raw))

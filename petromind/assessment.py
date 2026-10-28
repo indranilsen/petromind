@@ -74,7 +74,7 @@ def decode_submission(raw):
             "Use strict JSON with unique keys and finite numbers; do not include commentary outside the object."), fingerprint)
     if not isinstance(parsed, dict):
         return RejectedSubmission(ValidationIssue("assessment_object_required", "$",
-            "Return a JSON object matching submit_assessment, not an array, string or null."), fingerprint)
+            "Return a JSON object matching the selected submission tool, not an array, string or null."), fingerprint)
     return parsed
 
 

@@ -10,7 +10,7 @@ from uuid import uuid4
 from .agent import AgentConfig
 from .assessment import ASSESSMENT_VERSION, MAX_REPAIRS
 from .baselines import GaussianEvidence
-from .challenger import INSTRUCTIONS, PROMPT_VERSION, observe_adaptively
+from .challenger import INSTRUCTIONS, MODEL_INSTRUCTIONS, PROMPT_VERSION, TOOL_CONTRACT_VERSION, assessment_tools, observe_adaptively
 from .data import load_incidents
 from .eval_protocol import DEFAULT_PRICES, digest, inventory, runtime_versions, source_digest
 from .session import DiagnosticSession
@@ -106,6 +106,9 @@ def freeze_development(dataset, split_path, *, n_cases=16, pilot_cases=2, second
         "seconds": seconds, "budget": 5, "initial_queries": initial_queries,
         "methods": list(METHODS), "agent_config": asdict(config), "assessment_contract_version": ASSESSMENT_VERSION, "assessment_repair_limit": MAX_REPAIRS,
         "prompt_version": PROMPT_VERSION, "prompt_digest": digest(INSTRUCTIONS),
+        "model_instructions_digest": digest(MODEL_INSTRUCTIONS),
+        "tool_contract_version": TOOL_CONTRACT_VERSION,
+        "tool_schema_digest": digest({v: assessment_tools(v) for v in VARIANTS.values()}),
         "prices": dict(DEFAULT_PRICES), "gate": dict(GATE),
         "fit_classes": [int(c) for c in model.classes], "requested_cases": n_cases,
         "selection": {"policy": "Label-blind hash well split, then joint initial/five-query correctness and class round-robin",
@@ -146,7 +149,10 @@ def freeze_development(dataset, split_path, *, n_cases=16, pilot_cases=2, second
 def validate_development(protocol, dataset):
     if digest({k: v for k, v in protocol.items() if k != "protocol_id"}) != protocol["protocol_id"]:
         raise ValueError("Protocol was modified")
-    if (protocol.get("assessment_contract_version") != ASSESSMENT_VERSION
+    if (protocol.get("tool_contract_version") != TOOL_CONTRACT_VERSION
+            or protocol.get("model_instructions_digest") != digest(MODEL_INSTRUCTIONS)
+            or protocol.get("tool_schema_digest") != digest({v: assessment_tools(v) for v in VARIANTS.values()})
+            or protocol.get("assessment_contract_version") != ASSESSMENT_VERSION
             or protocol.get("assessment_repair_limit") != MAX_REPAIRS):
         raise ValueError("A new protocol with the current assessment contract is required")
     if protocol["source_digest"] != source_digest() or protocol["runtime"] != runtime_versions():

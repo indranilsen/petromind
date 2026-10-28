@@ -213,8 +213,14 @@ labels never enter fitting, prompt selection or parameter optimization.
 The original v1 run stays frozen. Updated code cannot resume it because of the
 source hash. If a new pilot is justified after reviewing the original claims,
 `prepare --cohort-from .petromind/challenge-m4-v1/protocol.json` with a fresh output
-directory preserves all cases, IDs, pilot order, model, prompts, evidence, runtime
+directory preserves all cases, IDs, pilot order, model, original diagnostic policy, evidence, runtime
 and scientific criteria, while recording the versioned submission contract,
 validation feedback and two-repair limit. Use the original requested case/pilot counts.
 Never copy original result rows into the revision or selectively rerun failures.
 No additional live run is recommended solely because schema feedback improves.
+
+The active interface is [decision-specific assessment tools v3](assessment-tools-v3.md).
+It changes only submission instructions, with separate hashes for the actual
+model instructions and tool schemas. Prior protocols cannot run under this
+contract. Offline mock tests do not authorize a paid pilot or establish live
+model compliance.
