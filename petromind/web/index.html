@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PetroMind — follow the evidence</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script defer src="/app.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/"
+        ><span class="brandmark">P</span>PetroMind<span class="brandtag"
+          >INDUSTRIAL CLAIM INTELLIGENCE</span
+        ></a
+      >
+      <div class="topmeta">
+        <span class="dot"></span> Meta Muse Spark
+        <span class="separator">/</span
+        ><span id="modeBadge">CAPTURED REAL RUN</span>
+      </div>
+    </header>
+    <div class="shell">
+      <aside>
+        <div class="eyebrow">INVESTIGATION FILES</div>
+        <nav id="cases" aria-label="Captured examples"></nav>
+        <div class="aside-line"></div>
+        <div class="eyebrow">EXECUTION MODE</div>
+        <button id="replayMode" class="mode active">
+          ◉ Captured replay <small>Real Muse output · v1</small></button
+        ><button id="liveMode" class="mode" disabled>
+          ○ Live Muse <small>New scope-aware contract · v2</small>
+        </button>
+        <p id="liveHelp" class="aside-help">
+          Live calls are disabled. Replay requires no API key.
+        </p>
+        <div class="aside-bottom">
+          <div class="eyebrow">THE BOUNDARY</div>
+          <p>
+            Observed.<br />Documented.<br /><strong
+              >Not yet established.</strong
+            >
+          </p>
+          <span class="aside-note"
+            >Decision support.<br />No autonomous equipment control.</span
+          >
+        </div>
+      </aside>
+      <main>
+        <section class="intro">
+          <div class="eyebrow orange">EVIDENCE BEFORE CERTAINTY</div>
+          <h1>Convincing isn’t the same<br />as established.</h1>
+          <p>
+            Muse Spark follows an industrial diagnostic claim back to its
+            physical evidence—and identifies where the conclusion outruns it.
+          </p>
+        </section>
+        <div class="case-heading">
+          <div>
+            <div id="caseNumber" class="eyebrow">CASE 01</div>
+            <h2 id="caseTitle"></h2>
+          </div>
+          <div class="budget">
+            <strong id="budgetValue"></strong
+            ><span>of 5 sensor queries<br />already charged</span>
+          </div>
+        </div>
+        <section class="claim-card">
+          <div class="card-head">
+            <span class="eyebrow">THE CLAIM UNDER INVESTIGATION</span
+            ><span class="constructed">Constructed evaluation claim</span>
+          </div>
+          <blockquote id="claim"></blockquote>
+          <div class="claim-bottom">
+            <div id="baseline"></div>
+            <button id="inspect" class="primary">
+              Follow the evidence <span>↗</span>
+            </button>
+          </div>
+          <p class="small muted">
+            Real 3W development telemetry. The claim is constructed for
+            evaluation, not an expert diagnosis.
+          </p>
+        </section>
+        <section id="auditArea" hidden>
+          <div class="audit-toolbar">
+            <div>
+              <span class="eyebrow">MUSE CLAIM AUDIT</span>
+              <h2 id="verdictTitle"></h2>
+            </div>
+            <div class="segmented" aria-label="Actual captured conditions">
+              <button id="grounded" class="selected">Grounded</button
+              ><button id="ungrounded">Ungrounded</button>
+            </div>
+          </div>
+          <div id="liveNotice" hidden class="notice"></div>
+          <div class="audit-summary">
+            <span id="verdictBadge" class="verdict"></span
+            ><span id="runStats" class="muted"></span
+            ><button id="liveRun" class="primary" hidden>
+              Run live v2 · uses API
+            </button>
+          </div>
+          <div class="audit-grid">
+            <div class="audit-left">
+              <div class="eyebrow section-label">01 / DECOMPOSE THE CLAIM</div>
+              <div id="findings" class="findings"></div>
+              <section class="premise-panel">
+                <div class="eyebrow">THE PREMISES</div>
+                <ol id="premises"></ol>
+                <p id="justification"></p>
+                <div id="citations" class="citation-list"></div>
+              </section>
+              <section class="gap-card">
+                <div id="gapTitle" class="eyebrow">
+                  02 / LOCATE THE MISSING PREMISE
+                </div>
+                <p id="gap"></p>
+                <div class="eyebrow">
+                  CAPTURED MODEL’S NEXT-EVIDENCE PROPOSAL
+                </div>
+                <p id="next"></p>
+                <div class="review-callout">
+                  <span class="eyebrow"
+                    >SCOPE REVIEW · EDITORIAL ANNOTATION</span
+                  >
+                  <p id="note"></p>
+                </div>
+              </section>
+            </div>
+            <div class="evidence-panel">
+              <div class="evidence-tabs">
+                <button id="tabMeasurements" class="selected">
+                  Measurements</button
+                ><button id="tabKnowledge">Knowledge</button
+                ><button id="tabHistory">Analogues</button>
+              </div>
+              <div id="evidence"></div>
+            </div>
+          </div>
+          <section class="action-section">
+            <div class="eyebrow orange">
+              03 / WHAT WOULD JUSTIFY THE STRONGER CLAIM?
+            </div>
+            <h2>Ask for the missing evidence.<br />Don’t invent it.</h2>
+            <p class="muted">
+              Source/logic review proposals below are editorial annotations, not
+              new Muse outputs or engineering sign-off.
+            </p>
+            <div id="actions" class="action-grid"></div>
+          </section>
+          <details class="raw">
+            <summary>Inspect the original model output and provenance</summary>
+            <pre id="raw"></pre>
+          </details>
+          <div class="review-footer">
+            <span
+              >Independent engineering review pending. A cited value is not
+              proof of physical correctness.</span
+            ><button id="downloadReview">Download claim-level review ↗</button>
+          </div>
+        </section>
+        <footer>
+          <span>PetroMind / Push the Frontier</span
+          ><span
+            >Prior benchmark: adaptive statistics 60.6%; direct Muse 12.1–15.2%.
+            No classification improvement claimed.</span
+          >
+        </footer>
+        <p id="error" role="alert" hidden></p>
+      </main>
+    </div>
+  </body>
+</html>

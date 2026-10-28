@@ -27,3 +27,6 @@ include = ["petromind*"]
 testpaths = ["tests"]
 pythonpath = ["."]
 filterwarnings = ["error"]
+
+[tool.setuptools.package-data]
+petromind = ["web/*.html", "web/*.css", "web/*.js"]

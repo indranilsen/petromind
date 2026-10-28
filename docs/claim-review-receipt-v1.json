@@ -1,0 +1,207 @@
+{
+  "source_protocol_id": "58e8c6ba429a46730434f5b1b91b112c0ca7fd7b0e733fa3806b71c473bb6b84",
+  "review_version": "claim-level-review-v1",
+  "numeric_values_checked": 18,
+  "citation_occurrences_checked": 33,
+  "repairs": 3,
+  "independent_engineering_review": false,
+  "api_requests": 0,
+  "limitations": [
+    "Mechanical checks validate captured summaries, not raw sensor calibration or full time series.",
+    "Training membership cannot be independently recomputed here without the raw dataset.",
+    "Editorial notes are source/logic review, not an independent engineering sign-off."
+  ],
+  "findings": [
+    {
+      "id": "fault_expectation:ungrounded:1",
+      "finding_digest": "a7acd535976c59ac766c18b393d0a12aec7831b09091992d785a5f17dd78ecad",
+      "source_ids": [
+        "measurement:P-PDG"
+      ],
+      "review_category": "measured",
+      "physical_correctness": null,
+      "engineering_review_required": true
+    },
+    {
+      "id": "fault_expectation:ungrounded:2",
+      "finding_digest": "250c1c31f52681b8ac782e1586ed1d71df203e4aae7c4e0eb1235d7461ff8720",
+      "source_ids": [
+        "measurement:P-TPT"
+      ],
+      "review_category": "measured",
+      "physical_correctness": null,
+      "engineering_review_required": true
+    },
+    {
+      "id": "fault_expectation:ungrounded:3",
+      "finding_digest": "983b3446c338c94f43edd13a02fdb9b1b42ac158eb4cdc28c32cec56c96da939",
+      "source_ids": [
+        "measurement:P-PDG",
+        "measurement:P-TPT"
+      ],
+      "review_category": "compatible_not_proven",
+      "physical_correctness": null,
+      "engineering_review_required": true
+    },
+    {
+      "id": "fault_expectation:ungrounded:4",
+      "finding_digest": "38c25ee886291188ec9648ed40ac2b179278c763f86059db8798d2919734d923",
+      "source_ids": [],
+      "review_category": "missing_premise",
+      "physical_correctness": null,
+      "engineering_review_required": true
+    },
+    {
+      "id": "fault_expectation:grounded:1",
+      "finding_digest": "3598f0434364953d1665e998b96c2561ee27b6a06ab1407c40025ddf6643a9e6",
+      "source_ids": [
+        "measurement:P-PDG"
+      ],
+      "review_category": "measured",
+      "physical_correctness": null,
+      "engineering_review_required": true
+    },
+    {
+      "id": "fault_expectation:grounded:2",
+      "finding_digest": "f36476c12f9b936a6bbc6ac5eb01109ce08a8365da59d70886c58fa4ab8c83cf",
+      "source_ids": [
+        "measurement:P-TPT"
+      ],
+      "review_category": "measured",
+      "physical_correctness": null,
+      "engineering_review_required": true
+    },
+    {
+      "id": "fault_expectation:grounded:3",
+      "finding_digest": "7a00a6daff80373b2063b318bfcd33e375db1f95bfe809e9d59eebdb5e6ef03c",
+      "source_ids": [],
+      "review_category": "documentation_limit",
+      "physical_correctness": null,
+      "engineering_review_required": true
+    },
+    {
+      "id": "fault_expectation:grounded:4",
+      "finding_digest": "5116578afb6722d0cefbfc4c905004a9e6d2b0b19cd3a08c19faf8d644549dfc",
+      "source_ids": [
+        "measurement:P-PDG",
+        "measurement:P-TPT",
+        "knowledge:fault:9:equipment",
+        "knowledge:fault:9:mechanism",
+        "analogue:0",
+        "analogue:1",
+        "analogue:2"
+      ],
+      "review_category": "overlap_caution",
+      "physical_correctness": null,
+      "engineering_review_required": true
+    },
+    {
+      "id": "fault_expectation:grounded:5",
+      "finding_digest": "19985430f39b4095aa9c0b49f9e28c39b87b408b1c691249a4ac5ba82254b309",
+      "source_ids": [
+        "measurement:P-PDG",
+        "measurement:P-TPT",
+        "knowledge:fault:9:mechanism",
+        "analogue:0",
+        "analogue:1"
+      ],
+      "review_category": "scope",
+      "physical_correctness": null,
+      "engineering_review_required": true
+    },
+    {
+      "id": "published_example_consistency:ungrounded:1",
+      "finding_digest": "9f8fa5b49bf9c0d50c2a2292c9c6ae7e2d87e310a9b7e8dd784e75ef2dc2dfa2",
+      "source_ids": [
+        "measurement:P-PDG"
+      ],
+      "review_category": "measured",
+      "physical_correctness": null,
+      "engineering_review_required": true
+    },
+    {
+      "id": "published_example_consistency:ungrounded:2",
+      "finding_digest": "f4dca505b98f51acf4bbbca1a65344a9306083050121699b50743386a9d80e9b",
+      "source_ids": [
+        "measurement:P-TPT"
+      ],
+      "review_category": "measured",
+      "physical_correctness": null,
+      "engineering_review_required": true
+    },
+    {
+      "id": "published_example_consistency:ungrounded:3",
+      "finding_digest": "3765215c751c45dea82bde8427f7b46a728d7d9bad705bdaa0e84b651a0cf432",
+      "source_ids": [
+        "measurement:P-PDG",
+        "measurement:P-TPT"
+      ],
+      "review_category": "reasonable_uncertainty",
+      "physical_correctness": null,
+      "engineering_review_required": true
+    },
+    {
+      "id": "published_example_consistency:ungrounded:4",
+      "finding_digest": "018842d323efa917c672bc66468f28f8b1d5e8bf49a7f7bbd3c1659acd6ea559",
+      "source_ids": [
+        "measurement:P-PDG",
+        "measurement:P-TPT"
+      ],
+      "review_category": "scope",
+      "physical_correctness": null,
+      "engineering_review_required": true
+    },
+    {
+      "id": "published_example_consistency:grounded:1",
+      "finding_digest": "04bc3005799a9104768ab786e5ec8c229819f87271e5626080cdfaba01b39e78",
+      "source_ids": [
+        "measurement:P-PDG"
+      ],
+      "review_category": "measured",
+      "physical_correctness": null,
+      "engineering_review_required": true
+    },
+    {
+      "id": "published_example_consistency:grounded:2",
+      "finding_digest": "a3fb54410b77c42030b86f000766f7447048a6a5c2246e44066739c151ca5f25",
+      "source_ids": [
+        "measurement:P-TPT"
+      ],
+      "review_category": "measured",
+      "physical_correctness": null,
+      "engineering_review_required": true
+    },
+    {
+      "id": "published_example_consistency:grounded:3",
+      "finding_digest": "fa728c816c9a2069070713663f65492922dfb97a5757784bb8aa0a49c048e569",
+      "source_ids": [
+        "measurement:P-PDG",
+        "measurement:P-TPT",
+        "knowledge:example:2:P-PDG",
+        "knowledge:example:2:P-TPT",
+        "knowledge:example:2"
+      ],
+      "review_category": "documented_comparison",
+      "physical_correctness": null,
+      "engineering_review_required": true
+    },
+    {
+      "id": "published_example_consistency:grounded:4",
+      "finding_digest": "82ad49ad12a5bca098e83959adde0e9847ea1c40682015e97ca1b7c317c710ec",
+      "source_ids": [
+        "knowledge:example:2",
+        "analogue:0"
+      ],
+      "review_category": "scope",
+      "physical_correctness": null,
+      "engineering_review_required": true
+    }
+  ],
+  "live_contract": {
+    "version": "claim-auditor-v2-scope",
+    "prompt_digest": "e51a170d7e49eaacb07973c5f240a9a2ff1b9ea40646be5f21804e3d6a8d673a",
+    "tools_digest": "dfe7548d344275ccd91a276f59be5e31e83cdee8a3fbe8e415895a5fa2214b66",
+    "paid_calls": 0,
+    "status": "offline and mock tested only"
+  }
+}
