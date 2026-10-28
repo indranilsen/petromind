@@ -1,5 +1,18 @@
 # PetroMind
 
+**Current direction: Muse Spark audits industrial diagnostic claims.** It traces
+observations to charged telemetry, retrieves documented context, identifies
+missing premises, and proposes the smallest next evidence needed. The
+[claim-auditor pilot](docs/claim-auditor.md) is implemented and offline-tested;
+its live capability gate is **PENDING**, so no production UI or accuracy benefit
+is claimed. See [actual execution status](docs/claim-auditor-status.md).
+
+The earlier experiments remain intact. Conventional adaptive diagnosis achieved
+60.6% on the frozen 33 incidents; direct Muse sensor-only/GraphRAG achieved
+12.1%/15.2%. PetroMind does not claim GraphRAG improves classification. It is a
+decision-support investigation tool, not an autonomous equipment controller or
+safety-certified root-cause verifier.
+
 Milestone 1: a tested, label-blinded investigation framework for industrial
 fault diagnosis with a maximum of **five unique sensor queries**. An optional
 Milestone 2 Muse Spark tool runner is also available (see below).
