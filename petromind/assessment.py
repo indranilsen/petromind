@@ -8,7 +8,7 @@ import re
 from dataclasses import dataclass
 from numbers import Real
 
-ASSESSMENT_VERSION = "assessment-contract-v2"
+ASSESSMENT_VERSION = "assessment-contract-v2.1"
 MAX_REPAIRS = 2
 FIELDS = ("available", "median", "std", "first", "last", "delta", "change", "count",
           "total", "missing_count", "nonfinite_count", "nonnumeric_count", "extreme_count",
@@ -38,6 +38,7 @@ class ValidationIssue:
     code: str
     field: str
     correction: str
+    diagnostics_json: str | None = None
 
 
 @dataclass(frozen=True)
@@ -77,10 +78,34 @@ def decode_submission(raw):
     return parsed
 
 
+def normalize_fault_id(value):
+    """JSON Schema integer permits integral numbers (2 and 2.0), never strings/bools."""
+    if isinstance(value, Real) and not isinstance(value, bool) and 1 <= value <= 9 and value == int(value):
+        return int(value)
+    return None
+
+
+def numeric_diagnostics(value, baseline):
+    # Public syntax/contract predicates only: no raw values or ground truth.
+    kind = ("null" if value is None else "boolean" if isinstance(value, bool) else
+            "integer" if isinstance(value, int) else "number" if isinstance(value, float) else
+            "string" if isinstance(value, str) else "array" if isinstance(value, list) else
+            "object" if isinstance(value, dict) else "other")
+    number = isinstance(value, Real) and not isinstance(value, bool)
+    integral = isinstance(value, int) and not isinstance(value, bool)
+    if isinstance(value, float) and math.isfinite(value):
+        integral = value.is_integer()
+    normalized = normalize_fault_id(value)
+    return {"provided_json_type": kind, "is_integral_number": bool(integral),
+            "in_public_fault_range": bool(number and 1 <= value <= 9),
+            "matches_baseline_prediction": normalized is not None and normalized == baseline}
+
+
 def validate_assessment(args, baseline, observations, sources, returned_relationships):
     """Return only static errors and bounded field paths; never echo rejected data."""
-    def fail(code, field, instruction):
-        return ValidationIssue(code, field, instruction)
+    def fail(code, field, instruction, diagnostics=None):
+        return ValidationIssue(code, field, instruction,
+            json.dumps(diagnostics, sort_keys=True) if diagnostics is not None else None)
     required = ("decision", "confidence", "alternative_fault_type", "claims", "relationships", "uncertainty")
     if not isinstance(args, dict):
         return fail("invalid_submission_fields", "$", "Use a JSON object with exactly the fields in submit_assessment's schema.")
@@ -93,12 +118,25 @@ def validate_assessment(args, baseline, observations, sources, returned_relation
     if decision not in DECISIONS:
         return fail("invalid_decision", "decision", "Choose SUPPORT, CHALLENGE, or INSUFFICIENT_EVIDENCE.")
     if (not isinstance(confidence, Real) or isinstance(confidence, bool)
-            or not math.isfinite(confidence) or not 0 <= confidence <= 1):
+            or not 0 <= confidence <= 1 or not math.isfinite(confidence)):
         return fail("invalid_confidence", "confidence", "Use a finite number from 0 to 1, not a boolean.")
     if not isinstance(args["uncertainty"], str) or not 1 <= len(args["uncertainty"]) <= 1000:
         return fail("invalid_uncertainty", "uncertainty", "Describe uncertainty in 1–1000 characters.")
-    if alt is not None and (decision != "CHALLENGE" or type(alt) is not int or not 1 <= alt <= 9 or alt == baseline):
-        return fail("invalid_alternative", "alternative_fault_type", "Use null unless challenging; an alternative must be an integer 1–9 different from the baseline.")
+    if alt is not None:
+        diagnostics = {**numeric_diagnostics(alt, baseline), "decision_allows_alternative": decision == "CHALLENGE"}
+        if decision != "CHALLENGE":
+            return fail("alternative_not_allowed_for_decision", "alternative_fault_type",
+                        "Use JSON null for SUPPORT or INSUFFICIENT_EVIDENCE; only CHALLENGE may propose an alternative.", diagnostics)
+        if not isinstance(alt, Real) or isinstance(alt, bool):
+            return fail("alternative_wrong_type", "alternative_fault_type",
+                        "Use a JSON integer 1–9 or JSON null; do not use a string, boolean, array or object.", diagnostics)
+        if not 1 <= alt <= 9:
+            return fail("alternative_out_of_range", "alternative_fault_type", "Use a fault number 1–9, or null; zero is not a null sentinel.", diagnostics)
+        if normalize_fault_id(alt) is None:
+            return fail("alternative_not_integer", "alternative_fault_type", "Use a whole-number fault ID 1–9 without a fractional part, or null.", diagnostics)
+        alt = normalize_fault_id(alt)
+        if alt == baseline:
+            return fail("alternative_matches_baseline", "alternative_fault_type", "An alternative must differ from the baseline prediction; otherwise use null.", diagnostics)
     claims = args["claims"]
     if not isinstance(claims, list) or not 1 <= len(claims) <= 12:
         return fail("invalid_claim_count", "claims", "Provide 1–12 sourced claims; uncertainty can cite unavailable queried evidence.")
@@ -115,9 +153,10 @@ def validate_assessment(args, baseline, observations, sources, returned_relation
                 "Include every claim field: source_id, hypothesis_fault_type, category, sensor_name, field, value, interpretation, expected_if_hypothesis_true.")
         if set(claim) != set(keys):
             return fail("invalid_claim_fields", path, "Use exactly the allowed claim fields; remove all other keys.")
-        fault = claim["hypothesis_fault_type"]
-        if type(fault) is not int or not 1 <= fault <= 9:
-            return fail("invalid_claim_hypothesis", path + ".hypothesis_fault_type", "Identify the evaluated fault with an integer 1–9.")
+        fault = normalize_fault_id(claim["hypothesis_fault_type"])
+        if fault is None:
+            return fail("invalid_claim_hypothesis", path + ".hypothesis_fault_type", "Identify the evaluated fault with a whole-number JSON value 1–9; strings and booleans are invalid.",
+                        numeric_diagnostics(claim["hypothesis_fault_type"], baseline))
         category = claim["category"]
         if category not in CATEGORIES:
             return fail("invalid_claim_category", path + ".category", "Use supporting, contradictory, unavailable, or uncertainty.")
@@ -147,7 +186,7 @@ def validate_assessment(args, baseline, observations, sources, returned_relation
             if type(actual) is not type(quoted) and (isinstance(actual, bool) or isinstance(quoted, bool)
                     or not isinstance(actual, Real) or not isinstance(quoted, Real)):
                 return fail("citation_type_mismatch", path + ".value", "Quote the returned field with its original JSON scalar type; boolean and number differ.")
-            if isinstance(quoted, Real) and not math.isfinite(quoted):
+            if isinstance(quoted, Real) and not isinstance(quoted, int) and not math.isfinite(quoted):
                 return fail("nonfinite_citation", path + ".value", "Quote a finite returned value or its exact null; do not use NaN or infinity.")
             if quoted != actual:
                 return fail("citation_value_mismatch", path + ".value", "Quote the exact value from the queried summary without rounding or replacing it.")

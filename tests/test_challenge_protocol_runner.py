@@ -174,7 +174,7 @@ def test_validation_revision_preserves_cohort_ids_pilot_settings_and_gate(datase
     for key in ("records", "selected", "pilot_case_ids", "gate", "agent_config", "prompt_digest", "retrieval_split"):
         assert digest(revised[key]) == digest(parent[key])
     assert revised["assessment_repair_limit"] == 2
-    assert revised["assessment_contract_version"] == "assessment-contract-v2"
+    assert revised["assessment_contract_version"] == "assessment-contract-v2.1"
     assert revised["protocol_id"] != parent["protocol_id"]
     with pytest.raises(ValueError, match="preserve"):
         freeze_development(dataset, prepared_protocol[2], n_cases=16, pilot_cases=1, cohort_from=parent)
