@@ -126,7 +126,7 @@ class PhysicalKnowledge:
                 "fault_description_provenance": {**SOURCES["authors"], "locator": "Section 2.4 event descriptions"}, "fault_descriptions": {str(k): {"name": FAULT_TYPES[k], "mechanism": v[1],
                     "fact_id": f"fault:{k}:mechanism"} for k, v in _FAULTS.items()},
                 "valve_encodings": [self.fact("valve:" + str(v)) for v in (0, 1, .5)],
-                "example_patterns": [f.public() for f in self.facts if f.relation.startswith("example:")],
+                "example_patterns": [f.public() for f in self.facts if f.scope == "published_example_not_fault_rule"],
                 "unknowns": ["Exact individual well topology and tag correctness",
                     "Universal fault thresholds or necessary/sufficient signatures",
                     "Normality of a pre-window period without independent confirmation"],

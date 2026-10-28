@@ -37,6 +37,8 @@ def test_all_knowledge_edges_have_provenance_scope_and_explicit_status():
     assert {f['subject']:f['object'] for f in context['valve_encodings']} == {
         'valve_state:0':'closed', 'valve_state:1':'open', 'valve_state:0.5':'other'}
     assert all(f['scope'] == 'published_example_not_fault_rule' for f in context['example_patterns'])
+    assert any(f['subject']=='fault:2' and f['relation']=='illustrated_by' and f['object']=='pattern:2'
+               for f in context['example_patterns'])
     assert 'class' not in context['sensor_definitions'] and 'state' not in context['sensor_definitions']
     assert not any('threshold' in f['relation'] for f in graph['relationships'])
 
