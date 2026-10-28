@@ -152,7 +152,8 @@ def run_challenge_evaluation(directory, dataset, stage="pilot", *, max_requests=
                 "usage": usage_and_cost(events, requests, protocol["prices"]), **audit_metrics(session),
                 "well_group": next(r["well_group"] for r in protocol["records"] if r["case_id"] == task["case_id"]),
                 "assessment_validation_errors": [{k: value[k] for k in
-                    ("validation_code", "field", "correction", "submission_attempt", "repairs_remaining", "contract_version")
+                    ("validation_code", "field", "correction", "submission_attempt", "repairs_remaining", "contract_version",
+                     "validation_context", "underlying_validation_code", "underlying_field")
                     if k in value} for a in session.audit_trail if a.tool == "submit_assessment"
                     for value in [json.loads(a.result_json)] if "error" in value],
                 "rejected_assessment_attempts": sum(a.tool == "submit_assessment" and

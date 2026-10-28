@@ -1,4 +1,9 @@
-# Assessment reliability contract v2
+# Assessment reliability contract v2.1
+
+See the [v2 run review and v2.1 correction](milestone4-v2-review.md). Tool descriptions
+now disclose alternative-support rules before submission; alternative errors carry
+specific safe type/predicate diagnostics. Integral JSON fault IDs are accepted and
+normalized, while strings, booleans and fractional IDs remain invalid.
 
 This is a contract/repair correction, not a new diagnostic strategy. The original
 M4 prompt text and scientific gate are unchanged. Tools now specify the required
@@ -24,7 +29,7 @@ An invalid submission returns, for example:
   "submission_attempt": 1,
   "repairs_remaining": 2,
   "remaining_budget": 0,
-  "contract_version": "assessment-contract-v2"
+  "contract_version": "assessment-contract-v2.1"
 }
 ```
 

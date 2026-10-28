@@ -481,3 +481,78 @@ def test_unqueried_measurements_do_not_enter_sources_errors_or_model_context(fra
     with closing(MetaResponsesClient(transport=httpx.MockTransport(respond))) as client:
         assert run_challenger(session, client).status == "completed"
     assert session.remaining_budget == 4
+
+
+@pytest.mark.parametrize("decision, alt, expected", [
+    ("SUPPORT", 2, "alternative_not_allowed_for_decision"),
+    ("CHALLENGE", True, "alternative_wrong_type"),
+    ("CHALLENGE", "2", "alternative_wrong_type"),
+    ("CHALLENGE", 0, "alternative_out_of_range"),
+    ("CHALLENGE", 10, "alternative_out_of_range"),
+    ("CHALLENGE", 2.5, "alternative_not_integer"),
+    ("CHALLENGE", 1, "alternative_matches_baseline"),
+])
+def test_alternative_rejection_reports_exact_contract_reason(challenge, decision, alt, expected):
+    args = assessment(challenge, decision)
+    args["alternative_fault_type"] = alt
+    error = challenge.dispatch("submit_assessment", args)
+    assert error["validation_code"] == expected
+    assert error["field"] == "alternative_fault_type" and error["correction"]
+    assert set(error["validation_context"]) == {"provided_json_type", "is_integral_number",
+        "in_public_fault_range", "matches_baseline_prediction", "decision_allows_alternative"}
+    assert "true_event" not in json.dumps(error)
+
+
+def test_schema_integral_fault_numbers_accept_2_point_0_without_coercing_readings(challenge):
+    args = assessment(challenge)
+    args["alternative_fault_type"] = 2.0
+    args["claims"][0]["hypothesis_fault_type"] = 1.0
+    args["claims"][1]["hypothesis_fault_type"] = 2.0
+    original_reading = args["claims"][0]["value"]
+    result = challenge.dispatch("submit_assessment", args)
+    assert result["decision"] == "CHALLENGE"
+    assert type(result["alternative_fault_type"]) is int
+    assert all(type(c["hypothesis_fault_type"]) is int for c in result["claims"])
+    assert result["claims"][0]["value"] == original_reading
+
+
+def test_duplicate_rejection_retains_underlying_safe_reason(challenge):
+    args = assessment(challenge)
+    args["alternative_fault_type"] = "secret-value"
+    challenge.dispatch("submit_assessment", args)
+    error = challenge.dispatch("submit_assessment", args)
+    assert error["validation_code"] == "repeated_invalid_submission"
+    assert error["underlying_validation_code"] == "alternative_wrong_type"
+    assert error["underlying_field"] == "alternative_fault_type"
+    assert error["validation_context"]["provided_json_type"] == "string"
+    assert "secret-value" not in challenge.audit_trail[-1].arguments_json + json.dumps(error)
+
+
+def test_model_tool_contract_discloses_alternative_support_before_validation():
+    tool = next(t for t in assessment_tools("sensor_only") if t["name"] == "submit_assessment")
+    properties = tool["parameters"]["properties"]
+    assert "supporting claim" in properties["alternative_fault_type"]["description"]
+    assert "baseline" in properties["decision"]["description"]
+    assert "targeting that alternative" in properties["claims"]["description"]
+    assert "null" in properties["alternative_fault_type"]["description"]
+
+
+def test_unsourced_alternative_still_rejected_with_schema_integral_number(challenge):
+    args = assessment(challenge)
+    args["alternative_fault_type"] = 2.0
+    args["claims"].pop()
+    error = challenge.dispatch("submit_assessment", args)
+    assert error["validation_code"] == "alternative_requires_support"
+    assert challenge.assessment is None
+
+
+@pytest.mark.parametrize("field", ["confidence", "citation"])
+def test_large_json_integers_fail_safely_without_overflow(challenge, field):
+    args = assessment(challenge)
+    if field == "confidence":
+        args["confidence"] = 10 ** 400
+    else:
+        args["claims"][0]["value"] = 10 ** 400
+    error = challenge.dispatch("submit_assessment", args)
+    assert error["validation_code"] in {"invalid_confidence", "citation_value_mismatch"}
+    assert challenge.assessment is None

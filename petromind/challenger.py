@@ -19,7 +19,7 @@ from .audit import canonical
 from .baselines import posterior
 from .session import DiagnosticSession
 from .assessment import (ASSESSMENT_VERSION, MAX_REPAIRS, FIELDS, CATEGORIES, DECISIONS,
-                         RELATIONSHIPS, ValidationIssue, RejectedSubmission, decode_submission, validate_assessment)
+                         RELATIONSHIPS, ValidationIssue, RejectedSubmission, decode_submission, normalize_fault_id, validate_assessment)
 
 PROMPT_VERSION = "petromind-challenger-v1"
 INSTRUCTIONS = """You are PetroMind's evidence investigator. Assess the supplied statistical
@@ -92,14 +92,17 @@ def assessment_tools(variant):
         "expected_if_hypothesis_true": {"type": ["string", "null"],
             "description": "For contradiction, state the expected observation separately from the actual citation. Unverified expectations still require expert review."}})
     relation = obj({k: {"type": "string"} for k in ("sensor", "equipment", "relation", "verification")})
-    parameters = obj({"decision": {"type": "string", "enum": list(DECISIONS)},
+    parameters = obj({"decision": {"type": "string", "enum": list(DECISIONS),
+        "description": "SUPPORT needs baseline support with no unresolved baseline contradiction. CHALLENGE needs a contradiction targeting the baseline itself. INSUFFICIENT_EVIDENCE may abstain. Only CHALLENGE may propose an alternative."},
         "confidence": {"type": "number", "minimum": 0, "maximum": 1},
-        "alternative_fault_type": {"anyOf": [{"type": "integer", "minimum": 1, "maximum": 9}, {"type": "null"}]},
-        "claims": {"type": "array", "items": claim, "minItems": 1, "maxItems": 12},
+        "alternative_fault_type": {"anyOf": [{"type": "integer", "minimum": 1, "maximum": 9}, {"type": "null"}],
+            "description": "Optional: prefer JSON null unless proposing a supported alternative. SUPPORT and INSUFFICIENT_EVIDENCE require null. For CHALLENGE, a non-null alternative must differ from the baseline AND have its own supporting claim targeting that fault; no claim may contradict it. Zero and the string null are not JSON null."},
+        "claims": {"type": "array", "items": claim, "minItems": 1, "maxItems": 12,
+            "description": "Bind every claim to a source and fault hypothesis. CHALLENGE needs baseline contradiction; any proposed alternative additionally needs separate supporting evidence targeting that alternative. Contradicting an alternative does not challenge the baseline. Use inconclusive categories when evidence does not establish a direction."},
         "relationships": {"type": "array", "items": relation, "maxItems": 8},
         "uncertainty": {"type": "string"}})
     tools.append({"type": "function", "name": "submit_assessment", "strict": True,
-                  "description": "Seal a hypothesis assessment with exact quotations, interpretations and uncertainty",
+                  "description": "Seal an assessment using sourced claims. No alternative is required: use null if unsupported. A proposed alternative requires its own supporting claim and cannot be contradicted by your claims. The baseline prediction is never overwritten.",
                   "parameters": parameters})
     return tools
 
@@ -204,9 +207,11 @@ class ChallengeSession(DiagnosticSession):
             issue = validate_assessment(args, json.loads(self._hypothesis)["prediction"],
                 {s: o.to_dict() for s, o in self.observations.items()}, self._evidence_sources, returned_relationships)
         if issue:
+            underlying_issue = issue
             if repeated:
                 issue = ValidationIssue("repeated_invalid_submission", "$",
-                                        "Stop: this identical submission is still invalid; the investigation has failed.")
+                                        "Stop: this identical submission is still invalid; the investigation has failed.",
+                                        underlying_issue.diagnostics_json)
             self.validation_failures += 1
             if fingerprint is not None:
                 self._invalid_fingerprints.add(fingerprint)  # Memory-only; no rejected text or fingerprints exported.
@@ -221,12 +226,20 @@ class ChallengeSession(DiagnosticSession):
                 "submission_attempt": self.validation_failures,
                 "repairs_remaining": 0 if self._sealed else 1 + MAX_REPAIRS - self.validation_failures,
                 "remaining_budget": self.remaining_budget, "contract_version": ASSESSMENT_VERSION}
+            if issue.diagnostics_json is not None:
+                result["validation_context"] = json.loads(issue.diagnostics_json)
+            if repeated:
+                result["underlying_validation_code"] = underlying_issue.code
+                result["underlying_field"] = underlying_issue.field
             # Codes and field paths come only from the validator, never from untrusted keys.
             safe_metadata = {k: result[k] for k in ("validation_code", "field", "submission_attempt", "contract_version")}
+            safe_metadata.update({k: result[k] for k in ("validation_context", "underlying_validation_code", "underlying_field") if k in result})
             return self._record("submit_assessment", safe_metadata, result)
-        claims = [{**c, "relationship": RELATIONSHIPS[c["category"]]} for c in args["claims"]]
+        claims = [{**c, "hypothesis_fault_type": normalize_fault_id(c["hypothesis_fault_type"]),
+                   "relationship": RELATIONSHIPS[c["category"]]} for c in args["claims"]]
         cited_sources = {c["source_id"]: self._evidence_sources[c["source_id"]] for c in claims}
-        result = {**args, "claims": claims, "baseline_prediction": json.loads(self._hypothesis)["prediction"],
+        result = {**args, "alternative_fault_type": normalize_fault_id(args["alternative_fault_type"]),
+                  "claims": claims, "baseline_prediction": json.loads(self._hypothesis)["prediction"],
                   "remaining_budget": self.remaining_budget, "evidence_provenance": cited_sources,
                   "contract_version": ASSESSMENT_VERSION, "physical_correctness_verified": False,
                   "mechanical_citations_valid": True, "interpretation_review": "required"}
