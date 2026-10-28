@@ -1,0 +1,63 @@
+{
+  "protocol_id": "0368fe88eb586c479c2dd72cb2f657ba6f11416c897f6ddabfaca3172dda3964",
+  "source_protocol_id": "178967437cec45ac453b647f52498a8dd6d7b98b883d4e5e55a72054fcc60401",
+  "source_archive_sha256": "df75ee8c00468e0f1e85a2e0872dc5b0be86c0ea2f4727456ae800b9bf150521",
+  "source_digest": "51242a3777c6d2cf74b24afdbd08e64525c2b730b0a82291847f52293cc41202",
+  "knowledge_digest": "ad3192a87e7e9287d2dc39b72145bad80d3fa5ec250d2748282a72d7acceab78",
+  "prompt_digest": "01841f53a08518270668a4d62e7ec2c333e42afe58e68a07394730108c7dd302",
+  "tools_digest": "e0dcb406ff6c1d7b7bff568152a57d0cdd60a2050ba029e3b279b482663eb15f",
+  "historical_retrieval_enabled": false,
+  "pilot_task_ids": [
+    "fault_expectation",
+    "published_example_consistency"
+  ],
+  "rubric": {
+    "additional_correct_semantic_gap_detections_vs_checker_min": 1,
+    "all_completed_outputs_independently_reviewed": true,
+    "completion_min": 1.0,
+    "false_rejection_supported_max": 0,
+    "note": "Pilot is an operational gate, not population accuracy or proof of general physical verification.",
+    "numeric_citation_faithfulness_min": 1.0,
+    "pilot_tasks": 2,
+    "specific_actionable_next_evidence_min": 1,
+    "unsupported_auditor_claims_max": 0,
+    "version": "claim-audit-rubric-v1"
+  },
+  "tasks": [
+    {
+      "task_id": "numeric_supported",
+      "public_packet_sha256": "f595640c017e88f44ef22eeeb6ccf1cfc92f7c85e8983cae4a12fe252282daa9"
+    },
+    {
+      "task_id": "numeric_contradicted",
+      "public_packet_sha256": "7e132f342577f4d202311eb490e4f42656d0b241277782bc056732732ec6ecdf"
+    },
+    {
+      "task_id": "missing_claimed_observed",
+      "public_packet_sha256": "0791231938f972dcb4cb72e72d8a43b50a5611e462c9bc459bb52219600885d3"
+    },
+    {
+      "task_id": "valve_encoding",
+      "public_packet_sha256": "ce0086178ba5d01efb2924815259de79d6974b8cdc918b3c0d3ebcb774893924"
+    },
+    {
+      "task_id": "fault_expectation",
+      "public_packet_sha256": "373b6e17a9251d441f3ea7ad035c61013fccc51bf06ba6fb3d64efc807fab5bf"
+    },
+    {
+      "task_id": "published_example_consistency",
+      "public_packet_sha256": "efbf24b5c95c5f1668c30bfd6e761991f848bf5fe8d84a3a280f6748f22fa668"
+    },
+    {
+      "task_id": "plausible_root_cause",
+      "public_packet_sha256": "696a389f16464ab8de91a568dad00e265e09cec6bb15b9e2848a2ab64fd67f24"
+    },
+    {
+      "task_id": "single_sensor_analogue",
+      "public_packet_sha256": "a66c9e3320934607a34f1063638beb379722883c84ba03eed3aa56fa2c2375a9"
+    }
+  ],
+  "status": "OFFLINE_CONTROLS_COMPLETE_LIVE_BLOCKED",
+  "api_requests": 0,
+  "note": "Metadata-only freeze receipt; no telemetry or dataset files are committed. Actual frozen packets remain in the local ignored protocol directory. This is not evidence of live Muse capability."
+}
