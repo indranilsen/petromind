@@ -4,6 +4,11 @@ Milestone 1: a tested, label-blinded investigation framework for industrial
 fault diagnosis with a maximum of **five unique sensor queries**. An optional
 Milestone 2 Muse Spark tool runner is also available (see below).
 
+Milestone 3 adds explicit sensor-quality metadata and the [paired evaluation
+workflow](docs/evaluation.md): freeze the original 33-case cohort, run a small
+pilot across three Muse variants plus fixed/adaptive baselines, then resume the
+same protocol for the full cohort. No GraphRAG improvement is assumed.
+
 ## Setup and demonstration
 
 Use Python 3.10 or newer (the previous prototype used 3.9; upgrade the venv):

@@ -15,6 +15,7 @@ from dataclasses import asdict, dataclass
 from .agent_tools import INSTRUCTIONS, PROMPT_VERSION, tool_definitions
 from .audit import canonical
 from .meta_api import MetaAPIError
+from .variants import VARIANT_TOOLS
 
 
 @dataclass(frozen=True)
@@ -25,8 +26,11 @@ class AgentConfig:
     max_output_tokens: int = 2048
     reasoning_effort: str = "medium"
     run_timeout: float = 300
+    variant: str = "graphrag"
 
     def __post_init__(self):
+        if self.variant not in VARIANT_TOOLS:
+            raise ValueError("Unknown agent variant")
         if not isinstance(self.model, str) or not re.fullmatch(r"muse-spark-[0-9]+\.[0-9]+", self.model):
             raise ValueError("Invalid Muse Spark model identifier")
         for value, low, high in ((self.max_turns, 1, 40), (self.max_tool_calls, 1, 80),
@@ -113,6 +117,8 @@ def _replay_items(output):
 def run_agent(session, client, config: AgentConfig | None = None, *, on_event=None,
               clock=time.monotonic) -> AgentResult:
     config = config or AgentConfig()
+    if session.variant != config.variant:
+        raise ValueError("Session capabilities must match agent variant")
     if session.audit_trail or session.diagnosis is not None:
         raise ValueError("Muse requires a fresh investigation session")
     events = []
@@ -139,7 +145,7 @@ def run_agent(session, client, config: AgentConfig | None = None, *, on_event=No
     seen_ids, n_calls, stalls = set(), 0, 0
     for turn in range(1, config.max_turns + 1):
         payload = {"model": config.model, "instructions": INSTRUCTIONS, "input": history,
-                   "tools": tool_definitions(), "tool_choice": "auto", "parallel_tool_calls": False,
+                   "tools": tool_definitions(config.variant), "tool_choice": "auto", "parallel_tool_calls": False,
                    "store": False, "include": ["reasoning.encrypted_content"],
                    "reasoning": {"effort": config.reasoning_effort},
                    "max_output_tokens": config.max_output_tokens}
@@ -148,6 +154,16 @@ def run_agent(session, client, config: AgentConfig | None = None, *, on_event=No
         emit("request", {"turn": turn, "remaining_budget": session.remaining_budget})
         try:
             response = client.create(payload, deadline=deadline, on_retry=lambda d: emit("retry", d))
+            usage = response.get("usage")
+            usage = usage if isinstance(usage, dict) else {}
+            counts = {k: usage[k] for k in ("input_tokens", "output_tokens", "total_tokens")
+                      if type(usage.get(k)) is int and usage[k] >= 0}
+            for field, detail, key in (("cached_tokens", "input_tokens_details", "cached_tokens"),
+                                       ("reasoning_tokens", "output_tokens_details", "reasoning_tokens")):
+                nested = usage.get(detail)
+                if isinstance(nested, dict) and type(nested.get(key)) is int and nested[key] >= 0:
+                    counts[field] = nested[key]
+            emit("usage", {"turn": turn, **counts})
             if clock() >= deadline:
                 return finish("run_deadline_exceeded")
             incomplete = response.get("incomplete_details")

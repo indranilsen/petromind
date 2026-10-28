@@ -57,3 +57,18 @@ def dataset(tmp_path):
                              index=pd.date_range("2020-01-01", periods=602, freq="s"))
         frame.to_parquet(directory / f"WELL-{well:05d}_20200101000000.parquet")
     return root
+
+
+@pytest.fixture
+def prepared_protocol(dataset, tmp_path):
+    import json
+    from petromind.data import load_incidents
+    from petromind.eval_protocol import freeze_protocol
+    from petromind.splits import make_well_split
+    split_path = tmp_path / "split.json"
+    make_well_split({r.well for r in load_incidents(dataset)}).save(split_path)
+    protocol = freeze_protocol(dataset, split_path, expected_test=2, pilot_cases=1, budgets=(2,))
+    out = tmp_path / "evaluation"
+    out.mkdir()
+    (out / "protocol.json").write_text(json.dumps(protocol))
+    return protocol, out, split_path
