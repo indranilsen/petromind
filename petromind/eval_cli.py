@@ -25,12 +25,15 @@ def main(argv=None):
     prepare.add_argument("--pilot-cases", type=int, default=2)
     prepare.add_argument("--max-turns", type=int, default=20)
     prepare.add_argument("--max-output-tokens", type=int, default=2048)
+    prepare.add_argument("--cohort-from", type=Path,
+                         help="Existing protocol for a token-only revision; preserves exact cohort, IDs, pilot and prompts")
     for name in ("pilot", "full"):
         command = commands.add_parser(name, help="Run pending paired tasks; full requires a successful pilot")
         command.add_argument("--dataset", type=Path, required=True)
         command.add_argument("--out", type=Path, required=True)
         command.add_argument("--max-requests-total", type=int, default=120 if name == "pilot" else 2000)
-        command.add_argument("--max-output-tokens-total", type=int, default=245760 if name == "pilot" else 4096000)
+        command.add_argument("--max-output-tokens-total", type=int, default=None,
+                             help="Default: planned Muse runs times frozen per-run output reservation")
     analyze = commands.add_parser("analyze", help="Regenerate reports without API calls")
     analyze.add_argument("--out", type=Path, required=True)
     analyze.add_argument("--cohort", choices=("pilot", "full"), default="full")
@@ -41,7 +44,8 @@ def main(argv=None):
                 raise ValueError("Use a fresh output directory; never overwrite a protocol")
             protocol = freeze_protocol(args.dataset, args.split, budgets=tuple(args.budgets),
                 seconds=args.seconds, expected_test=args.expected_test_incidents, pilot_cases=args.pilot_cases,
-                config=AgentConfig(max_turns=args.max_turns, max_output_tokens=args.max_output_tokens))
+                config=AgentConfig(max_turns=args.max_turns, max_output_tokens=args.max_output_tokens),
+                cohort_from=json.loads(args.cohort_from.read_text()) if args.cohort_from else None)
             args.out.mkdir(parents=True, exist_ok=True)
             with (args.out / "protocol.json").open("x") as stream:
                 stream.write(json.dumps(protocol, indent=2) + "\n")

@@ -54,8 +54,10 @@ python scripts/evaluate.py pilot \
 At the default single budget, this runs **two identical incidents across five
 methods**: six paid Muse investigations and four local conventional runs. No
 full-cohort evaluation starts automatically. Across the entire output directory,
-the pilot defaults to caps of 120 HTTP attempts and 245,760 reserved output
-tokens, including retries. Adjust using `--max-requests-total` and
+the pilot defaults to 120 HTTP attempts. Its total output reservation is derived
+from the number of planned Muse runs and the frozen per-run reservation; at the
+default 2,048-token cap and 20 turns this is 245,760 tokens, including retries.
+Adjust using `--max-requests-total` and
 `--max-output-tokens-total`; reservations persist before each request so restarting
 the command cannot reset spending counters. Per-investigation transport limits
 are the same for all Muse variants. These are request/output bounds, not an
@@ -79,8 +81,9 @@ python scripts/evaluate.py full \
 `full` refuses to run without a successful complete pilot, preserves pilot
 results and runs only pending tasks. At one budget the total is **165 paired
 investigations: 99 Muse and 66 conventional**, including the pilot. Full-stage
-default global caps are 2,000 requests and 4,096,000 reserved output tokens,
-including previous pilot reservations. Each request checks these caps in Python.
+default global caps are 2,000 requests and the number of planned Muse runs times
+their frozen output reservation (4,055,040 tokens at the default 2,048-token cap
+and 20 turns), including previous pilot reservations. Each request checks these caps in Python.
 If a limit stops work, the incomplete report must not be described as accuracy
 over all 33 cases.
 
@@ -102,6 +105,42 @@ python scripts/evaluate.py analyze --out .petromind/eval-m3-v1 --cohort full
 `analyze` never reads a key or calls Meta. It analyzes the saved records; it does
 not establish data integrity beyond the original run-time checks. Use the same
 analysis code version for the final report.
+
+## Operational token-limit revision
+
+`model_output_token_limit` means one response exhausted its generation cap,
+including reasoning, before a complete tool call/submission. It is distinct from
+the sensor-query budget. `stage_complete: true` means all planned tasks were
+attempted; `pilot_ready: false` means at least one workflow did not complete.
+Keep those failures in the original results. Do not retry only failed variants,
+edit their rows, pool protocols, or bypass the full-stage gate.
+
+For a uniform larger cap, create a new protocol and repeat the entire pilot:
+
+```bash
+python scripts/evaluate.py prepare \
+  --dataset ../3W/dataset --split .petromind/split.json \
+  --out .petromind/eval-m3-v2 --budgets 5 --pilot-cases 2 \
+  --max-output-tokens 4096 \
+  --cohort-from .petromind/eval-m3-v1/protocol.json
+python scripts/evaluate.py pilot \
+  --dataset ../3W/dataset --out .petromind/eval-m3-v2
+```
+
+`--cohort-from` verifies the parent protocol's integrity, file hashes, split,
+sensor budgets, prompts and other model settings, and preserves every opaque
+case ID, pilot ID and method order. Among model settings only the generation-token cap may change;
+the source/runtime are freshly recorded and the parent protocol ID is linked.
+No prior results are imported or overwritten. The default remains 2,048 until
+the larger value is explicitly requested. Increasing the cap does not guarantee
+completion, a correct diagnosis or a graph benefit.
+
+Per-run output reservations now scale as `max_turns * max_output_tokens`.
+For 4,096 tokens and 20 turns, that is 81,920 per run and 491,520 total for the
+six-run Muse pilot. This is reserved capacity, not actual output usage or a
+dollar charge. Explicit lower global caps remain available. All three Muse
+conditions receive the same revised cap; model draws remain stochastic. This
+is an operational reliability revision, not permission to tune on test labels.
 
 ## Compared configurations
 

@@ -143,7 +143,7 @@ def write_reports(directory, protocol, rows, case_ids):
 
 
 def run_evaluation(directory, dataset, stage="pilot", *, max_requests=120,
-                   max_output_tokens=245760, client_factory=MetaResponsesClient, on_progress=None):
+                   max_output_tokens=None, client_factory=MetaResponsesClient, on_progress=None):
     directory = Path(directory)
     if stage not in {"pilot", "full"}:
         raise ValueError("Invalid stage")
@@ -168,6 +168,9 @@ def run_evaluation(directory, dataset, stage="pilot", *, max_requests=120,
             raise ValueError("A successful complete pilot is required before the full cohort")
         selected = pilot_ids if stage == "pilot" else all_ids
         plan = task_plan(protocol, selected)
+        if max_output_tokens is None:
+            n_model_runs = sum(t["method"] in VARIANT_TOOLS for t in plan)
+            max_output_tokens = n_model_runs * protocol["per_run_transport"]["max_output_budget"]
         valid_tasks = {task_key(t) for t in task_plan(protocol, all_ids)}
         if any(k not in valid_tasks for k in keys):
             raise ValueError("Unexpected task in results")
@@ -246,6 +249,9 @@ def run_evaluation(directory, dataset, stage="pilot", *, max_requests=120,
         report = write_reports(directory, protocol, rows, selected)
         ready = all(task_key(t) in completed for t in plan)
         report["stage_complete"] = ready
+        report["execution_limits"] = {"max_requests_total": total.max_requests,
+            "max_output_tokens_total": total.max_output_tokens,
+            "requests_reserved": total.requests, "output_tokens_reserved": total.output_tokens}
         report["pilot_ready"] = all(task_key(t) in completed and completed[task_key(t)]["status"] == "completed"
                                     for t in task_plan(protocol, pilot_ids))
         (directory / "report.json").write_text(json.dumps(report, indent=2) + "\n")

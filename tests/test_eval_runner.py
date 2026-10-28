@@ -45,6 +45,7 @@ def test_pilot_full_pairing_resume_and_reports(dataset, prepared_protocol, monke
         run_evaluation(out, dataset, "full", client_factory=factory)
     assert requests == []
     pilot = run_evaluation(out, dataset, client_factory=factory)
+    assert pilot["execution_limits"]["max_output_tokens_total"] == 3 * 20 * 2048
     assert pilot["stage_complete"] and pilot["pilot_ready"]
     rows = read_jsonl(out / "results.jsonl")
     assert len(rows) == 5 and len(requests) == 9
@@ -58,6 +59,7 @@ def test_pilot_full_pairing_resume_and_reports(dataset, prepared_protocol, monke
     run_evaluation(out, dataset, client_factory=factory)
     assert len(requests) == 9  # Resume never reruns completed pilot tasks.
     full = run_evaluation(out, dataset, "full", client_factory=factory)
+    assert full["execution_limits"]["max_output_tokens_total"] == 2 * 3 * 20 * 2048
     assert full["stage_complete"] and full["n_cases"] == 2
     rows = read_jsonl(out / "results.jsonl")
     assert len(rows) == 10 and len(requests) == 18
@@ -121,3 +123,24 @@ def test_cli_freeze_analyze_and_no_overwrite(dataset, prepared_protocol, tmp_pat
     assert main(["analyze", "--out", str(out)]) == 0
     assert (out / "report.json").exists()
     assert not (out / "reservations.jsonl").exists()
+
+
+def test_cli_token_revision_reuses_ids_and_higher_caps_end_to_end(dataset, prepared_protocol, tmp_path, monkeypatch, capsys):
+    parent, original_out, split_path = prepared_protocol
+    before = (original_out / "protocol.json").read_bytes()
+    revised_out = tmp_path / "revised"
+    assert main(["prepare", "--dataset", str(dataset), "--split", str(split_path),
+        "--out", str(revised_out), "--expected-test-incidents", "2", "--pilot-cases", "1",
+        "--budgets", "2", "--max-output-tokens", "4096",
+        "--cohort-from", str(original_out / "protocol.json")]) == 0
+    capsys.readouterr()
+    revised = json.loads((revised_out / "protocol.json").read_text())
+    assert revised["parent_protocol_id"] == parent["protocol_id"]
+    assert revised["records"] == parent["records"]
+    assert (original_out / "protocol.json").read_bytes() == before
+    factory, requests = fake_model(monkeypatch)
+    report = run_evaluation(revised_out, dataset, client_factory=factory)
+    assert report["pilot_ready"]
+    assert all(r["max_output_tokens"] == 4096 for r in requests)
+    assert all(r["output_cap"] == 4096 for r in read_jsonl(revised_out / "reservations.jsonl"))
+    assert report["execution_limits"]["max_output_tokens_total"] == 3 * 20 * 4096
