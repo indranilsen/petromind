@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "petromind"
+version = "0.1.0"
+description = "Label-blinded, budgeted industrial fault investigation tools"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24,<3", "pandas>=2.0,<3", "pyarrow>=14,<24", "networkx>=3,<4"]
+
+[project.optional-dependencies]
+test = ["pytest>=8,<10"]
+experiments = ["scikit-learn>=1.2,<2"]
+
+[project.scripts]
+petromind-demo = "petromind.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["petromind*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+filterwarnings = ["error"]
