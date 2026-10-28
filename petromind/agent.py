@@ -222,7 +222,7 @@ def run_tool_agent(session, client, config, *, instructions, tools, initial_hist
                 ("No diagnosis has been submitted. Use the registered tools to gather evidence, "
                  "then call submit_diagnosis. Plain text is not a submission."
                  if submission_reason == "diagnosis_submitted" else
-                 "No terminal assessment has been submitted. Use submit_assessment; plain text is not a submission.")}]})
+                 "No terminal assessment has been submitted. Use one of the registered assessment submission tools; plain text is not a submission.")}]})
             continue
         stalls = 0
         seen_ids.update(current_ids)

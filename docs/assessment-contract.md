@@ -1,4 +1,17 @@
-# Assessment reliability contract v2.1
+# Decision-specific assessment tools v3
+
+The active model-facing contract is `assessment-tools-v3`, documented in
+[the schema simplification review](assessment-tools-v3.md). It offers four
+decision-specific tools and normalizes their accepted calls into the existing
+`assessment-contract-v2.1` result schema. The universal `submit_assessment` tool
+is no longer registered or accepted by the agent dispatcher.
+
+The remainder describes the retained canonical evidence validator and its
+historical v2.1 introduction. Its provenance, physical-evidence checks and
+repair ceiling still apply. The new interface requires a fresh protocol; the
+original pilot artifacts remain unchanged.
+
+## Canonical assessment reliability contract v2.1
 
 See the [v2 run review and v2.1 correction](milestone4-v2-review.md). Tool descriptions
 now disclose alternative-support rules before submission; alternative errors carry
@@ -147,6 +160,8 @@ New protocols freeze `assessment_contract_version` and `assessment_repair_limit=
 Old protocols cannot resume against changed code. The existing
 `prepare --cohort-from OLD/protocol.json` path can create a fresh reliability
 revision, preserving original cases, IDs, pilot and method order, initial
-hypotheses/evidence, model, prompt, runtime, prices and scientific gate. It links
+hypotheses/evidence, model, original diagnostic policy, runtime, prices and scientific gate.
+The new tool-selection sentence and full tool schemas are separately versioned
+and hashed; see the v3 review. It links
 the parent and copies no outcomes. This option does not authorize a paid run;
 review the validator/repair changes first. Never edit v1 or retry only its failure.

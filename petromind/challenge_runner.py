@@ -12,7 +12,7 @@ from .audit import canonical
 from .baselines import GaussianEvidence
 from .challenge_analysis import build_challenge_report
 from .challenge_protocol import METHODS, VARIANTS, validate_development
-from .challenger import ChallengeSession, observe_adaptively, run_challenger
+from .challenger import SUBMISSION_TOOLS, ChallengeSession, observe_adaptively, run_challenger
 from .eval_protocol import digest
 from .eval_runner import EvaluationBudget, append_json, audit_metrics, read_jsonl, usage_and_cost
 from .meta_api import MetaResponsesClient
@@ -153,10 +153,10 @@ def run_challenge_evaluation(directory, dataset, stage="pilot", *, max_requests=
                 "well_group": next(r["well_group"] for r in protocol["records"] if r["case_id"] == task["case_id"]),
                 "assessment_validation_errors": [{k: value[k] for k in
                     ("validation_code", "field", "correction", "submission_attempt", "repairs_remaining", "contract_version",
-                     "validation_context", "underlying_validation_code", "underlying_field")
-                    if k in value} for a in session.audit_trail if a.tool == "submit_assessment"
+                     "validation_context", "underlying_validation_code", "underlying_field", "tool_contract_version", "submission_tool")
+                    if k in value} for a in session.audit_trail if a.tool in SUBMISSION_TOOLS
                     for value in [json.loads(a.result_json)] if "error" in value],
-                "rejected_assessment_attempts": sum(a.tool == "submit_assessment" and
+                "rejected_assessment_attempts": sum(a.tool in SUBMISSION_TOOLS and
                     "error" in json.loads(a.result_json) for a in session.audit_trail)}
             append_json(trace, {"kind": "audit_snapshot", "entries": [asdict(a) for a in session.audit_trail]})
             append_json(directory / "results.jsonl", row)

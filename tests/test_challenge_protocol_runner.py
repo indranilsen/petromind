@@ -74,8 +74,7 @@ def factory(monkeypatch):
             steps.append(("get_equipment_neighbors", {"sensor_name": "P-TPT"}))
         if "search_similar_incidents" in tool_names:
             steps.append(("search_similar_incidents", {"top_k": 3}))
-        steps.append(("submit_assessment", {"decision": "INSUFFICIENT_EVIDENCE", "confidence": .4,
-            "alternative_fault_type": None, "relationships": [], "uncertainty": "Synthetic test only.",
+        steps.append(("submit_insufficient_evidence", {"confidence": .4, "relationships": [], "uncertainty": "Synthetic test only.",
             "claims": [{"category": "uncertainty", "sensor_name": sensor, "field": "median",
                         "value": obs[sensor]["median"], "interpretation": "Requires review.",
                         "source_id": next(k for k,v in context["evidence_sources"].items() if v.get("sensor_name") == sensor),
@@ -181,3 +180,60 @@ def test_validation_revision_preserves_cohort_ids_pilot_settings_and_gate(datase
     parent["gate"]["false_challenge_rate_max"] = .9
     with pytest.raises(ValueError, match="modified"):
         freeze_development(dataset, prepared_protocol[2], n_cases=12, pilot_cases=1, cohort_from=parent)
+
+
+@pytest.mark.parametrize("field", ["tool_contract_version", "tool_schema_digest", "model_instructions_digest"])
+def test_old_or_mismatched_submission_interface_requires_fresh_protocol(dataset, development, field):
+    protocol, _ = development
+    protocol = json.loads(json.dumps(protocol))
+    protocol.pop(field)
+    protocol["protocol_id"] = digest({k: v for k, v in protocol.items() if k != "protocol_id"})
+    with pytest.raises(ValueError, match="new protocol"):
+        validate_development(protocol, dataset)
+
+
+def test_schema_revision_links_parent_without_modifying_it(dataset, development, prepared_protocol):
+    from petromind.challenger import INSTRUCTIONS, MODEL_INSTRUCTIONS, TOOL_CONTRACT_VERSION
+    parent, _ = development
+    parent = json.loads(json.dumps(parent))
+    for field in ("tool_contract_version", "tool_schema_digest", "model_instructions_digest"):
+        parent.pop(field)
+    parent["prompt_version"] = "petromind-challenger-v1"
+    parent["protocol_id"] = digest({k: v for k, v in parent.items() if k != "protocol_id"})
+    original = json.dumps(parent, sort_keys=True)
+    revised = freeze_development(dataset, prepared_protocol[2], n_cases=12, pilot_cases=1, cohort_from=parent)
+    assert json.dumps(parent, sort_keys=True) == original
+    assert revised["parent_protocol_id"] == parent["protocol_id"]
+    assert revised["tool_contract_version"] == TOOL_CONTRACT_VERSION
+    assert revised["prompt_digest"] == digest(INSTRUCTIONS) == parent["prompt_digest"]
+    assert revised["model_instructions_digest"] == digest(MODEL_INSTRUCTIONS)
+    assert revised["model_instructions_digest"] != revised["prompt_digest"]
+    assert revised["selected"] == parent["selected"] and revised["gate"] == parent["gate"]
+    assert revised["pilot_case_ids"] == parent["pilot_case_ids"]
+    validate_development(revised, dataset)
+
+
+def test_runner_exports_sanitized_rejections_from_new_submission_family(dataset, development, monkeypatch):
+    from petromind.challenger import TOOL_CONTRACT_VERSION
+    monkeypatch.setenv("MODEL_API_KEY", "synthetic-test-placeholder")
+    _, out = development
+    def respond(request):
+        body = json.loads(request.content)
+        count = sum(item.get("type") == "function_call_output" for item in body["input"])
+        return httpx.Response(200, json={"status": "completed", "error": None,
+            "output": [{"type": "function_call", "name": "submit_support",
+                        "call_id": f"reject{count}", "arguments": '{}'}]})
+    client = partial(MetaResponsesClient, transport=httpx.MockTransport(respond))
+    report = run_challenge_evaluation(out, dataset, client_factory=client)
+    assert not report["pilot_ready"]
+    rows = [r for r in read_jsonl(out / "results.jsonl") if r["method"] != "baseline"]
+    assert len(rows) == 3
+    for row in rows:
+        assert row["assessment"] is None and row["rejected_assessment_attempts"] == 2
+        assert row["reason"] == "assessment_repeated_invalid_submission"
+        assert row["audit_valid"] and row["requests"] == 2
+        diagnostics = row["assessment_validation_errors"]
+        assert [d["validation_code"] for d in diagnostics] == ["missing_submission_field", "repeated_invalid_submission"]
+        assert all(d["submission_tool"] == "submit_support" and
+                   d["tool_contract_version"] == TOOL_CONTRACT_VERSION for d in diagnostics)
+        assert all("true_event" not in d and "claims" not in d for d in diagnostics)
