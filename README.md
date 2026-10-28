@@ -1,8 +1,8 @@
 # PetroMind
 
 Milestone 1: a tested, label-blinded investigation framework for industrial
-fault diagnosis with a maximum of **five unique sensor queries**. Meta Muse
-integration is Milestone 2 and is not included here.
+fault diagnosis with a maximum of **five unique sensor queries**. An optional
+Milestone 2 Muse Spark tool runner is also available (see below).
 
 ## Setup and demonstration
 
@@ -137,8 +137,9 @@ about real 3W performance. GitHub Actions runs the suite on Python 3.10 and 3.12
 baselines. Install the `experiments` extra for their original commands. They
 retain their historical split protocols/results; they have **not** been silently
 migrated or re-evaluated under the new split. All new comparison runners must
-use `WellSplit` / `prepare_investigation` for paired evaluation. No Muse API,
-fine-tuning, dataset, credentials, or industrial control actions are included.
+use `WellSplit` / `prepare_investigation` for paired evaluation. No fine-tuning,
+dataset, credentials, or industrial control actions are included. Muse API calls
+are opt-in through the separate runner below; the original demo stays scripted.
 
 The initial repository commit contains preparatory experiments described in the
 handoff; its October 27 commit timestamp does not establish when that code was
@@ -156,3 +157,91 @@ when you need the separate evaluator or custom split. Its old public path/label
 attributes and `.evaluate()` method are removed. `IncidentRetriever` now takes
 training incident records plus an explicit `WellSplit`; the unsafe constructor
 that accepted just a root and target-well exclusion is intentionally removed.
+
+## Milestone 2: Muse Spark tool investigation
+
+The optional runner lets Muse select sensor/graph/retrieval calls and submit a
+diagnosis through the existing Python-enforced session. It does not automatically
+select sensors or substitute a scripted diagnosis when the model fails. The
+Milestone 1 CLI and the three exploratory scripts keep their behavior.
+
+Install in your Python 3.10+ environment:
+
+```bash
+python -m pip install -e '.[test,agent,experiments]'
+python -m pytest -q
+```
+
+Create a key in the [Meta developer dashboard](https://dev.meta.ai/). In zsh, load
+it without putting the secret in a command or shell history:
+
+```zsh
+read -rs 'MODEL_API_KEY?Paste your Meta API key: '
+echo
+export MODEL_API_KEY
+```
+
+If you already exported the key for the API smoke test, reuse that same terminal.
+The runner reads `MODEL_API_KEY` from the environment; it does not load `.env`
+automatically, accept a key as a CLI argument, or include it in trace files.
+
+```bash
+python scripts/demo_muse.py --dataset ../3W/dataset --budget 5 \
+  --trace .petromind/muse-run-001.jsonl --reveal
+```
+
+The model receives constant public 3W fault names/sensor context and only the
+label-blinded session tools. The default dataset case and frozen split are the
+same as the scripted demo. It chooses its own measurements, may stop early, and
+must cite available observed sensors when submitting. Confidence is the model's
+subjective self-report, not a calibrated probability. A successful exit requires
+an accepted `submit_diagnosis`; plain model text is not a submission.
+
+`--reveal` runs the independent evaluator only after a successful submission.
+Failures exit 2, report a static reason code and never reveal the target label.
+The optional JSONL trace flushes each event immediately and refuses to overwrite
+an existing file; use a fresh filename for subsequent runs. Trace output contains
+tool arguments sanitized by the session, actual results, audit hashes, request
+counts, reported token usage, model/configuration and prompt version/hash. Raw
+assistant text, reasoning, opaque replay blobs, API keys, vendor error messages,
+source filenames and source paths are excluded. A trace with `--reveal` has an
+evaluation-only final record; never feed that record into a future investigation.
+
+The integration follows Meta's [Responses protocol](https://dev.meta.ai/docs/protocols/responses)
+and [tool calling](https://dev.meta.ai/docs/tool-calling) documentation. Requests
+use `https://api.meta.ai/v1/responses`, `store: false`, and encrypted reasoning
+replay; opaque reasoning items and assistant commentary phases are carried across
+turns in memory, but never displayed/exported. Disabling response persistence
+does not make a claim about broader provider logging or data-retention policy.
+There are no built-in web, filesystem, code-execution or evaluator tools.
+
+The public taxonomy/measurement context is attributed to Petrobras 3W 2.0.0,
+[dataset.ini](https://github.com/petrobras/3W/blob/main/dataset/dataset.ini), source
+blob `4c4799e80e04a9cf8b10cb3f9a23f1c487797cc9` (CC BY 4.0). Definitions and units
+do not verify the illustrative graph edges or any particular well's topology.
+
+Default safeguards: at most 20 model turns, 40 dispatched tool calls, 24 HTTP
+attempts, 2 retries per request, 2,048 generated tokens per attempt (including
+reasoning), and 40,960 conservatively reserved output tokens across attempts.
+The transport reserves the entire per-attempt cap even for failures, rather than
+assuming failed attempts were free. Input tokens and rates still affect actual
+API charges; these bounds are not a dollar spend cap. Use your Meta account's
+billing controls as well. The run deadline is 300 seconds, with per-operation
+HTTP timeouts up to 60 seconds. Network timeout enforcement is best-effort; slow
+responses are rejected before tools are executed if the run deadline has passed.
+Responses and accumulated request payloads are also size-limited.
+
+Only HTTP 429/500/502/503 are retried, with bounded backoff and `Retry-After`.
+A requested delay above 30 seconds causes a safe stop instead of retrying early.
+Authentication/billing/permission errors, timeouts and 504 are not blindly
+retried. Redirects and environment proxy routing are disabled. Tune limits with
+`--max-turns`, `--max-tool-calls`, `--max-requests`, `--max-retries`,
+`--max-output-tokens`, `--output-budget`, `--reasoning`, `--timeout` and
+`--run-timeout`. Increasing an output cap may require increasing the total
+reservation budget too. The model ID can be set with `--model`.
+
+Tests use mocked HTTP responses and fabricated Parquet fixtures, exercising the
+full runner/CLI, replay, validation, limits, retries, refusal and failure paths.
+No tests spend API credits. The user's authentication smoke test succeeded with
+Muse Spark 1.3; a complete real-model tool investigation must still be run locally
+to validate account-specific API behavior. No model accuracy gain is claimed.
