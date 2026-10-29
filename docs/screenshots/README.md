@@ -18,13 +18,22 @@ summaries; the raw dataset was unavailable here. No synthetic raw data appears.
 
 ![Mobile verdict](verdict-mobile.webp)
 
-Visual review: removed the dashboard, five-step navigation, inspector sidebar,
-unrelated sensor labels, default charts and permanent provenance link. The opening
-has two friendly-name pressure indicators and one primary action. The same well
-remains in scene 2. The two-click verdict becomes the visual centerpiece. Original
-findings, historical overlap, raw values and sources are behind the verdict-only
-**Explore evidence** drawer. The exact quote is captured Muse output; surrounding
-story and next-evidence requests are labeled editorial.
+Visual review: the three-scene layout is retained. Pressure values, signed changes,
+and warm/cool marker states now make scrubbing visible. Two pressures remain
+primary; choke opening is a smaller measured indicator, while two temperature
+indicators honestly say “Not observed in audit.” No chart appears by default.
+The diagnosis explains the measurements, proposed restriction and conditional
+plausibility. Muse's three checks precede the verdict, followed by an exact
+captured excerpt and a plain-language missing premise. Full outputs remain in
+**Explore evidence**.
+
+Compare actual endpoints: [start — desktop](replay-start-desktop.webp) →
+[end — desktop](well-desktop.webp), or [start — mobile](replay-start-mobile.webp) →
+[end — mobile](well-mobile.webp). Gray starts become orange higher readings in
+this case; the second case also includes a blue lower reading. Colors do not
+encode danger. These are real captured endpoint values, not intermediate samples.
+
+See the [exact change inventory and boundaries](../ux-refinement.md).
 
 Both cases were visually reviewed on desktop/mobile. Browser assertions separately
 check that all three desktop scenes fit without scrolling, the main actions remain

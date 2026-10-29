@@ -30,22 +30,42 @@ const fmt = (v, d = 2) =>
   v === null || v === undefined
     ? "Not observed"
     : Number(v).toLocaleString("en-US", { maximumFractionDigits: d });
-const scaled = (s, v) => (v === null ? null : v / 1e6);
-const unitDisplay = () => "MPa";
+const pressure = (s) => s.startsWith("P-");
+const scaled = (s, v) => (v === null ? null : pressure(s) ? v / 1e6 : v);
+const unitDisplay = (s) =>
+  pressure(s) ? "MPa" : c().sensor_definitions[s]?.unit || "unknown";
 const value = (s, v) =>
-  v === null ? "Not observed" : `${fmt(scaled(s, v), 3)} MPa`;
-const names = { "P-PDG": "Downhole pressure", "P-TPT": "Tree pressure" };
+  v === null ? "Not observed" : `${fmt(scaled(s, v), 3)} ${unitDisplay(s)}`;
+const names = {
+  "P-PDG": "Downhole pressure",
+  "P-TPT": "Tree pressure",
+  "ABER-CKGL": "Choke opening",
+  "T-TPT": "Tree temperature",
+  "T-PDG": "Downhole temperature",
+};
+const sensorPositions = {
+  "P-TPT": "tree",
+  "P-PDG": "down",
+  "ABER-CKGL": "choke",
+  "T-TPT": "tree-temp",
+  "T-PDG": "down-temp",
+};
 function state(s) {
-  const stream = c().replay.series[s],
-    sample = stream.samples[index];
+  const stream = c().replay.series[s];
+  if (!stream)
+    return {
+      value: null,
+      quality: "unobserved",
+      trend: "missing",
+      label: "— Not observed in audit",
+    };
+  const sample = stream.samples[index];
   if (sample.quality !== "valid")
     return {
       ...sample,
       trend: sample.quality,
       label:
-        sample.quality === "invalid"
-          ? "! Invalid reading"
-          : "— Missing reading",
+        sample.quality === "invalid" ? "! Invalid reading" : "— Unavailable",
     };
   const delta =
     stream.reference === null ? null : sample.value - stream.reference;
@@ -64,10 +84,8 @@ function state(s) {
       delta === null
         ? "— No reference"
         : delta === 0
-          ? "→ At starting value"
-          : delta > 0
-            ? "↑ Above starting value"
-            : "↓ Below starting value",
+          ? "→ Unchanged"
+          : `${delta > 0 ? "↑ +" : "↓ −"}${fmt(scaled(s, Math.abs(delta)), 3)} ${unitDisplay(s)} vs start`,
   };
 }
 function resetPlayback() {
@@ -95,12 +113,12 @@ function render() {
     current === 0
       ? [
           "Two pressures rose.",
-          "A plausible cause.\nBut is it proven?",
+          "The model proposes\na hydrate restriction.",
           "The pressures really rose.\nBut that doesn’t prove the cause.",
         ]
       : [
           "Two pressures.\nDifferent directions.",
-          "A familiar pattern.\nBut is it the same cause?",
+          "The model proposes\na closed safety valve.",
           "The pattern matches.\nThat doesn’t prove the cause.",
         ];
   $("headline").textContent = headings[scene];
@@ -110,8 +128,10 @@ function render() {
         ? "Two sensors in a production well recorded higher ending pressures."
         : "Downhole pressure rose. Tree pressure fell."
       : scene === 1
-        ? "A statistical diagnosis becomes a claim to investigate."
-        : "Measured facts and proven causes are different things.";
+        ? "An observed pressure change. A possible explanation to check."
+        : "Muse checks whether the proposed cause follows from the evidence.";
+  $("museChecks").hidden = scene !== 2;
+  $("trendLegend").hidden = scene !== 0;
   $("stage").hidden = scene === 2;
   $("diagnosis").hidden = scene !== 1;
   $("discovery").hidden = scene !== 2;
@@ -125,6 +145,19 @@ function render() {
     ),
     el("span", "→"),
   );
+  $("diagnosisObservations").replaceChildren(
+    el(
+      "li",
+      current === 0
+        ? "Pressure near the top of the well increased."
+        : "Pressure near the top of the well decreased.",
+    ),
+    el("li", "Pressure deeper in the well increased."),
+  );
+  $("plausibility").textContent =
+    current === 0
+      ? "Why it might fit: a restriction could affect pressures in the system. This is a plausible hypothesis, not a verified rule for this well."
+      : "Why it might fit: the two pressure directions match a published valve-closure example. A match alone does not identify the cause.";
   $("cause").textContent =
     current === 0 ? "Service-line hydrate." : "Downhole safety-valve closure.";
   $("definition").textContent =
@@ -136,15 +169,18 @@ function render() {
       ? "“Both pressures rose. This establishes service-line hydrate.”"
       : "“These pressure directions match a published valve-closure example—not proof of root cause.”";
   $("observedSummary").textContent =
-    current === 0 ? "Downhole ↑  ·  Tree ↑" : "Downhole ↑  ·  Tree ↓";
+    current === 0 ? "Both pressures rose." : "Downhole ↑  ·  Tree ↓";
   $("causeSummary").textContent =
-    current === 0 ? "Service-line hydrate" : "Safety-valve closure";
+    current === 0 ? "“This proves hydrate.”" : "Safety-valve closure";
   const f = c().audits.grounded.output.findings[2];
-  $("museQuote").textContent = f.justification;
+  // An exact first-sentence excerpt; the full original remains in the drawer.
+  $("museQuote").textContent =
+    f.justification.split(". ")[0] +
+    (f.justification.split(". ").length > 1 ? "." : "");
   $("nextEvidence").textContent =
     current === 0
-      ? "What’s missing? A verified rule linking this pressure pattern specifically to hydrate. Request the applicable well documentation and a validated way to distinguish it from other causes. No verified discriminating test is supplied."
-      : "The documented example supports this limited comparison. Establishing valve closure would need additional evidence, such as valve records and validated criteria distinguishing other causes—not just a matching pattern.";
+      ? "Missing: a verified rule showing this pressure pattern identifies hydrate rather than another cause. Next: applicable well documentation and validated diagnostic criteria; no verified discriminating test is supplied."
+      : "The published comparison is supported. To establish valve closure itself, request valve records and validated criteria that distinguish other causes; those are not supplied by a matching example.";
   renderTelemetry();
 }
 function renderTelemetry() {
@@ -168,21 +204,23 @@ function renderTelemetry() {
       ? "Recorded data · 10×"
       : "Captured endpoints · raw replay unavailable";
   $("sensors").replaceChildren(
-    ...["P-TPT", "P-PDG"].map((s) => {
+    ...Object.keys(sensorPositions).map((s) => {
       const st = state(s),
-        b = el(
-          "button",
-          undefined,
-          `sensor-hit ${s === "P-TPT" ? "tree" : "down"} ${st.trend}`,
-        );
+        primary = pressure(s);
+      const b = el(
+        "button",
+        undefined,
+        `sensor-hit ${sensorPositions[s]} ${primary ? "claim-sensor" : "secondary-sensor"} ${st.trend}`,
+      );
+      b.dataset.sensor = s;
       b.setAttribute(
         "aria-label",
-        `${names[s]}: ${st.label}. Show recorded value`,
+        `${names[s]}: ${value(s, st.value)}, ${st.label}. Show details`,
       );
-      b.append(
-        el("span", names[s], "sensor-name"),
-        el("span", st.label, "sensor-direction"),
-      );
+      b.append(el("span", names[s], "sensor-name"));
+      if (st.quality === "valid")
+        b.append(el("strong", value(s, st.value), "sensor-reading"));
+      b.append(el("span", st.label, "sensor-direction"));
       if (s === "P-TPT")
         b.append(el("small", "Equipment near the top of the well"));
       b.onclick = () => {
@@ -195,20 +233,21 @@ function renderTelemetry() {
       return b;
     }),
   );
-  // Halo size is a deterministic function of the selected real sample. No
-  // autonomous pulsing, flow animation, interpolated measurements or safety cue.
-  for (const [s, id] of [
-    ["P-TPT", "treeHalo"],
-    ["P-PDG", "downHalo"],
+  // State colors reflect comparison with the first valid observation, not
+  // pressure limits or a fabricated fault path. Marker size uses relative change.
+  for (const [s, id, point] of [
+    ["P-TPT", "treeHalo", "treePoint"],
+    ["P-PDG", "downHalo", "downPoint"],
   ]) {
     const st = state(s),
       ref = r.series[s].reference;
     const radius =
       st.quality === "valid" && ref
-        ? 28 + Math.min(18, Math.abs((st.value - ref) / ref) * 300)
-        : 28;
+        ? 30 + Math.min(28, Math.abs((st.value - ref) / ref) * 500)
+        : 30;
     $(id).setAttribute("r", String(radius));
-    $(id).classList.toggle("falling", st.trend === "falling");
+    $(id).setAttribute("class", `gauge-halo ${st.trend}`);
+    $(point).setAttribute("class", `gauge-point ${st.trend}`);
   }
   if ($("sensorDialog").open) renderSensor();
 }
@@ -220,14 +259,23 @@ function renderSensor() {
     el("strong", value(selected, st.value)),
     el("span", st.label),
   );
-  $("sensorChart").replaceChildren(chart(selected));
+  $("sensorChart").replaceChildren(
+    ...(c().replay.series[selected]
+      ? [chart(selected)]
+      : [
+          el(
+            "p",
+            "No measurements were supplied for this sensor. No value or trend is inferred.",
+          ),
+        ]),
+  );
   const box = $("sensorNotes");
   box.replaceChildren(
     el("p", `${selected} · ${d.description}`),
     el("p", `${c().replay.reference_note} ${c().replay.timing}`),
     el(
       "p",
-      `Recorded units: ${d.unit}. Display: MPa = Pa ÷ 1,000,000. Color and arrows show change, not danger or safety. ${st.quality === "invalid" ? "Numerically invalid sample; no physical danger threshold inferred." : ""}`,
+      `Recorded units: ${d.unit}. ${pressure(selected) ? "Display: MPa = Pa ÷ 1,000,000. " : ""}Color and arrows show change, not danger or safety. ${st.quality === "invalid" ? "Numerically invalid sample; no physical danger threshold inferred." : ""}`,
     ),
   );
   const link = el("a", "Documented sensor definition ↗");

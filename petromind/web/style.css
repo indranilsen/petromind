@@ -1086,3 +1086,420 @@ pre {
     margin-top: 16px;
   }
 }
+/* Focused refinement: visible measured values, not another dashboard. */
+:root {
+  --warm: #ffb17a;
+  --cool: #8bc7ff;
+  --neutral: #a9b7bf;
+}
+.sensor-hit {
+  gap: 5px;
+  border: 1px solid transparent;
+  padding: 10px 12px;
+}
+.sensor-hit.tree {
+  top: 22%;
+}
+.sensor-hit.down {
+  top: 61%;
+}
+.sensor-hit.rising {
+  border-color: #ffb17a35;
+  background: #ffb17a0a;
+}
+.sensor-hit.falling {
+  border-color: #8bc7ff35;
+  background: #8bc7ff0a;
+}
+.sensor-hit.stable {
+  border-color: #a9b7bf24;
+  background: #a9b7bf06;
+}
+.sensor-hit.missing,
+.sensor-hit.invalid {
+  border: 1px dashed #788c9940;
+}
+.sensor-reading {
+  font-size: 24px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.6px;
+}
+.sensor-direction {
+  font-size: 12px;
+}
+.sensor-hit.rising .sensor-reading,
+.sensor-hit.rising .sensor-direction {
+  color: var(--warm);
+}
+.sensor-hit.falling .sensor-reading,
+.sensor-hit.falling .sensor-direction {
+  color: var(--cool);
+}
+.sensor-hit.stable .sensor-reading,
+.sensor-hit.stable .sensor-direction {
+  color: var(--neutral);
+}
+.sensor-hit.secondary-sensor {
+  gap: 3px;
+  padding: 7px 10px;
+  min-height: 44px;
+  max-width: 205px;
+  opacity: 0.78;
+}
+.secondary-sensor .sensor-name {
+  font-size: 12px;
+  letter-spacing: -0.1px;
+  color: #b4c3c7;
+}
+.secondary-sensor .sensor-reading {
+  font-size: 15px;
+  letter-spacing: 0;
+}
+.secondary-sensor .sensor-direction {
+  font-size: 10px;
+}
+.sensor-hit.choke {
+  left: 17%;
+  top: 16%;
+}
+.sensor-hit.tree-temp {
+  left: 65%;
+  top: 53%;
+}
+.sensor-hit.down-temp {
+  left: 13%;
+  top: 86%;
+}
+.secondary-geometry {
+  position: absolute;
+  top: 13%;
+  left: 18%;
+  font-size: 25px;
+  color: var(--neutral);
+}
+#treeHalo,
+#downHalo {
+  fill: #a9b7bf12;
+  stroke: #a9b7bf38;
+  stroke-width: 1;
+  opacity: 1;
+}
+#treeHalo.rising,
+#downHalo.rising {
+  fill: #ff9a5035;
+  stroke: #ffb17a88;
+}
+#treeHalo.falling,
+#downHalo.falling {
+  fill: #70b7ff35;
+  stroke: #8bc7ff88;
+}
+.gauge-point.stable {
+  fill: var(--neutral);
+}
+.gauge-point.rising {
+  fill: var(--warm);
+}
+.gauge-point.falling {
+  fill: var(--cool);
+}
+.gauge-point.missing,
+.gauge-point.invalid {
+  fill: #0b1724;
+  stroke: #9ab0ba;
+  stroke-dasharray: 3 3;
+  stroke-width: 2;
+}
+.trend-legend {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--neutral);
+  margin: 12px 0 0;
+}
+.trend-legend .warm {
+  color: var(--warm);
+}
+.trend-legend .cool {
+  color: var(--cool);
+}
+.trend-legend small {
+  color: var(--muted);
+  font-size: 9px;
+}
+main[data-scene="1"] h1 {
+  font-size: 48px;
+}
+main[data-scene="1"] .sensor-hit.tree {
+  top: 20%;
+  left: 60%;
+}
+main[data-scene="1"] .sensor-hit.down {
+  top: 60%;
+  left: 1%;
+}
+main[data-scene="1"] .sensor-reading {
+  font-size: 21px;
+}
+main[data-scene="1"] .secondary-sensor {
+  display: none;
+}
+main[data-scene="1"] .secondary-geometry {
+  display: none;
+}
+.diagnosis {
+  width: 44%;
+  padding-right: 0;
+}
+main[data-scene="1"] .well-panel {
+  width: 56%;
+}
+.observed-copy {
+  margin: 0 0 22px;
+}
+.observed-copy ul {
+  padding-left: 16px;
+  margin: 8px 0 0;
+  color: #d5e1df;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.diagnosis h2 {
+  font-size: 31px;
+  margin-bottom: 12px;
+}
+.diagnosis > p:not(.eyebrow) {
+  max-width: 390px;
+  font-size: 14px;
+  line-height: 1.55;
+  margin: 10px 0;
+}
+.diagnosis .plausibility {
+  color: #c7d8d4;
+}
+.claim-copy {
+  margin-top: 18px;
+}
+.claim-copy p {
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 8px 0 0;
+}
+.muse-checks {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  padding: 0;
+  list-style: none;
+  margin: 6px 0 22px;
+  font-size: 12px;
+  color: #c0d3d2;
+}
+.muse-checks li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.muse-checks b {
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  border: 1px solid #9de8cf40;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  color: var(--mint);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+main[data-scene="2"] h1 {
+  font-size: 50px;
+}
+main[data-scene="2"] .story-heading > .eyebrow {
+  margin-bottom: 15px;
+}
+.discovery {
+  margin-top: 24px;
+}
+.logic-chain {
+  margin-bottom: 22px;
+}
+.muse-finding {
+  padding: 18px 24px;
+}
+.next-evidence {
+  margin-top: 18px;
+}
+@media (max-width: 740px) {
+  .sensor-hit {
+    padding: 8px;
+    gap: 4px;
+  }
+  .sensor-hit.tree,
+  main[data-scene="0"] .sensor-hit.tree {
+    left: 54%;
+    top: 24%;
+    max-width: 175px;
+  }
+  .sensor-hit.down {
+    left: 1%;
+    top: 61%;
+    max-width: 175px;
+  }
+  .sensor-name {
+    font-size: 15px;
+  }
+  .sensor-reading {
+    font-size: 21px;
+  }
+  .sensor-direction {
+    font-size: 10px;
+  }
+  .sensor-hit small {
+    font-size: 9px;
+  }
+  .sensor-hit.secondary-sensor {
+    max-width: 170px;
+    padding: 6px 8px;
+  }
+  .secondary-sensor .sensor-name {
+    font-size: 11px;
+  }
+  .secondary-sensor .sensor-direction {
+    font-size: 9px;
+  }
+  .sensor-hit.choke {
+    left: 2%;
+    top: 17%;
+  }
+  .sensor-hit.tree-temp {
+    left: 54%;
+    top: 60%;
+  }
+  .sensor-hit.down-temp {
+    left: 1%;
+    top: 86%;
+  }
+  .secondary-geometry {
+    left: 5%;
+    top: 9%;
+  }
+  .well-panel {
+    height: 370px;
+  }
+  .stage {
+    min-height: 370px;
+    max-height: 400px;
+  }
+  .illustration-note {
+    bottom: 0;
+    font-size: 8px;
+  }
+  .trend-legend {
+    gap: 10px;
+    font-size: 9px;
+    flex-wrap: wrap;
+    margin: 14px 0 4px;
+    row-gap: 4px;
+  }
+  .trend-legend small {
+    width: 100%;
+    text-align: center;
+    font-size: 8px;
+  }
+  main[data-scene="1"] h1 {
+    font-size: 34px;
+  }
+  main[data-scene="1"] .well-panel {
+    height: 155px;
+    width: 100%;
+  }
+  main[data-scene="1"] .sensor-hit.tree {
+    top: 9%;
+    left: 54%;
+  }
+  main[data-scene="1"] .sensor-hit.down {
+    top: 52%;
+    left: 1%;
+  }
+  main[data-scene="1"] .sensor-reading {
+    font-size: 17px;
+  }
+  main[data-scene="1"] .sensor-name {
+    font-size: 13px;
+  }
+  main[data-scene="1"] .sensor-direction {
+    font-size: 9px;
+  }
+  .diagnosis {
+    width: 100%;
+    padding: 14px 24px 16px;
+  }
+  .observed-copy {
+    margin: 0 0 13px;
+  }
+  .observed-copy ul {
+    font-size: 12px;
+    line-height: 1.5;
+    margin-top: 4px;
+  }
+  .diagnosis h2 {
+    font-size: 25px;
+    margin-bottom: 8px;
+  }
+  .diagnosis > p:not(.eyebrow) {
+    font-size: 12px;
+    margin: 7px 0;
+    line-height: 1.5;
+  }
+  .diagnosis .eyebrow {
+    font-size: 8px;
+    margin-bottom: 7px;
+    letter-spacing: 1.4px;
+  }
+  .claim-copy {
+    margin-top: 12px;
+  }
+  .claim-copy p {
+    font-size: 13px;
+    line-height: 1.5;
+    margin-top: 5px;
+  }
+  .muse-checks {
+    gap: 12px;
+    margin: 5px 0 20px;
+    font-size: 10px;
+    line-height: 1.4;
+    text-align: left;
+  }
+  .muse-checks li {
+    flex: 1;
+    gap: 5px;
+  }
+  .muse-checks b {
+    width: 18px;
+    height: 18px;
+    font-size: 9px;
+  }
+  main[data-scene="2"] h1 {
+    font-size: 31px;
+  }
+  main[data-scene="2"] #subtitle {
+    font-size: 12px;
+  }
+  .discovery {
+    margin-top: 20px;
+  }
+  .muse-finding {
+    padding: 16px 0;
+  }
+  .next-evidence {
+    font-size: 12px;
+  }
+  blockquote {
+    font-size: 15px;
+  }
+}

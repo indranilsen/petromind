@@ -23,6 +23,16 @@
     <main id="experience" data-scene="0">
       <section class="story-heading" aria-live="polite">
         <p id="chapter" class="eyebrow">01 / WHAT HAPPENED</p>
+        <ol
+          id="museChecks"
+          class="muse-checks"
+          hidden
+          aria-label="Editorial guide to Muse’s captured audit"
+        >
+          <li><b>1</b>Read the measurements</li>
+          <li><b>2</b>Consult engineering sources</li>
+          <li><b>3</b>Check the causal claim</li>
+        </ol>
         <h1 id="headline">Two pressures rose.</h1>
         <p id="subtitle">Two sensors in a production well recorded a change.</p>
       </section>
@@ -30,7 +40,7 @@
         <section
           id="wellPanel"
           class="well-panel"
-          aria-label="An illustrative production well and two pressure sensors"
+          aria-label="An illustrative production well and five sensor indicators"
         >
           <div class="ocean-glow"></div>
           <svg
@@ -124,13 +134,28 @@
               r="45"
               fill="url(#sensorGlow)"
             />
-            <circle cx="500" cy="241" r="5" class="gauge-point" />
-            <circle cx="500" cy="405" r="5" class="gauge-point" />
+            <circle
+              id="treePoint"
+              cx="500"
+              cy="241"
+              r="9"
+              class="gauge-point"
+            />
+            <circle
+              id="downPoint"
+              cx="500"
+              cy="405"
+              r="9"
+              class="gauge-point"
+            />
             <path d="M513 241H620L650 213" class="leader" />
             <path d="M487 405H374L345 374" class="leader" />
           </svg>
           <div id="sensors"></div>
-          <span class="illustration-note">Simplified illustration</span>
+          <div class="secondary-geometry" aria-hidden="true">◇</div>
+          <span class="illustration-note"
+            >Illustrative layout · generic sensor associations</span
+          >
         </section>
         <section
           id="diagnosis"
@@ -138,9 +163,16 @@
           hidden
           aria-label="The diagnostic claim"
         >
-          <p class="eyebrow">PROPOSED CAUSE</p>
+          <div class="observed-copy">
+            <span class="small-label"
+              >MEASURED OBSERVATIONS · CAPTURED WINDOW</span
+            >
+            <ul id="diagnosisObservations"></ul>
+          </div>
+          <p class="eyebrow">PROPOSED EXPLANATION · HYPOTHESIS</p>
           <h2 id="cause"></h2>
           <p id="definition"></p>
+          <p id="plausibility" class="plausibility"></p>
           <div class="claim-copy">
             <span class="small-label"
               >CONSTRUCTED CLAIM · EDITORIAL SUMMARY</span
@@ -171,16 +203,24 @@
         <div class="muse-finding">
           <div class="muse-label">
             <span class="spark">✧</span> MUSE SPARK
-            <span>Captured finding</span>
+            <span>Exact captured excerpt</span>
           </div>
           <blockquote id="museQuote"></blockquote>
         </div>
         <p id="nextEvidence" class="next-evidence"></p>
         <span class="editorial-label"
-          >Story and next steps: editorial explanation of the captured
-          audit</span
+          >Story and next steps: editorial guide to the captured audit</span
         >
       </section>
+      <div
+        id="trendLegend"
+        class="trend-legend"
+        aria-label="Sensor change legend"
+      >
+        <span class="warm">↑ Higher</span><span class="cool">↓ Lower</span
+        ><span>→ Unchanged</span><span>— Unavailable</span
+        ><small>vs first valid value · not danger</small>
+      </div>
       <div id="transport" class="transport">
         <button
           id="play"

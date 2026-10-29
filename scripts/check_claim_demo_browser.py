@@ -47,12 +47,12 @@ def main():
                 page.set_viewport_size({"width": width, "height": height})
                 page.locator("#caseSelect").select_option(str(case_index))
                 assert page.locator("#experience").get_attribute("data-scene") == "0"
-                assert page.locator(".sensor-hit").count() == 2
+                assert page.locator(".sensor-hit").count() == 5
                 assert page.locator("#inspectDetails").is_hidden()
                 assert page.locator(".chart-svg:visible").count() == 0
                 assert page.locator("#details").is_hidden()
                 assert page.locator("#progress").count() == 0
-                # No default identifiers, readings, citations, unrelated sensors.
+                # Friendly values and a limited secondary set, without a dashboard.
                 visible = page.locator("body").inner_text()
                 for excluded in ("P-PDG", "P-TPT", "ABER-CKGL", "API", "provenance"):
                     assert excluded not in visible
@@ -62,6 +62,42 @@ def main():
                 maximum = 599 if case["replay"]["mode"] == "raw" else 1
                 for position in (0, maximum):
                     page.locator("#slider").fill(str(position))
+                assert page.locator(".claim-sensor").count() == 2
+                assert page.locator(".secondary-sensor").count() == 3
+                assert (
+                    "Not observed in audit" in page.locator(".tree-temp").inner_text()
+                )
+                # Endpoints visibly change both numbers and marker colors.
+                page.locator("#slider").fill("0")
+                first = page.locator(".tree .sensor-reading").inner_text()
+                assert "stable" in page.locator("#treePoint").get_attribute("class")
+                if a.screenshots and case_index == 0:
+                    page.mouse.move(0, 0)
+                    page.screenshot(
+                        path=str(a.screenshots / f"replay-start-{viewport}.png")
+                    )
+                page.locator("#slider").fill(str(maximum))
+                assert page.locator(".tree .sensor-reading").inner_text() != first
+                assert ("rising" if case_index == 0 else "falling") in page.locator(
+                    "#treePoint"
+                ).get_attribute("class")
+                assert page.locator(".choke .sensor-reading").count() == (
+                    1 if case_index == 0 else 0
+                )
+                assert "not danger" in page.locator("#trendLegend").inner_text()
+                # A measured secondary uses its actual unit; an unobserved one has no chart.
+                page.locator(".choke").click()
+                assert ("53 %" if case_index == 0 else "Not observed") in page.locator(
+                    "#sensorValue"
+                ).inner_text()
+                page.keyboard.press("Escape")
+                page.locator(".tree-temp").click()
+                assert page.locator("#sensorChart .chart-svg").count() == 0
+                assert (
+                    "No measurements were supplied"
+                    in page.locator("#sensorChart").inner_text()
+                )
+                page.keyboard.press("Escape")
                 # Sensor is optional. Its modal contains one chart and real units.
                 page.locator(".sensor-hit.tree").click()
                 assert "MPa" in page.locator("#sensorValue").inner_text()
@@ -108,11 +144,16 @@ def main():
                 assert "prove the cause" in page.locator("#headline").inner_text()
                 assert (
                     page.locator("#museQuote").text_content()
-                    == (
-                        case["audits"]["grounded"]["output"]["findings"][2][
-                            "justification"
-                        ]
-                    )
+                    in case["audits"]["grounded"]["output"]["findings"][2][
+                        "justification"
+                    ]
+                )
+                assert page.locator("#museChecks li").count() == 3
+                assert (
+                    "rule" in page.locator("#nextEvidence").inner_text()
+                    if case_index == 0
+                    else "comparison is supported"
+                    in page.locator("#nextEvidence").inner_text()
                 )
                 headline = page.locator("#headline").inner_text()
                 page.locator("#inspectDetails").click()
@@ -151,10 +192,19 @@ def main():
                     timing="Synthetic software test only",
                     visibility="Synthetic UI-test samples, not 3W data",
                 )
-                for stream in r["series"].values():
+                for sensor, stream in r["series"].items():
+                    # Synthetic fixture only: zero is valid, one pressure rises,
+                    # the other falls, choke stays constant; gaps stay explicit.
                     stream["samples"] = [
                         {
-                            "value": None if i in (2, 3) else float(i + 1),
+                            "value": None
+                            if i in (2, 3)
+                            else (
+                                53.0
+                                if sensor == "ABER-CKGL"
+                                else (float(i) if sensor == "P-PDG" else float(600 - i))
+                                * 1e6
+                            ),
                             "quality": "missing"
                             if i == 2
                             else "invalid"
@@ -163,7 +213,7 @@ def main():
                         }
                         for i in range(600)
                     ]
-                    stream["reference"] = 1
+                    stream["reference"] = stream["samples"][0]["value"]
             testpage = browser.new_page(viewport={"width": 1440, "height": 900})
             testpage.on("pageerror", lambda e: errors.append(str(e)))
             testpage.route("**/api/cases", lambda route: route.fulfill(json=toy))
@@ -171,10 +221,23 @@ def main():
             testpage.locator(".sensor-hit").nth(1).wait_for()
             assert not testpage.locator("#play").is_disabled()
             testpage.locator("#slider").fill("2")
-            assert testpage.locator(".sensor-hit.missing").count() == 2
+            assert testpage.locator(".claim-sensor.missing").count() == 2
             testpage.locator("#slider").fill("3")
-            assert testpage.locator(".sensor-hit.invalid").count() == 2
+            assert testpage.locator(".claim-sensor.invalid").count() == 2
             testpage.locator("#slider").fill("0")
+            assert "0 MPa" in testpage.locator(".down .sensor-reading").inner_text()
+            assert "stable" in testpage.locator("#downPoint").get_attribute("class")
+            testpage.locator("#slider").fill("10")
+            assert testpage.locator(".down .sensor-reading").inner_text() == "10 MPa"
+            assert testpage.locator(".tree .sensor-reading").inner_text() == "590 MPa"
+            assert (
+                testpage.locator("#downPoint").evaluate("e => getComputedStyle(e).fill")
+                == "rgb(255, 177, 122)"
+            )
+            assert (
+                testpage.locator("#treePoint").evaluate("e => getComputedStyle(e).fill")
+                == "rgb(139, 199, 255)"
+            )
             testpage.locator("#play").click()
             testpage.wait_for_timeout(1250)
             assert int(testpage.locator("#slider").input_value()) > 0
