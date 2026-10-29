@@ -19,6 +19,12 @@ def main():
         q.add_argument("--capture", type=Path, required=True)
         if name == "serve":
             q.add_argument("--port", type=int, default=8765)
+            q.add_argument("--dataset", type=Path, default=Path("../3W/dataset"))
+            q.add_argument(
+                "--science-protocol",
+                type=Path,
+                default=Path(".petromind/science-m5-v1/protocol.json"),
+            )
             q.add_argument(
                 "--enable-live", type=Path, metavar="FRESH_PROTOCOL_DIRECTORY"
             )
@@ -44,7 +50,14 @@ def main():
         elif a.command == "prepare-live":
             print(json.dumps(freeze_live(a.capture, a.out)))
         else:
-            app = DemoApp(a.capture, a.enable_live)
+            source = (
+                json.loads(a.science_protocol.read_text())
+                if a.dataset.is_dir() and a.science_protocol.is_file()
+                else None
+            )
+            app = DemoApp(
+                a.capture, a.enable_live, dataset=a.dataset, science_protocol=source
+            )
             server = make_server(app, a.port)
             print(
                 f"PetroMind: http://127.0.0.1:{server.server_port} — captured replay; live {'explicitly enabled' if a.enable_live else 'disabled'}",

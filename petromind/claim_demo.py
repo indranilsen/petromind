@@ -65,11 +65,49 @@ def freeze_live(capture, out, max_cost=2):
 
 class DemoApp:
     def __init__(
-        self, capture, live_directory=None, client_factory=MetaResponsesClient
+        self,
+        capture,
+        live_directory=None,
+        client_factory=MetaResponsesClient,
+        *,
+        dataset=None,
+        science_protocol=None,
     ):
         self.cases = demo_cases(capture)
         self.review = review_capture(capture)
-        self.protocol, _ = load_capture(capture)
+        self.protocol, captured_rows = load_capture(capture)
+        from .incident_replay import attach_replay, definitions
+
+        for case in self.cases:
+            case["sensor_definitions"] = definitions()
+            case["replay"] = attach_replay(
+                case, self.protocol, dataset=dataset, science_protocol=science_protocol
+            )
+            case["captured_activity"] = {}
+            for method in ("grounded", "ungrounded"):
+                row = next(
+                    r
+                    for r in captured_rows
+                    if r["task_id"] == case["id"] and r["method"] == method
+                )
+                activities = []
+                for entry in row["audit"]:
+                    value = json.loads(entry["result_json"])
+                    args = json.loads(entry["arguments_json"])
+                    activities.append(
+                        {
+                            "sequence": entry["sequence"],
+                            "tool": entry["tool"],
+                            "topic": args.get("topic"),
+                            "error": value.get("error"),
+                            "verdict": value.get("verdict"),
+                            "fact_count": len(value.get("facts", [])),
+                            "match_overlap": [
+                                m["shared_sensors"] for m in value.get("matches", [])
+                            ],
+                        }
+                    )
+                case["captured_activity"][method] = activities
         self.live_directory = Path(live_directory) if live_directory else None
         self.client_factory = client_factory
         self.lock = threading.Lock()

@@ -253,7 +253,7 @@ def test_end_to_end_http_replay_assets_privacy_and_no_live_by_default(server):
     app, url = server
     with httpx.Client(trust_env=False) as client:
         page = client.get(url + "/")
-        assert page.status_code == 200 and "Follow the evidence" in page.text
+        assert page.status_code == 200 and "The sensors changed." in page.text
         for asset in ("app.js", "style.css"):
             assert client.get(url + "/" + asset).status_code == 200
         result = client.get(url + "/api/cases").json()

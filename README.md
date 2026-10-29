@@ -1,18 +1,26 @@
 # PetroMind
 
 **PetroMind uses Muse Spark to identify when an industrial diagnosis outruns its evidence.**
-The [interactive claim-audit demo](docs/claim-demo.md) follows two real captured
+The [guided physical-system demo](docs/guided-investigation.md) follows two real captured
 Muse investigations from measured pressure changes to documented context, missing
 premises and specific evidence requests. Replay is explicitly labeled; live v2
 is separately enabled and cost-bounded. Captured output is unchanged.
 
 ```bash
 python -m pip install -e '.[test,agent]'
-python scripts/demo_claim_audit.py serve --capture .petromind/claim-audit-v1
+python scripts/demo_claim_audit.py serve --capture .petromind/claim-audit-v1 \
+  --dataset ../3W/dataset \
+  --science-protocol .petromind/science-m5-v1/protocol.json
 # Open http://127.0.0.1:8765 — no API key needed for replay
 ```
 
 The original reviewed capture is required and is not redistributed with the repo.
+The new five-scene experience explains the well, replays the change, presents the
+diagnosis, follows Muse's captured audit and shows the verdict. Raw replay loads
+only after a private protocol mapping and data-fingerprint check. If unavailable,
+the UI explicitly shows two actual endpoints with Play disabled; it never invents
+a continuous trace. See the [sensor/replay inventory](docs/guided-investigation.md)
+and [desktop/mobile screenshots](docs/screenshots/).
 See the [claim-level review / expert packet](docs/claim-level-review.md),
 [setup and live-v2 boundaries](docs/claim-demo.md), and
 [three-minute flow / submission description](docs/hackathon-demo.md).
