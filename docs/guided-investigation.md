@@ -3,14 +3,16 @@
 The defining sequence is: **two pressures rose → a diagnosis sounds plausible
 → Muse finds the unsupported causal leap**. The frontend is a three-scene science
 exhibit, not an industrial monitoring dashboard. Two main-action clicks reach the
-verdict. Only two pressure indicators are prominent; no charts, identifiers,
-quality tables, sidebar, step-navigation bar or provenance link compete with the
-story. Clicking a sensor opens one optional chart. After the verdict, one
+verdict. Two pressure indicators remain prominent, now showing selected values and signed
+changes. Three smaller indicators add instrument context: the measured choke
+opening and two temperature channels explicitly marked unobserved. No default
+charts, identifiers, quality tables, sidebar, step-navigation bar or provenance
+link compete with the story. Clicking a sensor opens one optional chart. After the verdict, one
 **Explore evidence** drawer contains the full audit and scientific limitations.
 
 The same illustration stays through the observation and diagnosis scenes. The
 verdict visually separates measured observations from an unestablished cause,
-quotes one exact captured Muse finding and provides editorial next-evidence
+shows a three-check editorial guide, quotes an exact captured Muse excerpt and provides editorial next-evidence
 requests. There is no staged tool-call animation or invented reasoning. Scene
 headings, claim paraphrases and concrete next steps are editorial, clearly
 distinguished from the captured finding. This version changes no agent prompt,
@@ -64,9 +66,10 @@ hidden operational `state`/`class` labels are never substituted for readings.
 **Illustrative only:** sea/seabed placement, depth, equipment silhouettes, component
 coordinates, wellbore shape and dashed pipe connections. Dotted sensor callouts
 represent generic documented equipment associations, not surveyed coordinates or
-verified hydraulic paths. Only P-PDG and P-TPT are drawn. Other existing definitions
-remain in the server payload; the gas-lift summary remains inspectable in evidence.
-No unqueried value is inferred.
+verified hydraulic paths. P-PDG and P-TPT dominate the drawing; ABER-CKGL is a secondary measured indicator.
+T-TPT and T-PDG are secondary definition-only indicators, explicitly marked
+“Not observed in audit.” No temperature sample is read or inferred. The choke
+marker is a functional callout, not a verified installed position or pipe route.
 
 ## Raw-data mapping and timing
 
@@ -93,14 +96,14 @@ ten recorded samples per wall second; all 600 remain in the slider/chart.
 Display-frame skipping is not dataset downsampling.
 
 Colors and symbols describe change from each sensor's first valid window sample:
-mint ↑ above the starting value, purple ↓ below it, muted → numerically
-unchanged, gray — missing, amber ! invalid. They are not normality, risk or danger classifications. The
+warm/orange ↑ above the starting value, cool/blue ↓ below it, gray → numerically
+unchanged, muted/dashed — missing or unobserved, and ! invalid. They are not normality, risk or danger classifications. The
 existing magnitude guardrail is numerical, not an engineering safety threshold.
 Zero values are valid. An earlier reference is not certified normal operation.
 
 Without raw data, the slider has only two discrete positions. First/last **valid**
 summary values can occur at different unknown instants for different sensors;
-they are not presented as synchronized timestamps. The chart has separate endpoint
+they are not presented as synchronized timestamps. The optional chart has separate endpoint
 dots and no connecting trace. Play is disabled. No playback-speed selector is shown.
 
 ## Availability and agent boundaries in this implementation
@@ -148,7 +151,9 @@ python scripts/check_claim_demo_browser.py \
 363 offline tests passed. Chromium checks cover both actual captured examples at
 1440×900 and 390×844, both cases and all three scenes, endpoint controls, optional
 sensor details, original output equality and verdict immutability under cursor
-changes. Tests assert that every desktop scene fits without page scroll, all
+changes. Replay assertions check changing values, signed deltas, orange/blue/gray
+marker state, measured percent units, valid zeros, and unavailable versus
+unobserved channels. Tests assert that every desktop scene fits without page scroll, all
 primary actions remain in view, the verdict takes two clicks, no chart is visible
 by default, and native modal focus/escape behavior works. Actual tool order remains
 inspectable in unchanged output metadata.

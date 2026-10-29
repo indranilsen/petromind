@@ -17,7 +17,10 @@ python scripts/demo_claim_audit.py serve --capture .petromind/claim-audit-v1 \
 The original reviewed capture is required and is not redistributed with the repo.
 The three-scene experience shows two pressure changes, a plausible diagnosis,
 and Muse’s missing-premise finding—in two main-action clicks. There is no
-monitoring dashboard. Optional sensor charts appear only when clicked; detailed
+monitoring dashboard. Values, signed changes and warm/cool markers update with
+the selected recorded sample. Two pressure sensors lead; choke opening and two
+explicitly unobserved temperature markers are secondary. Optional charts appear
+only when clicked; detailed
 sources and unchanged outputs live in one verdict-only **Explore evidence** drawer. Raw replay loads
 only after a private protocol mapping and data-fingerprint check. If unavailable,
 the UI explicitly shows two actual endpoints with Play disabled; it never invents
