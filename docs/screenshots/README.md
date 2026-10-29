@@ -1,21 +1,36 @@
-# Guided investigation screenshots
+# Three scenes, two clicks
 
-Captured with Chromium at **1440×900** and **390×844** viewports. Some images
-include the full scrollable page. These use the genuine captured audits and
-**actual endpoint summaries**, with no local raw dataset. They do not depict a
-continuous replay or synthetic measurements. Play is disabled honestly.
+Actual Chromium screenshots at **1440×900** and **390×844**. All images are
+viewport captures, not stitched scrolling pages. Lossless WebP conversion retains
+the screenshot pixels. They show the genuine captured audits and actual endpoint
+summaries; the raw dataset was unavailable here. No synthetic raw data appears.
 
-- [Well and diagnosis — desktop](well-desktop.webp)
-- [Fault-9 verdict — desktop](verdict-desktop.webp)
-- [Well — mobile](well-mobile.webp)
-- [Published comparison — desktop](comparison-desktop.webp)
-- [Published comparison — mobile](comparison-mobile.webp)
+| Story | Desktop | Mobile |
+|---|---|---|
+| Two sensors, one observed change | [Scene 1](well-desktop.webp) | [Scene 1](well-mobile.webp) |
+| The plausible diagnosis | [Scene 2](diagnosis-desktop.webp) | [Scene 2](diagnosis-mobile.webp) |
+| Muse finds the unsupported causal premise | [Scene 3](verdict-desktop.webp) | [Scene 3](verdict-mobile.webp) |
+| Second case: example match, not root-cause proof | [Verdict](comparison-desktop.webp) | [Verdict](comparison-mobile.webp) |
 
-![Well and diagnosis](well-desktop.webp)
+![The two-sensor opening](well-desktop.webp)
 
-![Published comparison on mobile](comparison-mobile.webp)
+![The central verdict](verdict-desktop.webp)
 
-The diagram is our explanatory illustration; routing/depth/placement are not
-verified per-well geometry. Pressure colors indicate change from the first valid
-value, not danger. The figures contain derived display summaries, not a committed
-dataset, original raw telemetry, evaluator labels or private protocol files.
+![Mobile verdict](verdict-mobile.webp)
+
+Visual review: removed the dashboard, five-step navigation, inspector sidebar,
+unrelated sensor labels, default charts and permanent provenance link. The opening
+has two friendly-name pressure indicators and one primary action. The same well
+remains in scene 2. The two-click verdict becomes the visual centerpiece. Original
+findings, historical overlap, raw values and sources are behind the verdict-only
+**Explore evidence** drawer. The exact quote is captured Muse output; surrounding
+story and next-evidence requests are labeled editorial.
+
+Both cases were visually reviewed on desktop/mobile. Browser assertions separately
+check that all three desktop scenes fit without scrolling, the main actions remain
+in view on mobile, no horizontal scrolling occurs, and closing evidence restores
+keyboard focus. This is not a measured 30-second user comprehension study.
+
+The illustration is explanatory, not verified individual-well geometry. Sensor
+colors/arrows indicate change from the first valid value, not danger. No raw
+dataset, evaluator labels, private protocol or credentials are included.

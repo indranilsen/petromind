@@ -3,288 +3,273 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>PetroMind · What does the evidence establish?</title>
+    <title>PetroMind · A fact is not yet a cause</title>
     <link rel="stylesheet" href="/style.css" />
     <script defer src="/app.js"></script>
   </head>
   <body>
     <header>
-      <a class="brand" href="/"
-        ><span class="brandmark">P</span>PetroMind
-        <small>INDUSTRIAL CLAIM INTELLIGENCE</small></a
+      <a class="brand" href="/" aria-label="PetroMind home"
+        ><span class="brandmark">P</span>PetroMind</a
       >
       <div class="header-right">
-        <span class="muse-dot"></span>Muse Spark<span id="modeBadge"
-          >Real captured audit · replay</span
-        >
+        <span class="capture-label">Captured Muse audit</span
+        ><select id="caseSelect" aria-label="Choose captured case">
+          <option value="0">01 · Two pressures rise</option>
+          <option value="1">02 · Pattern match</option>
+        </select>
       </div>
     </header>
-    <main>
-      <div class="introbar">
-        <div>
-          <div class="eyebrow">FOLLOW THE EVIDENCE</div>
-          <h1>
-            The sensors changed.<br /><em>Does that prove the diagnosis?</em>
-          </h1>
-        </div>
-        <div class="case-controls">
-          <label for="caseSelect">INVESTIGATION</label
-          ><select id="caseSelect">
-            <option value="0">01 · Pressure rise / hydrate claim</option>
-            <option value="1">
-              02 · A published pressure-pattern match
-            </option></select
-          ><button id="inspectDetails" class="quiet">
-            Evidence & provenance ↗
-          </button>
-        </div>
-      </div>
-      <nav
-        id="progress"
-        class="progress"
-        aria-label="Investigation scenes"
-      ></nav>
-      <section id="headline" class="headline" aria-live="polite"></section>
-      <div class="workspace">
-        <section class="well-panel">
-          <div class="panel-top">
-            <div>
-              <span class="eyebrow">THE PHYSICAL SYSTEM</span>
-              <h2>A production well, explained.</h2>
-            </div>
-            <span id="replayBadge" class="badge"></span>
-          </div>
-          <p class="well-caption">
-            Sensors measure pressure, temperature and equipment states. Click a
-            sensor to see what its readings mean.
-          </p>
-          <div class="diagram-wrap">
-            <svg
-              id="well"
-              viewBox="0 0 800 360"
-              role="img"
-              aria-labelledby="wellTitle wellDesc"
+    <main id="experience" data-scene="0">
+      <section class="story-heading" aria-live="polite">
+        <p id="chapter" class="eyebrow">01 / WHAT HAPPENED</p>
+        <h1 id="headline">Two pressures rose.</h1>
+        <p id="subtitle">Two sensors in a production well recorded a change.</p>
+      </section>
+      <div id="stage" class="stage">
+        <section
+          id="wellPanel"
+          class="well-panel"
+          aria-label="An illustrative production well and two pressure sensors"
+        >
+          <div class="ocean-glow"></div>
+          <svg
+            id="well"
+            viewBox="0 0 1000 480"
+            role="img"
+            aria-labelledby="wellTitle wellDesc"
+          >
+            <title id="wellTitle">A production well, simplified</title>
+            <desc id="wellDesc">
+              Pressure is measured at tree equipment near the top of the well
+              and by a downhole gauge. This explanatory layout is illustrative,
+              not the exact configuration of this well.
+            </desc>
+            <defs>
+              <linearGradient id="ocean" x2="0" y2="1">
+                <stop stop-color="#112d40" stop-opacity="0" />
+                <stop offset="1" stop-color="#173d4a" stop-opacity=".55" />
+              </linearGradient>
+              <linearGradient id="earth" x2="0" y2="1">
+                <stop stop-color="#25343b" />
+                <stop offset="1" stop-color="#101e2b" stop-opacity="0" />
+              </linearGradient>
+              <linearGradient id="steel">
+                <stop stop-color="#557c87" />
+                <stop offset=".5" stop-color="#b1c8c4" />
+                <stop offset="1" stop-color="#557c87" />
+              </linearGradient>
+              <radialGradient id="sensorGlow">
+                <stop stop-color="#8bf1d3" stop-opacity=".22" />
+                <stop offset="1" stop-color="#8bf1d3" stop-opacity="0" />
+              </radialGradient>
+            </defs>
+            <path
+              d="M40 85 Q270 60 500 85 T960 85 V290 H40Z"
+              fill="url(#ocean)"
+            />
+            <path d="M40 85 Q270 60 500 85 T960 85" class="waterline" />
+            <path
+              d="M40 290 Q210 275 380 288 T710 290 T960 286 V480 H40Z"
+              fill="url(#earth)"
+            />
+            <path
+              d="M40 290 Q210 275 380 288 T710 290 T960 286"
+              class="groundline"
+            />
+            <path
+              d="M472 290V449Q500 465 528 449V290"
+              fill="#112934"
+              stroke="#4b636a"
+              stroke-width="1.5"
+            />
+            <path d="M491 277V449H509V277" fill="url(#steel)" opacity=".85" />
+            <path
+              d="M500 234V127Q500 105 525 105H629"
+              fill="none"
+              stroke="#718e94"
+              stroke-width="8"
+              stroke-linecap="round"
+            />
+            <path
+              d="M500 234V127Q500 105 525 105H629"
+              fill="none"
+              stroke="#b6cdca"
+              stroke-width="2"
+            />
+            <g fill="url(#steel)" stroke="#a4bfbd" stroke-width="1">
+              <rect x="478" y="222" width="44" height="58" rx="5" />
+              <rect x="461" y="238" width="78" height="14" rx="3" />
+              <rect x="470" y="275" width="60" height="14" rx="3" />
+              <rect x="487" y="213" width="26" height="13" rx="2" />
+              <rect x="488" y="393" width="24" height="25" rx="4" />
+            </g>
+            <path
+              d="M453 242V248M547 242V248"
+              stroke="#c0d8cf"
+              stroke-width="8"
+              stroke-linecap="round"
+            />
+            <circle
+              id="treeHalo"
+              cx="500"
+              cy="241"
+              r="45"
+              fill="url(#sensorGlow)"
+            />
+            <circle
+              id="downHalo"
+              cx="500"
+              cy="405"
+              r="45"
+              fill="url(#sensorGlow)"
+            />
+            <circle cx="500" cy="241" r="5" class="gauge-point" />
+            <circle cx="500" cy="405" r="5" class="gauge-point" />
+            <path d="M513 241H620L650 213" class="leader" />
+            <path d="M487 405H374L345 374" class="leader" />
+          </svg>
+          <div id="sensors"></div>
+          <span class="illustration-note">Simplified illustration</span>
+        </section>
+        <section
+          id="diagnosis"
+          class="diagnosis"
+          hidden
+          aria-label="The diagnostic claim"
+        >
+          <p class="eyebrow">PROPOSED CAUSE</p>
+          <h2 id="cause"></h2>
+          <p id="definition"></p>
+          <div class="claim-copy">
+            <span class="small-label"
+              >CONSTRUCTED CLAIM · EDITORIAL SUMMARY</span
             >
-              <title id="wellTitle">
-                Simplified explanatory production-well schematic
-              </title>
-              <desc id="wellDesc">
-                Illustrative geometry and routing, not a verified piping
-                diagram. Sensor labels describe documented generic measurement
-                associations.
-              </desc>
-              <defs>
-                <pattern
-                  id="water"
-                  width="32"
-                  height="18"
-                  patternUnits="userSpaceOnUse"
-                >
-                  <path
-                    d="M0 12 Q8 6 16 12 T32 12"
-                    fill="none"
-                    stroke="#b7d4dd"
-                    stroke-width="1"
-                  />
-                </pattern>
-              </defs>
-              <rect x="0" y="30" width="800" height="150" fill="#edf5f7" />
-              <rect
-                x="0"
-                y="30"
-                width="800"
-                height="150"
-                fill="url(#water)"
-                opacity=".35"
-              />
-              <path d="M0 30H800" stroke="#9abcc5" />
-              <text x="18" y="21" class="zone">SEA SURFACE · ILLUSTRATIVE</text>
-              <text x="18" y="198" class="zone">SEABED</text>
-              <rect x="0" y="204" width="800" height="156" fill="#f1ede4" />
-              <path d="M0 204H800" stroke="#d4cdbc" stroke-width="2" />
-              <rect
-                x="355"
-                y="194"
-                width="76"
-                height="157"
-                rx="16"
-                fill="#e2dfd4"
-                stroke="#bbb8aa"
-              />
-              <path d="M392 203V340" class="pipe" />
-              <path d="M392 160V48H476" class="illustrative" />
-              <path d="M516 157H470V176H422" class="illustrative" />
-              <path
-                d="M392 157H428V192H355V172H392Z"
-                fill="#b4c7c3"
-                stroke="#587773"
-                stroke-width="2"
-              />
-              <path
-                d="M375 157V141H410V157M355 180H340M428 180H443"
-                fill="none"
-                stroke="#587773"
-                stroke-width="5"
-              />
-              <text x="449" y="187" class="equipment">Subsea tree</text>
-              <text x="449" y="202" class="sublabel">Wellhead equipment</text>
-              <rect
-                x="373"
-                y="244"
-                width="38"
-                height="25"
-                rx="4"
-                fill="#d4d4c7"
-                stroke="#929786"
-              />
-              <text x="392" y="262" text-anchor="middle" class="equipment">
-                ?
-              </text>
-              <text x="448" y="255" class="equipment">Safety valve</text>
-              <text x="448" y="271" class="sublabel">State not observed</text>
-              <circle
-                cx="392"
-                cy="319"
-                r="12"
-                fill="#a3b5ad"
-                stroke="#587773"
-                stroke-width="2"
-              />
-              <text x="448" y="321" class="equipment">Downhole gauge</text>
-              <rect
-                x="518"
-                y="128"
-                width="250"
-                height="48"
-                rx="8"
-                fill="#f8faf5"
-                stroke="#d0d9ce"
-              />
-              <path
-                d="M538 141L558 163V141L538 163Z"
-                fill="#bccbb6"
-                stroke="#73826e"
-              />
-              <text x="572" y="149" class="equipment">Gas-lift choke</text>
-              <text x="572" y="164" class="sublabel">
-                Functional group · location illustrative
-              </text>
-              <text x="525" y="296" class="routing">
-                Dashed routing is illustrative.
-              </text>
-              <text x="525" y="310" class="routing">
-                No physical fault path is claimed.
-              </text>
-              <g id="sensors"></g>
-            </svg>
-          </div>
-          <div id="familyRow" class="family-row"></div>
-          <div class="legend" aria-label="Measurement trend legend">
-            <span class="rising">↑ Rising</span
-            ><span class="falling">↓ Falling</span
-            ><span class="stable">→ Unchanged</span
-            ><span class="missing">— Missing</span
-            ><span class="invalid">! Invalid</span>
-          </div>
-          <div class="diagram-foot">
-            <span
-              >Illustrative layout · not to scale · not a verified well
-              P&ID</span
-            ><span>Color shows recorded change, not safety or cause.</span>
+            <p id="claimSummary"></p>
           </div>
         </section>
-        <aside id="context" class="context" aria-live="polite"></aside>
       </div>
-      <section class="telemetry">
-        <div class="telemetry-top">
-          <div>
-            <div class="eyebrow">02 / WHAT HAPPENED</div>
-            <h2 id="timelineTitle"></h2>
+      <section
+        id="discovery"
+        class="discovery"
+        hidden
+        aria-label="Muse’s captured findings"
+      >
+        <div class="logic-chain">
+          <div class="observation-node">
+            <span class="status-label">✓ VERIFIED OBSERVATIONS</span>
+            <p id="observedSummary"></p>
           </div>
-          <p id="reference"></p>
+          <div class="inference-link">
+            <span>does this prove</span><b>··· ? ···</b>
+          </div>
+          <div class="cause-node">
+            <span class="status-label">NOT ESTABLISHED</span>
+            <p id="causeSummary"></p>
+          </div>
         </div>
-        <div class="transport">
-          <button
-            id="play"
-            class="play"
-            aria-label="Play or pause real telemetry"
-          >
-            ▶ Play</button
-          ><span id="clock" class="clock"></span
-          ><input
-            id="slider"
-            type="range"
-            min="0"
-            max="1"
-            step="1"
-            value="1"
-            aria-label="Telemetry sample or captured endpoint"
-          /><span id="endLabel"></span
-          ><select id="speed" aria-label="Playback speed">
-            <option value="1">1×</option>
-            <option value="10" selected>10×</option>
-            <option value="30">30×</option>
-          </select>
+        <div class="muse-finding">
+          <div class="muse-label">
+            <span class="spark">✧</span> MUSE SPARK
+            <span>Captured finding</span>
+          </div>
+          <blockquote id="museQuote"></blockquote>
         </div>
-        <div id="charts" class="charts"></div>
-        <p id="timing" class="timing"></p>
-        <p id="visibility" class="visibility"></p>
+        <p id="nextEvidence" class="next-evidence"></p>
+        <span class="editorial-label"
+          >Story and next steps: editorial explanation of the captured
+          audit</span
+        >
       </section>
-      <div class="bottom-action">
-        <p id="sceneHint"></p>
-        <button id="nextScene" class="primary">Replay what happened →</button>
+      <div id="transport" class="transport">
+        <button
+          id="play"
+          class="play"
+          aria-label="Play or pause real telemetry"
+          disabled
+        >
+          ▶</button
+        ><input
+          id="slider"
+          type="range"
+          min="0"
+          max="1"
+          value="1"
+          step="1"
+          aria-label="Recorded sample or captured endpoint"
+        /><span id="clock"></span><span id="replayLabel"></span>
       </div>
-      <section id="verdictSection" class="verdict-section" hidden>
-        <div class="eyebrow">CAPTURED MUSE FINDINGS · EDITORIAL SUMMARY</div>
-        <h2 id="verdictTitle"></h2>
-        <div id="verdictColumns" class="verdict-columns"></div>
-        <p class="verdict-limit">
-          Independent engineering review pending. This is a decision-support
-          audit, not root-cause certification.
-        </p>
-      </section>
-      <section id="details" class="details" hidden>
-        <div class="details-head">
-          <h2>Inspect the evidence</h2>
-          <button id="closeDetails" class="quiet">Close ×</button>
-        </div>
-        <div class="detail-controls">
-          <button id="grounded" class="selected">Actual grounded output</button
-          ><button id="ungrounded">Actual ungrounded output</button
-          ><button id="downloadReview">Download claim review ↗</button>
-        </div>
-        <div id="detailFindings"></div>
-        <details>
-          <summary>Retrieved knowledge and historical analogue overlap</summary>
-          <div id="sources"></div>
-        </details>
-        <details>
-          <summary>Original model output and protocol</summary>
-          <pre id="raw"></pre>
-        </details>
+      <div class="action-row">
+        <button id="back" class="back" hidden>← Back</button
+        ><button id="nextScene" class="primary">
+          See the diagnosis <span>→</span></button
+        ><button id="inspectDetails" class="evidence-button" hidden>
+          Explore evidence <span>↗</span>
+        </button>
+      </div>
+      <p id="error" role="alert" hidden></p>
+    </main>
+    <dialog
+      id="sensorDialog"
+      class="sensor-dialog"
+      aria-labelledby="sensorTitle"
+    >
+      <button id="closeSensor" class="close" aria-label="Close sensor details">
+        ×
+      </button>
+      <p class="eyebrow">RECORDED MEASUREMENT</p>
+      <h2 id="sensorTitle"></h2>
+      <div id="sensorValue"></div>
+      <div id="sensorChart"></div>
+      <div id="sensorNotes"></div>
+    </dialog>
+    <dialog
+      id="details"
+      class="evidence-drawer"
+      aria-labelledby="evidenceTitle"
+    >
+      <div class="details-head">
+        <h2 id="evidenceTitle">Explore the evidence</h2>
+        <button id="closeDetails" class="quiet">Close ×</button>
+      </div>
+      <div class="detail-controls">
+        <button id="grounded" class="selected">Actual grounded output</button
+        ><button id="ungrounded">Actual ungrounded output</button
+        ><button id="downloadReview">Download claim review ↗</button>
+      </div>
+      <p id="evidenceContext"></p>
+      <details>
+        <summary>Original constructed claim and recorded measurements</summary>
+        <p id="originalClaim"></p>
+        <pre id="evidenceMeasurements"></pre>
         <details>
           <summary>
-            Live Muse integration · separate versioned execution
+            Viewer replay payload · not added to Muse’s evidence
           </summary>
-          <p>
-            Live v2 uses a separate fresh protocol and an explicit API-spending
-            action. No playback data is added to the agent’s fixed packet.
-          </p>
-          <button id="liveRun" disabled>
-            Live disabled · captured replay active
-          </button>
-          <p id="liveResult"></p>
-          <pre id="liveRaw" hidden></pre>
+          <pre id="evidenceTimeline"></pre>
         </details>
-      </section>
-      <p id="error" role="alert" hidden></p>
-      <footer>
-        <span>PetroMind / Push the Frontier</span
-        ><span
-          >Prior classification results preserved. No accuracy improvement or
-          physical certification claimed.</span
-        >
-      </footer>
-    </main>
+      </details>
+      <div id="detailFindings"></div>
+      <details>
+        <summary>Retrieved knowledge and historical analogue overlap</summary>
+        <div id="sources"></div>
+      </details>
+      <details>
+        <summary>Original model output and protocol</summary>
+        <pre id="raw"></pre>
+      </details>
+      <details>
+        <summary>Live Muse integration · separate versioned execution</summary>
+        <p>
+          Live v2 uses a separate fresh protocol and an explicit API-spending
+          action. No playback data is added to the agent’s fixed packet.
+        </p>
+        <button id="liveRun" disabled>
+          Live disabled · captured replay active
+        </button>
+        <p id="liveResult"></p>
+        <pre id="liveRaw" hidden></pre>
+      </details>
+    </dialog>
   </body>
 </html>

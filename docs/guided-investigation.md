@@ -1,10 +1,20 @@
 # PetroMind: a guided physical investigation
 
-The defining sequence is: **the readings changed → a diagnosis sounds plausible
-→ Muse identifies the premise that the evidence does not establish**. Five
-clickable scenes explain the well, show the change, present the diagnosis, inspect
-the actual captured audit, and state the bounded verdict. No new model experiment
-or claim of physical certification is introduced.
+The defining sequence is: **two pressures rose → a diagnosis sounds plausible
+→ Muse finds the unsupported causal leap**. The frontend is a three-scene science
+exhibit, not an industrial monitoring dashboard. Two main-action clicks reach the
+verdict. Only two pressure indicators are prominent; no charts, identifiers,
+quality tables, sidebar, step-navigation bar or provenance link compete with the
+story. Clicking a sensor opens one optional chart. After the verdict, one
+**Explore evidence** drawer contains the full audit and scientific limitations.
+
+The same illustration stays through the observation and diagnosis scenes. The
+verdict visually separates measured observations from an unestablished cause,
+quotes one exact captured Muse finding and provides editorial next-evidence
+requests. There is no staged tool-call animation or invented reasoning. Scene
+headings, claim paraphrases and concrete next steps are editorial, clearly
+distinguished from the captured finding. This version changes no agent prompt,
+submission schema, protocol, captured result or backend behavior.
 
 ## Run
 
@@ -45,17 +55,18 @@ asserted by the drawing.
 | ESTADO-DHSV | Safety-valve state | Dimensionless | Encoded DHSV state | Definition only; actual valve position unknown |
 
 Each definition carries the exact location/unit fact, locator, source/version and
-scope. Pressure cards/charts display MPa for readability, explicitly computed as
-Pa ÷ 1,000,000; the selected sensor panel also shows its canonical Pa value. Unknown
+scope. Optional pressure details display MPa for readability, explicitly computed as
+Pa ÷ 1,000,000; canonical readings and units remain in the evidence drawer. Unknown
 units are labeled unknown rather than guessed. Valve encoding is 0 closed, 1 open,
 0.5 other, per Table 3. It does not establish an actual actuator position, and
 hidden operational `state`/`class` labels are never substituted for readings.
 
 **Illustrative only:** sea/seabed placement, depth, equipment silhouettes, component
-coordinates, wellbore shape and dashed pipe connections. Solid sensor callouts
+coordinates, wellbore shape and dashed pipe connections. Dotted sensor callouts
 represent generic documented equipment associations, not surveyed coordinates or
-verified hydraulic paths. Sensors outside the charged set have definition buttons
-marked “not in audit”; no value is inferred for them.
+verified hydraulic paths. Only P-PDG and P-TPT are drawn. Other existing definitions
+remain in the server payload; the gas-lift summary remains inspectable in evidence.
+No unqueried value is inferred.
 
 ## Raw-data mapping and timing
 
@@ -77,20 +88,20 @@ A raw window is exactly **600 ordered observations at 1 Hz**, with **599 seconds
 between first and last**, using original timestamps with their encoded timezone
 (or explicitly unspecified timezone). No downsampling, resampling, missing-value
 filling or generated measurements occurs. Chart segments connect adjacent valid
-samples and break at missing/invalid positions. Playback at 10× or 30× advances
-that many recorded samples per wall second; all 600 remain in the slider/chart.
+samples and break at missing/invalid positions. Playback at a fixed 10× advances
+ten recorded samples per wall second; all 600 remain in the slider/chart.
 Display-frame skipping is not dataset downsampling.
 
 Colors and symbols describe change from each sensor's first valid window sample:
-blue ↑ rising, purple ↓ falling, teal → numerically unchanged, gray — missing,
-amber ! invalid. They are not normality, risk or danger classifications. The
+mint ↑ above the starting value, purple ↓ below it, muted → numerically
+unchanged, gray — missing, amber ! invalid. They are not normality, risk or danger classifications. The
 existing magnitude guardrail is numerical, not an engineering safety threshold.
 Zero values are valid. An earlier reference is not certified normal operation.
 
 Without raw data, the slider has only two discrete positions. First/last **valid**
 summary values can occur at different unknown instants for different sensors;
 they are not presented as synchronized timestamps. The chart has separate endpoint
-dots and no connecting trace. Play/speed controls are disabled.
+dots and no connecting trace. Play is disabled. No playback-speed selector is shown.
 
 ## Availability and agent boundaries in this implementation
 
@@ -101,8 +112,8 @@ dots and no connecting trace. Play/speed controls are disabled.
 
 Raw loading is tested using explicitly synthetic Parquet fixtures. This is adapter
 validation, not evidence that the real raw windows were loaded in this workspace.
-On the user's machine, each case is independently verified at startup; the badge
-states “Real samples · viewer only” only after successful verification.
+On the user's machine, each case is independently verified at startup; the transport
+states “Recorded data · 10×” only after successful verification.
 
 Muse actually received P-PDG, P-TPT and ABER-CKGL **summaries** and the constructed
 claim, plus the logged document/history tool responses in the grounded condition.
@@ -131,12 +142,16 @@ changes. No paid API calls were run for this redesign.
 python -m pytest -q
 # Optional real-browser check against a running replay server:
 python scripts/check_claim_demo_browser.py \
-  --url http://127.0.0.1:8765 --screenshots .petromind/guided-screenshots
+  --url http://127.0.0.1:8765 --screenshots .petromind/cinematic-screenshots
 ```
 
 363 offline tests passed. Chromium checks cover both actual captured examples at
-1440×900 and 390×844, all five scenes, endpoint controls, sensor selection, original
-output equality, actual tool order, and verdict immutability under cursor changes.
+1440×900 and 390×844, both cases and all three scenes, endpoint controls, optional
+sensor details, original output equality and verdict immutability under cursor
+changes. Tests assert that every desktop scene fits without page scroll, all
+primary actions remain in view, the verdict takes two clicks, no chart is visible
+by default, and native modal focus/escape behavior works. Actual tool order remains
+inspectable in unchanged output metadata.
 A separate `--test-synthetic-raw-controls` option exercises Play/Pause, missing and
 invalid states and broken chart segments using an explicitly synthetic routed
 fixture. It is never saved as a real-data screenshot or shipped as replay data.

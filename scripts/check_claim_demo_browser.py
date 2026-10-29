@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check the guided real-capture UI at desktop/mobile sizes. Never calls live Muse."""
+"""Check the three-scene story with real captures. Never calls live Muse."""
 
 import argparse
 import json
@@ -31,97 +31,113 @@ def main():
         page = browser.new_page(
             viewport={"width": 1440, "height": 900}, device_scale_factor=1
         )
-        errors = []
-        requests = []
+        errors, requests = [], []
         page.on("pageerror", lambda e: errors.append(str(e)))
         page.on("request", lambda r: requests.append(r.url))
         page.goto(a.url, wait_until="networkidle")
-        page.wait_for_function("document.querySelectorAll('.sensor-hit').length>=3")
+        page.locator(".sensor-hit").nth(1).wait_for()
         payload = page.request.get(a.url + "/api/cases").json()
+        if a.screenshots:
+            a.screenshots.mkdir(parents=True, exist_ok=True)
         for case_index, case in enumerate(payload["cases"]):
-            page.locator("#caseSelect").select_option(str(case_index))
-            page.wait_for_function(
-                'document.querySelectorAll("#progress button").length===5'
-            )
-            assert page.locator("#progress button").count() == 5
-            assert page.locator("#well [role=button]").count() >= 3
-            # Every displayed sensor can be selected; no additional queries occur.
-            page.locator('#well [aria-label^="Tree pressure"]').click()
-            assert (
-                "Canonical recorded value" in page.locator("#context").inner_text()
-                or "No measurement" in page.locator("#context").inner_text()
-            )
-            mode = case["replay"]["mode"]
-            maximum = 599 if mode == "raw" else 1
-            assert page.locator("#play").is_disabled() == (mode == "endpoints")
-            page.locator("#slider").fill("0")
-            page.locator("#slider").fill(str(maximum))
-            assert (
-                "viewer" in page.locator("#visibility").inner_text().lower()
-                or "captured" in page.locator("#visibility").inner_text().lower()
-            )
-            page.locator("#progress button").nth(2).click()
-            assert ("Hydrate" if case_index == 0 else "safety valve") in page.locator(
-                "#context"
-            ).inner_text()
-            if a.screenshots:
-                a.screenshots.mkdir(parents=True, exist_ok=True)
-                page.screenshot(
-                    path=str(a.screenshots / f"case{case_index + 1}-desktop-system.png")
+            for width, height, viewport in (
+                (1440, 900, "desktop"),
+                (390, 844, "mobile"),
+            ):
+                page.set_viewport_size({"width": width, "height": height})
+                page.locator("#caseSelect").select_option(str(case_index))
+                assert page.locator("#experience").get_attribute("data-scene") == "0"
+                assert page.locator(".sensor-hit").count() == 2
+                assert page.locator("#inspectDetails").is_hidden()
+                assert page.locator(".chart-svg:visible").count() == 0
+                assert page.locator("#details").is_hidden()
+                assert page.locator("#progress").count() == 0
+                # No default identifiers, readings, citations, unrelated sensors.
+                visible = page.locator("body").inner_text()
+                for excluded in ("P-PDG", "P-TPT", "ABER-CKGL", "API", "provenance"):
+                    assert excluded not in visible
+                assert page.locator("#play").is_disabled() == (
+                    case["replay"]["mode"] == "endpoints"
                 )
-            page.locator("#progress button").nth(3).click()
-            assert page.locator(".tool-step").count() == len(
-                case["captured_activity"]["grounded"]
-            )
-            page.locator("#progress button").nth(4).click()
-            verdict = page.locator("#verdictTitle").inner_text()
-            assert "ROOT CAUSE IS NOT ESTABLISHED" in verdict
-            page.locator("#slider").fill("0")
-            assert page.locator("#verdictTitle").inner_text() == verdict
-            page.locator("#slider").fill(str(maximum))
-            assert page.locator("#verdictTitle").inner_text() == verdict
-            if a.screenshots:
-                page.screenshot(
-                    path=str(
-                        a.screenshots / f"case{case_index + 1}-desktop-verdict.png"
-                    ),
-                    full_page=True,
+                maximum = 599 if case["replay"]["mode"] == "raw" else 1
+                for position in (0, maximum):
+                    page.locator("#slider").fill(str(position))
+                # Sensor is optional. Its modal contains one chart and real units.
+                page.locator(".sensor-hit.tree").click()
+                assert "MPa" in page.locator("#sensorValue").inner_text()
+                assert page.locator("#sensorChart .chart-svg").count() == 1
+                assert "viewer-only" in page.locator("#sensorNotes").inner_text()
+                page.keyboard.press("Escape")
+                assert page.locator("#sensorDialog").is_hidden()
+                for scene in range(3):
+                    page.mouse.move(0, 0)
+                    page.wait_for_timeout(450)  # capture after editorial fade
+                    assert page.evaluate(
+                        "document.documentElement.scrollWidth<=innerWidth"
+                    )
+                    if width == 1440:
+                        assert page.evaluate(
+                            "document.documentElement.scrollHeight<=innerHeight"
+                        ), (
+                            case_index,
+                            viewport,
+                            scene,
+                            page.evaluate("document.documentElement.scrollHeight"),
+                        )
+                    action = page.locator(
+                        "#inspectDetails" if scene == 2 else "#nextScene"
+                    ).bounding_box()
+                    assert action["height"] >= 44
+                    assert action["y"] + action["height"] <= height, (
+                        case_index,
+                        viewport,
+                        scene,
+                        action,
+                    )
+                    if a.screenshots:
+                        page.screenshot(
+                            path=str(
+                                a.screenshots
+                                / f"case{case_index + 1}-{viewport}-{scene + 1}.png"
+                            )
+                        )
+                    if scene < 2:
+                        page.locator("#nextScene").click()
+                # Exactly two main-action clicks reached the fixed verdict.
+                assert page.locator("#experience").get_attribute("data-scene") == "2"
+                assert "prove the cause" in page.locator("#headline").inner_text()
+                assert (
+                    page.locator("#museQuote").text_content()
+                    == (
+                        case["audits"]["grounded"]["output"]["findings"][2][
+                            "justification"
+                        ]
+                    )
                 )
-            page.locator("#inspectDetails").click()
-            raw = json.loads(page.locator("#raw").text_content())
-            assert raw["output"] == case["audits"]["grounded"]["output"]
-            page.locator("#ungrounded").click()
-            assert (
-                json.loads(page.locator("#raw").text_content())["output"]
-                == case["audits"]["ungrounded"]["output"]
-            )
-            page.locator("#grounded").click()
-            page.locator("#closeDetails").click()
-            page.set_viewport_size({"width": 390, "height": 844})
-            page.locator("#progress button").nth(0).click()
-            page.evaluate("window.scrollTo(0,0)")
-            assert page.evaluate(
-                "document.documentElement.scrollWidth<=window.innerWidth"
-            )
-            assert page.locator("#nextScene").is_visible()
-            if a.screenshots:
-                page.screenshot(
-                    path=str(a.screenshots / f"case{case_index + 1}-mobile.png"),
-                    full_page=True,
+                headline = page.locator("#headline").inner_text()
+                page.locator("#inspectDetails").click()
+                raw = json.loads(page.locator("#raw").text_content())
+                assert raw["output"] == case["audits"]["grounded"]["output"]
+                page.locator("#ungrounded").click()
+                assert (
+                    json.loads(page.locator("#raw").text_content())["output"]
+                    == (case["audits"]["ungrounded"]["output"])
                 )
-            page.locator("#progress button").nth(4).click()
-            if a.screenshots:
-                page.screenshot(
-                    path=str(
-                        a.screenshots / f"case{case_index + 1}-mobile-verdict.png"
-                    ),
-                    full_page=True,
+                page.locator("#grounded").click()
+                page.keyboard.press("Escape")
+                assert page.locator("#details").is_hidden()
+                assert page.locator("#inspectDetails").evaluate(
+                    "e => e === document.activeElement"
                 )
-            page.set_viewport_size({"width": 1440, "height": 900})
-            page.evaluate("window.scrollTo(0,0)")
+                assert page.locator("#headline").inner_text() == headline
+                # Replaying endpoints/samples and returning does not alter output.
+                page.locator("#back").click()
+                page.locator("#back").click()
+                page.locator("#slider").fill("0")
+                page.locator("#nextScene").click()
+                page.locator("#nextScene").click()
+                assert page.locator("#headline").inner_text() == headline
         if a.test_synthetic_raw_controls:
-            # Explicit synthetic UI fixture: does not pass through the production
-            # adapter and is never saved as a screenshot or reported as 3W data.
             from copy import deepcopy
 
             toy = deepcopy(payload)
@@ -152,12 +168,12 @@ def main():
             testpage.on("pageerror", lambda e: errors.append(str(e)))
             testpage.route("**/api/cases", lambda route: route.fulfill(json=toy))
             testpage.goto(a.url, wait_until="networkidle")
-            testpage.locator("#sensors [role=button]").nth(2).wait_for()
+            testpage.locator(".sensor-hit").nth(1).wait_for()
             assert not testpage.locator("#play").is_disabled()
             testpage.locator("#slider").fill("2")
-            assert testpage.locator("#sensors .missing").count() == 3
+            assert testpage.locator(".sensor-hit.missing").count() == 2
             testpage.locator("#slider").fill("3")
-            assert testpage.locator("#sensors .invalid").count() == 3
+            assert testpage.locator(".sensor-hit.invalid").count() == 2
             testpage.locator("#slider").fill("0")
             testpage.locator("#play").click()
             testpage.wait_for_timeout(1250)
@@ -166,9 +182,8 @@ def main():
             position = testpage.locator("#slider").input_value()
             testpage.wait_for_timeout(1100)
             assert testpage.locator("#slider").input_value() == position
-            assert (
-                testpage.locator(".chart-line").first.get_attribute("d").count("M") >= 2
-            )
+            testpage.locator(".sensor-hit.tree").click()
+            assert testpage.locator(".chart-line").get_attribute("d").count("M") >= 2
             testpage.close()
         assert not errors, errors
         assert not any("/api/live" in x or "api.meta.ai" in x for x in requests)
@@ -181,6 +196,7 @@ def main():
                     "viewports": ["1440x900", "390x844"],
                     "javascript_errors": 0,
                     "paid_requests": 0,
+                    "main_action_clicks_to_verdict": 2,
                     "unchanged_captured_outputs": True,
                 }
             )

@@ -15,8 +15,10 @@ python scripts/demo_claim_audit.py serve --capture .petromind/claim-audit-v1 \
 ```
 
 The original reviewed capture is required and is not redistributed with the repo.
-The new five-scene experience explains the well, replays the change, presents the
-diagnosis, follows Muse's captured audit and shows the verdict. Raw replay loads
+The three-scene experience shows two pressure changes, a plausible diagnosis,
+and Muse’s missing-premise finding—in two main-action clicks. There is no
+monitoring dashboard. Optional sensor charts appear only when clicked; detailed
+sources and unchanged outputs live in one verdict-only **Explore evidence** drawer. Raw replay loads
 only after a private protocol mapping and data-fingerprint check. If unavailable,
 the UI explicitly shows two actual endpoints with Play disabled; it never invents
 a continuous trace. See the [sensor/replay inventory](docs/guided-investigation.md)
