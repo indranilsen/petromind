@@ -2,173 +2,289 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>PetroMind — follow the evidence</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>PetroMind · What does the evidence establish?</title>
     <link rel="stylesheet" href="/style.css" />
     <script defer src="/app.js"></script>
   </head>
   <body>
-    <header class="topbar">
+    <header>
       <a class="brand" href="/"
-        ><span class="brandmark">P</span>PetroMind<span class="brandtag"
-          >INDUSTRIAL CLAIM INTELLIGENCE</span
-        ></a
+        ><span class="brandmark">P</span>PetroMind
+        <small>INDUSTRIAL CLAIM INTELLIGENCE</small></a
       >
-      <div class="topmeta">
-        <span class="dot"></span> Meta Muse Spark
-        <span class="separator">/</span
-        ><span id="modeBadge">CAPTURED REAL RUN</span>
+      <div class="header-right">
+        <span class="muse-dot"></span>Muse Spark<span id="modeBadge"
+          >Real captured audit · replay</span
+        >
       </div>
     </header>
-    <div class="shell">
-      <aside>
-        <div class="eyebrow">INVESTIGATION FILES</div>
-        <nav id="cases" aria-label="Captured examples"></nav>
-        <div class="aside-line"></div>
-        <div class="eyebrow">EXECUTION MODE</div>
-        <button id="replayMode" class="mode active">
-          ◉ Captured replay <small>Real Muse output · v1</small></button
-        ><button id="liveMode" class="mode" disabled>
-          ○ Live Muse <small>New scope-aware contract · v2</small>
-        </button>
-        <p id="liveHelp" class="aside-help">
-          Live calls are disabled. Replay requires no API key.
-        </p>
-        <div class="aside-bottom">
-          <div class="eyebrow">THE BOUNDARY</div>
-          <p>
-            Observed.<br />Documented.<br /><strong
-              >Not yet established.</strong
-            >
-          </p>
-          <span class="aside-note"
-            >Decision support.<br />No autonomous equipment control.</span
-          >
+    <main>
+      <div class="introbar">
+        <div>
+          <div class="eyebrow">FOLLOW THE EVIDENCE</div>
+          <h1>
+            The sensors changed.<br /><em>Does that prove the diagnosis?</em>
+          </h1>
         </div>
-      </aside>
-      <main>
-        <section class="intro">
-          <div class="eyebrow orange">EVIDENCE BEFORE CERTAINTY</div>
-          <h1>Convincing isn’t the same<br />as established.</h1>
-          <p>
-            Muse Spark follows an industrial diagnostic claim back to its
-            physical evidence—and identifies where the conclusion outruns it.
-          </p>
-        </section>
-        <div class="case-heading">
-          <div>
-            <div id="caseNumber" class="eyebrow">CASE 01</div>
-            <h2 id="caseTitle"></h2>
-          </div>
-          <div class="budget">
-            <strong id="budgetValue"></strong
-            ><span>of 5 sensor queries<br />already charged</span>
-          </div>
+        <div class="case-controls">
+          <label for="caseSelect">INVESTIGATION</label
+          ><select id="caseSelect">
+            <option value="0">01 · Pressure rise / hydrate claim</option>
+            <option value="1">
+              02 · A published pressure-pattern match
+            </option></select
+          ><button id="inspectDetails" class="quiet">
+            Evidence & provenance ↗
+          </button>
         </div>
-        <section class="claim-card">
-          <div class="card-head">
-            <span class="eyebrow">THE CLAIM UNDER INVESTIGATION</span
-            ><span class="constructed">Constructed evaluation claim</span>
-          </div>
-          <blockquote id="claim"></blockquote>
-          <div class="claim-bottom">
-            <div id="baseline"></div>
-            <button id="inspect" class="primary">
-              Follow the evidence <span>↗</span>
-            </button>
-          </div>
-          <p class="small muted">
-            Real 3W development telemetry. The claim is constructed for
-            evaluation, not an expert diagnosis.
-          </p>
-        </section>
-        <section id="auditArea" hidden>
-          <div class="audit-toolbar">
+      </div>
+      <nav
+        id="progress"
+        class="progress"
+        aria-label="Investigation scenes"
+      ></nav>
+      <section id="headline" class="headline" aria-live="polite"></section>
+      <div class="workspace">
+        <section class="well-panel">
+          <div class="panel-top">
             <div>
-              <span class="eyebrow">MUSE CLAIM AUDIT</span>
-              <h2 id="verdictTitle"></h2>
+              <span class="eyebrow">THE PHYSICAL SYSTEM</span>
+              <h2>A production well, explained.</h2>
             </div>
-            <div class="segmented" aria-label="Actual captured conditions">
-              <button id="grounded" class="selected">Grounded</button
-              ><button id="ungrounded">Ungrounded</button>
-            </div>
+            <span id="replayBadge" class="badge"></span>
           </div>
-          <div id="liveNotice" hidden class="notice"></div>
-          <div class="audit-summary">
-            <span id="verdictBadge" class="verdict"></span
-            ><span id="runStats" class="muted"></span
-            ><button id="liveRun" class="primary" hidden>
-              Run live v2 · uses API
-            </button>
+          <p class="well-caption">
+            Sensors measure pressure, temperature and equipment states. Click a
+            sensor to see what its readings mean.
+          </p>
+          <div class="diagram-wrap">
+            <svg
+              id="well"
+              viewBox="0 0 800 360"
+              role="img"
+              aria-labelledby="wellTitle wellDesc"
+            >
+              <title id="wellTitle">
+                Simplified explanatory production-well schematic
+              </title>
+              <desc id="wellDesc">
+                Illustrative geometry and routing, not a verified piping
+                diagram. Sensor labels describe documented generic measurement
+                associations.
+              </desc>
+              <defs>
+                <pattern
+                  id="water"
+                  width="32"
+                  height="18"
+                  patternUnits="userSpaceOnUse"
+                >
+                  <path
+                    d="M0 12 Q8 6 16 12 T32 12"
+                    fill="none"
+                    stroke="#b7d4dd"
+                    stroke-width="1"
+                  />
+                </pattern>
+              </defs>
+              <rect x="0" y="30" width="800" height="150" fill="#edf5f7" />
+              <rect
+                x="0"
+                y="30"
+                width="800"
+                height="150"
+                fill="url(#water)"
+                opacity=".35"
+              />
+              <path d="M0 30H800" stroke="#9abcc5" />
+              <text x="18" y="21" class="zone">SEA SURFACE · ILLUSTRATIVE</text>
+              <text x="18" y="198" class="zone">SEABED</text>
+              <rect x="0" y="204" width="800" height="156" fill="#f1ede4" />
+              <path d="M0 204H800" stroke="#d4cdbc" stroke-width="2" />
+              <rect
+                x="355"
+                y="194"
+                width="76"
+                height="157"
+                rx="16"
+                fill="#e2dfd4"
+                stroke="#bbb8aa"
+              />
+              <path d="M392 203V340" class="pipe" />
+              <path d="M392 160V48H476" class="illustrative" />
+              <path d="M516 157H470V176H422" class="illustrative" />
+              <path
+                d="M392 157H428V192H355V172H392Z"
+                fill="#b4c7c3"
+                stroke="#587773"
+                stroke-width="2"
+              />
+              <path
+                d="M375 157V141H410V157M355 180H340M428 180H443"
+                fill="none"
+                stroke="#587773"
+                stroke-width="5"
+              />
+              <text x="449" y="187" class="equipment">Subsea tree</text>
+              <text x="449" y="202" class="sublabel">Wellhead equipment</text>
+              <rect
+                x="373"
+                y="244"
+                width="38"
+                height="25"
+                rx="4"
+                fill="#d4d4c7"
+                stroke="#929786"
+              />
+              <text x="392" y="262" text-anchor="middle" class="equipment">
+                ?
+              </text>
+              <text x="448" y="255" class="equipment">Safety valve</text>
+              <text x="448" y="271" class="sublabel">State not observed</text>
+              <circle
+                cx="392"
+                cy="319"
+                r="12"
+                fill="#a3b5ad"
+                stroke="#587773"
+                stroke-width="2"
+              />
+              <text x="448" y="321" class="equipment">Downhole gauge</text>
+              <rect
+                x="518"
+                y="128"
+                width="250"
+                height="48"
+                rx="8"
+                fill="#f8faf5"
+                stroke="#d0d9ce"
+              />
+              <path
+                d="M538 141L558 163V141L538 163Z"
+                fill="#bccbb6"
+                stroke="#73826e"
+              />
+              <text x="572" y="149" class="equipment">Gas-lift choke</text>
+              <text x="572" y="164" class="sublabel">
+                Functional group · location illustrative
+              </text>
+              <text x="525" y="296" class="routing">
+                Dashed routing is illustrative.
+              </text>
+              <text x="525" y="310" class="routing">
+                No physical fault path is claimed.
+              </text>
+              <g id="sensors"></g>
+            </svg>
           </div>
-          <div class="audit-grid">
-            <div class="audit-left">
-              <div class="eyebrow section-label">01 / DECOMPOSE THE CLAIM</div>
-              <div id="findings" class="findings"></div>
-              <section class="premise-panel">
-                <div class="eyebrow">THE PREMISES</div>
-                <ol id="premises"></ol>
-                <p id="justification"></p>
-                <div id="citations" class="citation-list"></div>
-              </section>
-              <section class="gap-card">
-                <div id="gapTitle" class="eyebrow">
-                  02 / LOCATE THE MISSING PREMISE
-                </div>
-                <p id="gap"></p>
-                <div class="eyebrow">
-                  CAPTURED MODEL’S NEXT-EVIDENCE PROPOSAL
-                </div>
-                <p id="next"></p>
-                <div class="review-callout">
-                  <span class="eyebrow"
-                    >SCOPE REVIEW · EDITORIAL ANNOTATION</span
-                  >
-                  <p id="note"></p>
-                </div>
-              </section>
-            </div>
-            <div class="evidence-panel">
-              <div class="evidence-tabs">
-                <button id="tabMeasurements" class="selected">
-                  Measurements</button
-                ><button id="tabKnowledge">Knowledge</button
-                ><button id="tabHistory">Analogues</button>
-              </div>
-              <div id="evidence"></div>
-            </div>
+          <div id="familyRow" class="family-row"></div>
+          <div class="legend" aria-label="Measurement trend legend">
+            <span class="rising">↑ Rising</span
+            ><span class="falling">↓ Falling</span
+            ><span class="stable">→ Unchanged</span
+            ><span class="missing">— Missing</span
+            ><span class="invalid">! Invalid</span>
           </div>
-          <section class="action-section">
-            <div class="eyebrow orange">
-              03 / WHAT WOULD JUSTIFY THE STRONGER CLAIM?
-            </div>
-            <h2>Ask for the missing evidence.<br />Don’t invent it.</h2>
-            <p class="muted">
-              Source/logic review proposals below are editorial annotations, not
-              new Muse outputs or engineering sign-off.
-            </p>
-            <div id="actions" class="action-grid"></div>
-          </section>
-          <details class="raw">
-            <summary>Inspect the original model output and provenance</summary>
-            <pre id="raw"></pre>
-          </details>
-          <div class="review-footer">
+          <div class="diagram-foot">
             <span
-              >Independent engineering review pending. A cited value is not
-              proof of physical correctness.</span
-            ><button id="downloadReview">Download claim-level review ↗</button>
+              >Illustrative layout · not to scale · not a verified well
+              P&ID</span
+            ><span>Color shows recorded change, not safety or cause.</span>
           </div>
         </section>
-        <footer>
-          <span>PetroMind / Push the Frontier</span
-          ><span
-            >Prior benchmark: adaptive statistics 60.6%; direct Muse 12.1–15.2%.
-            No classification improvement claimed.</span
+        <aside id="context" class="context" aria-live="polite"></aside>
+      </div>
+      <section class="telemetry">
+        <div class="telemetry-top">
+          <div>
+            <div class="eyebrow">02 / WHAT HAPPENED</div>
+            <h2 id="timelineTitle"></h2>
+          </div>
+          <p id="reference"></p>
+        </div>
+        <div class="transport">
+          <button
+            id="play"
+            class="play"
+            aria-label="Play or pause real telemetry"
           >
-        </footer>
-        <p id="error" role="alert" hidden></p>
-      </main>
-    </div>
+            ▶ Play</button
+          ><span id="clock" class="clock"></span
+          ><input
+            id="slider"
+            type="range"
+            min="0"
+            max="1"
+            step="1"
+            value="1"
+            aria-label="Telemetry sample or captured endpoint"
+          /><span id="endLabel"></span
+          ><select id="speed" aria-label="Playback speed">
+            <option value="1">1×</option>
+            <option value="10" selected>10×</option>
+            <option value="30">30×</option>
+          </select>
+        </div>
+        <div id="charts" class="charts"></div>
+        <p id="timing" class="timing"></p>
+        <p id="visibility" class="visibility"></p>
+      </section>
+      <div class="bottom-action">
+        <p id="sceneHint"></p>
+        <button id="nextScene" class="primary">Replay what happened →</button>
+      </div>
+      <section id="verdictSection" class="verdict-section" hidden>
+        <div class="eyebrow">CAPTURED MUSE FINDINGS · EDITORIAL SUMMARY</div>
+        <h2 id="verdictTitle"></h2>
+        <div id="verdictColumns" class="verdict-columns"></div>
+        <p class="verdict-limit">
+          Independent engineering review pending. This is a decision-support
+          audit, not root-cause certification.
+        </p>
+      </section>
+      <section id="details" class="details" hidden>
+        <div class="details-head">
+          <h2>Inspect the evidence</h2>
+          <button id="closeDetails" class="quiet">Close ×</button>
+        </div>
+        <div class="detail-controls">
+          <button id="grounded" class="selected">Actual grounded output</button
+          ><button id="ungrounded">Actual ungrounded output</button
+          ><button id="downloadReview">Download claim review ↗</button>
+        </div>
+        <div id="detailFindings"></div>
+        <details>
+          <summary>Retrieved knowledge and historical analogue overlap</summary>
+          <div id="sources"></div>
+        </details>
+        <details>
+          <summary>Original model output and protocol</summary>
+          <pre id="raw"></pre>
+        </details>
+        <details>
+          <summary>
+            Live Muse integration · separate versioned execution
+          </summary>
+          <p>
+            Live v2 uses a separate fresh protocol and an explicit API-spending
+            action. No playback data is added to the agent’s fixed packet.
+          </p>
+          <button id="liveRun" disabled>
+            Live disabled · captured replay active
+          </button>
+          <p id="liveResult"></p>
+          <pre id="liveRaw" hidden></pre>
+        </details>
+      </section>
+      <p id="error" role="alert" hidden></p>
+      <footer>
+        <span>PetroMind / Push the Frontier</span
+        ><span
+          >Prior classification results preserved. No accuracy improvement or
+          physical certification claimed.</span
+        >
+      </footer>
+    </main>
   </body>
 </html>

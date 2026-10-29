@@ -1,27 +1,26 @@
-# Three-minute demo flow
+# Three-minute guided demo flow
 
-Use the actual captured replay, visibly labeled **Captured real run · v1**. Do
-not say this is a fresh API response. A separate live v2 path exists but is not
-needed for recording reliability and has no new paid evaluation. The claims are
-constructed evaluation claims using actual development evidence, not quotations
-from an industrial expert.
+Start on **See the well**. The badge identifies a real captured Muse audit replay.
+Check the data badge before recording: raw data must be privately mapped and
+verified to enable Play. Otherwise show only the actual captured endpoints and
+say so. Never stage a continuous replay with generated readings.
 
-| Time | Screen / action | Suggested narration |
+| Time | Scene and action | Suggested narration |
 |---|---|---|
-| 0:00–0:20 | Fault-9 claim and statistical model score | “An industrial AI can sound convincing and still outrun its evidence. PetroMind asks a different question: what does this diagnosis actually establish?” |
-| 0:20–0:40 | Show first/last pressure measurements | “These are real 3W recorded measurements. Both pressures increased. The statistical engine proposes fault 9. We have not established that these rises prove service-line hydrate.” |
-| 0:40–1:10 | Follow the evidence; click measured findings, then necessity finding | “Muse decomposes the explanation. It accepts the recorded observations, but identifies the missing premise: a documented response that is necessary or specific to this fault.” |
-| 1:10–1:30 | Knowledge tab, then Analogues | “The retrieved document describes the mechanism; it does not supply that rule. Historical similarity is not confirmation either. Notice these matches share three, three, and only one sensor—we show the difference explicitly.” |
-| 1:30–1:50 | Missing premise and concrete requests | “An honest next step is not to invent a diagnostic test. Request the applicable tag map and validated differential procedure. Neither is supplied, and neither a schematic nor another number alone proves root cause.” |
-| 1:50–2:20 | Switch to fault-2 example, grounded audit, Knowledge tab | “An auditor must also recognize limited valid claims. Here the measured increase/decrease matches the documented example. Muse supports that comparison without upgrading it to a causal diagnosis.” |
-| 2:20–2:40 | Briefly switch ungrounded / grounded | “Without the source, Muse reasonably withholds documentary verification. With it, the limited comparison can be traced to the example. These are actual captured outputs, not scripted model responses.” |
-| 2:40–3:00 | Original output / review status, show disabled Live mode | “This is evidence-scope auditing, not root-cause certification. Four captured audits completed; physical interpretation needs independent engineering review. Live Muse integration is available separately with explicit versioning and cost bounds.” |
+| 0:00–0:25 | See the well; click Tree pressure, then Downhole pressure | “This is a production well. These sensors record pressure at the wellhead and downhole. The equipment associations are documented; this simplified layout is illustrative, not an exact well piping diagram.” |
+| 0:25–0:50 | Replay the change; if verified raw data is loaded, Play at 10× and drag the cursor | “The values come from real timestamped measurements. Color means change from the first valid sample—not dangerous pressure. Missing and invalid readings stay distinct.” **If endpoint mode:** “The raw dataset is not loaded here. These are the actual recorded first/last valid values, not a simulated time series.” |
+| 0:50–1:10 | The diagnosis | “Both recorded pressures increased. The statistical model suggests hydrate blockage in the service line. Here is our constructed claim: those increases establish that cause.” |
+| 1:10–1:45 | Audit this diagnosis | “Muse separates the measured facts from the physical inference. The document describes hydrate obstruction, but supplies no necessary or sufficiently specific joint-pressure rule. Here is the missing premise.” Show actual captured tool order; do not present the editorial guide as a live model transcript. |
+| 1:45–2:10 | The verdict | “The pressure changes are real. The claimed root cause is not established. Moving the slider changes the viewer, not what Muse saw or concluded. There is no verified discriminating test in this registry; request the applicable tag map and validated differential procedure instead of inventing one.” |
+| 2:10–2:40 | Select example 02; go to The verdict / optional provenance | “A careful auditor also accepts a limited valid comparison. These two directions match a documented fault-2 example. Muse supports that comparison without upgrading it into proof of valve closure.” |
+| 2:40–3:00 | Evidence & provenance; briefly show source and overlap | “These are genuine captured model outputs. Analogue matches have unequal overlap, and source citations do not certify physical truth. Live integration is separate and cost-bounded; independent engineering review remains pending.” |
 
-Do not imply a generated full sensor timeline: this capture contains endpoint and
-quality summaries. Do not imply that the fault-9 causal hypothesis was disproved;
-it was **not established** by the supplied evidence. Do not imply that source
-lookup alone proves graph superiority or that these two examples constitute a
-population accuracy benchmark.
+Judges should understand the well, sensor meaning, observed change, suggested
+failure and missing causal premise without knowing the original sensor IDs.
+Friendly names are primary; identifiers, units and source provenance remain
+inspectable. Keep the original statistical diagnosis unchanged. Do not present
+the constructed claims as real expert diagnoses or the endpoint chart as a full
+sensor timeline. See [the inventory and mapping guarantees](guided-investigation.md).
 
 # Submission description
 

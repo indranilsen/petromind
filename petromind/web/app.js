@@ -1,440 +1,782 @@
 "use strict";
-const $ = (id) => document.getElementById(id);
-const node = (tag, text, cls) => {
+const $ = (id) => document.getElementById(id),
+  NS = "http://www.w3.org/2000/svg";
+const el = (tag, text, cls) => {
   const n = document.createElement(tag);
   if (text !== undefined) n.textContent = text;
   if (cls) n.className = cls;
   return n;
 };
+const svg = (tag, attrs, text) => {
+  const n = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs || {}))
+    n.setAttribute(k, String(v));
+  if (text !== undefined) n.textContent = text;
+  return n;
+};
+const SCENES = [
+  "See the well",
+  "Replay the change",
+  "The diagnosis",
+  "Muse investigates",
+  "The verdict",
+];
+const FAULTS = {
+  9: "Hydrate blockage in the service line",
+  2: "Unexpected closure of the downhole safety valve",
+};
+const symbols = {
+  rising: "↑",
+  falling: "↓",
+  stable: "→",
+  missing: "—",
+  invalid: "!",
+};
+let contextSensor = false;
 let cases = [],
   status = {},
   current = 0,
+  scene = 0,
+  index = 1,
+  selected = "P-TPT",
   condition = "grounded",
-  selected = 0,
-  tab = "Measurements",
-  mode = "replay",
-  opened = false;
-const liveRows = new Map();
-const nice = (x) => x.replaceAll("_", " ").toLowerCase();
-const number = (v) =>
-  v === null || v === undefined
-    ? "Unavailable"
-    : Number(v).toLocaleString("en-US", { maximumFractionDigits: 3 });
-function activeCase() {
-  return cases[current];
+  timer = null,
+  liveBusy = false;
+const liveResults = new Map();
+const c = () => cases[current],
+  audit = () => c().audits[condition],
+  fmt = (v, d = 2) =>
+    v === null || v === undefined
+      ? "Not observed"
+      : Number(v).toLocaleString("en-US", { maximumFractionDigits: d });
+const pressure = (s) => s.startsWith("P-"),
+  unit = (s) => c().sensor_definitions[s]?.unit || "unknown";
+const unitDisplay = (s) => (pressure(s) ? "MPa" : unit(s)),
+  scaled = (s, v) => (v === null ? null : pressure(s) ? v / 1e6 : v);
+function value(s, v) {
+  return v === null
+    ? "Not observed"
+    : `${fmt(scaled(s, v), 3)} ${unitDisplay(s)}`;
 }
-function activeAudit() {
-  if (mode === "live" && liveRows.has(activeCase().id)) {
-    const r = liveRows.get(activeCase().id);
+function state(s, i = index) {
+  const stream = c().replay.series[s];
+  if (!stream)
     return {
-      output: r.output,
-      requests: r.requests,
-      usage: r.usage,
-      latency_seconds: r.latency_seconds,
-      notes: [],
-      sources: liveSources(r),
+      value: null,
+      quality: "not_in_audit",
+      trend: "missing",
+      label: "Not in audit",
     };
-  }
-  return activeCase().audits[condition];
+  const sample = stream.samples[i];
+  if (sample.quality !== "valid")
+    return {
+      ...sample,
+      trend: sample.quality,
+      label:
+        sample.quality === "invalid" ? "Invalid reading" : "Missing reading",
+    };
+  const ref = stream.reference,
+    delta = ref === null ? null : sample.value - ref;
+  return {
+    ...sample,
+    delta,
+    trend:
+      delta === null
+        ? "missing"
+        : delta === 0
+          ? "stable"
+          : delta > 0
+            ? "rising"
+            : "falling",
+    label:
+      delta === null
+        ? "No valid reference"
+        : delta === 0
+          ? "Unchanged from first valid"
+          : `${delta > 0 ? "Rising" : "Falling"} from first valid`,
+  };
 }
-function liveSources(r) {
-  const out = {};
-  for (const a of r.audit || []) {
-    const v = JSON.parse(a.result_json);
-    for (const f of [...(v.facts || []), ...(v.matches || [])])
-      out[f.citation_id] = f;
-  }
-  return out;
+function resetPlayback() {
+  if (timer) clearInterval(timer);
+  timer = null;
 }
-function showError(text) {
-  $("error").textContent = text;
+function showError(message) {
+  $("error").textContent = message;
   $("error").hidden = false;
 }
-function renderCases() {
-  const target = $("cases");
-  target.replaceChildren();
-  cases.forEach((c, i) => {
-    const b = node(
-      "button",
-      undefined,
-      "case-button" + (i === current ? " active" : ""),
-    );
-    b.append(
-      node("small", `CASE 0${i + 1} / REAL 3W`),
-      node("strong", i === 0 ? "The causal leap" : "The limited comparison"),
-      node("span", i === 0 ? "Measured ≠ established" : "A match ≠ root cause"),
-    );
-    b.onclick = () => {
-      current = i;
-      selected = 0;
-      opened = false;
-      render();
-    };
-    target.append(b);
-  });
-}
-function setMode(m) {
-  mode = m;
-  selected = 0;
-  opened = false;
-  condition = "grounded";
+function goto(n) {
+  contextSensor = false;
+  scene = Math.max(0, Math.min(4, n));
   render();
 }
 function render() {
-  renderCases();
-  const c = activeCase();
-  $("caseNumber").textContent = `CASE 0${current + 1} / CLAIM INVESTIGATION`;
-  $("caseTitle").textContent = c.title;
-  $("claim").textContent = c.packet.claim;
-  $("budgetValue").textContent = Object.keys(c.observations).length;
-  const b = c.packet.baseline;
-  const p = b.probabilities.find((x) => x.fault_type === b.prediction);
-  $("baseline").replaceChildren(
-    node("strong", `Statistical prediction: fault ${b.prediction}`),
-    node(
-      "span",
-      ` · ${p ? (p.probability * 100).toFixed(2) + "% model score" : ""} · uncalibrated`,
-    ),
+  $("modeBadge").textContent = "Real captured audit · replay";
+  $("caseSelect").value = String(current);
+  $("progress").replaceChildren(
+    ...SCENES.map((text, i) => {
+      const b = el("button", undefined, i === scene ? "active" : "");
+      b.append(el("b", String(i + 1).padStart(2, "0")), el("span", text));
+      b.setAttribute("aria-current", i === scene ? "step" : "false");
+      b.onclick = () => goto(i);
+      return b;
+    }),
   );
-  $("modeBadge").textContent =
-    mode === "replay" ? "CAPTURED REAL RUN · V1" : "LIVE MODE · NEW V2";
-  $("replayMode").classList.toggle("active", mode === "replay");
-  $("liveMode").classList.toggle("active", mode === "live");
-  $("liveMode").disabled = !status.live_enabled;
-  $("liveHelp").textContent = status.live_enabled
-    ? "Live calls require an explicit click and use the frozen estimated-cost cap."
-    : "Live calls are disabled. Replay requires no API key.";
-  $("auditArea").hidden = !opened;
-  $("inspect").textContent =
-    mode === "replay" ? "Follow the evidence ↗" : "Inspect / run live v2 ↗";
-  if (opened) renderAudit();
+  const heads = [
+    [
+      "This is a production well.",
+      "Pressure, temperature and equipment-state sensors record what happens.",
+    ],
+    [
+      "Explore the recorded change.",
+      "Rising or falling describes a measurement—not whether it is dangerous.",
+    ],
+    [
+      "A plausible diagnosis is still a claim.",
+      `The statistical model suggests: ${FAULTS[c().packet.baseline.prediction]}.`,
+    ],
+    [
+      "Muse follows the claim to its evidence.",
+      "Real captured findings and tool activity. Navigation explanations are editorial.",
+    ],
+    [
+      current === 0
+        ? "The pressure changes are real. The claimed root cause is not established."
+        : "The pattern comparison is supported. Root cause is not established.",
+      "Whole-window verdict: moving the playback cursor never changes the captured audit.",
+    ],
+  ];
+  $("headline").className = "headline" + (scene === 4 ? " final" : "");
+  $("headline").replaceChildren(
+    el("h2", heads[scene][0]),
+    el("p", heads[scene][1]),
+  );
+  $("replayBadge").textContent =
+    c().replay.mode === "raw"
+      ? "Real samples · viewer only"
+      : "Actual endpoints · no raw series";
+  $("timelineTitle").textContent =
+    c().replay.mode === "raw"
+      ? "Replay the original diagnostic window"
+      : "Compare the captured endpoints";
+  $("reference").textContent = c().replay.reference_note;
+  $("slider").max = String(c().replay.mode === "raw" ? 599 : 1);
+  $("slider").value = String(index);
+  $("play").disabled = !c().replay.can_play;
+  $("speed").disabled = !c().replay.can_play;
+  $("play").textContent = timer ? "Ⅱ Pause" : "▶ Play";
+  $("timing").textContent =
+    c().replay.timing + " No interpolation or downsampling.";
+  $("visibility").textContent =
+    c().replay.visibility +
+    (c().replay.mode === "endpoints"
+      ? " Raw replay unavailable: " +
+        c().replay.availability.replaceAll("_", " ") +
+        ". Play is disabled."
+      : "");
+  const hints = [
+    "Click a sensor for its meaning and source.",
+    "Compare measured values. A trend is not a cause.",
+    "Constructed evaluation claim—not an expert diagnosis.",
+    "These are captured public findings, not private model reasoning.",
+    "The audit is fixed; the slider only changes the viewer’s position.",
+  ];
+  $("sceneHint").textContent = hints[scene];
+  $("nextScene").textContent = [
+    "Replay what happened →",
+    "See the diagnosis →",
+    "Audit this diagnosis →",
+    "See Muse’s verdict →",
+    "Restart the story ↺",
+  ][scene];
+  $("verdictSection").hidden = scene !== 4;
+  renderDiagram();
+  renderContext();
+  renderTime();
+  renderVerdict();
+  if (!$("details").hidden) renderDetails();
 }
-function renderAudit() {
-  const c = activeCase();
-  const a = activeAudit();
-  const hasLive = mode === "live" && liveRows.has(c.id);
-  $("grounded").classList.toggle("selected", condition === "grounded");
-  $("ungrounded").classList.toggle("selected", condition === "ungrounded");
-  $("grounded").disabled = mode === "live";
-  $("ungrounded").disabled = mode === "live";
-  $("liveRun").hidden = mode !== "live";
-  $("liveNotice").hidden = mode !== "live";
-  $("liveNotice").textContent = hasLive
-    ? "New live v2 execution. Not part of the original pilot; independent review pending."
-    : "Live v2 has not been paid-evaluated. Below is the original captured reference until you explicitly run live. No API call has been made by opening this view.";
-  if (!a.output) {
-    $("verdictTitle").textContent = "No successful live audit";
-    $("findings").replaceChildren();
-    return;
-  }
-  const r = a.output;
-  selected = Math.min(selected, r.findings.length - 1);
-  $("verdictTitle").textContent =
-    current === 0
-      ? "A measured trend. An unestablished cause."
-      : "A documented comparison. A bounded conclusion.";
-  $("verdictBadge").textContent = r.verdict.replaceAll("_", " ");
-  $("verdictBadge").className =
-    "verdict" + (r.verdict === "SUPPORTED" ? " supported" : "");
-  $("runStats").textContent =
-    `${hasLive ? "Live v2" : "Captured v1"} · ${a.requests} requests · $${a.usage.estimated_cost_usd.toFixed(4)} estimated · ${a.latency_seconds.toFixed(1)}s`;
-  const list = $("findings");
-  list.replaceChildren();
-  r.findings.forEach((f, i) => {
-    const b = node(
-      "button",
-      undefined,
-      "finding" + (i === selected ? " active" : ""),
-    );
-    b.append(
-      node("span", String(i + 1).padStart(2, "0"), "finding-index"),
-      node("strong", f.statement),
-      node(
-        "small",
-        `${nice(f.scope || f.basis)} / ${nice(f.verdict)}`,
-        f.verdict === "SUPPORTED" ? "" : "warn",
-      ),
-    );
-    b.onclick = () => {
-      selected = i;
-      renderAudit();
-    };
-    list.append(b);
-  });
-  const f = r.findings[selected];
-  $("premises").replaceChildren(...f.premises.map((p) => node("li", p)));
-  $("justification").textContent = f.justification;
-  $("gapTitle").textContent =
-    f.verdict === "SUPPORTED"
-      ? "02 / KEEP THE CLAIM WITHIN ITS SCOPE"
-      : "02 / LOCATE THE MISSING PREMISE";
-  $("gap").textContent =
-    f.verdict === "SUPPORTED" && f.missing_premise
-      ? "Captured v1 proposed gap (reviewed below as a requirement for a stronger claim): " +
-        f.missing_premise
-      : f.missing_premise || "No missing premise at the stated claim scope.";
-  $("next").textContent =
-    typeof f.next_evidence === "string"
-      ? f.next_evidence
-      : `${nice(f.next_evidence.kind)}${f.next_evidence.target ? " / " + f.next_evidence.target : ""}${f.next_evidence.purpose ? " — " + f.next_evidence.purpose : ""}`;
-  $("note").textContent =
-    a.notes?.[selected]?.text ||
-    "New live output. Mechanical source/value checks do not establish semantic or physical correctness. Independent review is required.";
-  $("citations").replaceChildren(
-    ...f.citations.map((id) => {
-      const b = node("button", id, "citation");
+function renderDiagram() {
+  $("familyRow").replaceChildren(
+    ...["T-TPT", "T-PDG", "ESTADO-DHSV", "QGL"].map((s) => {
+      const b = el(
+        "button",
+        `${c().sensor_definitions[s].name} · ${s} / not in audit`,
+        "quiet",
+      );
       b.onclick = () => {
-        tab = id.startsWith("measurement:")
-          ? "Measurements"
-          : id.startsWith("analogue:")
-            ? "History"
-            : "Knowledge";
-        renderEvidence();
-        $("evidence").scrollIntoView({ behavior: "smooth", block: "nearest" });
+        selected = s;
+        contextSensor = true;
+        renderContext();
+        renderDiagram();
       };
       return b;
     }),
   );
-  $("actions").replaceChildren(
-    ...c.reviewed_actions.map((action) => {
-      const d = node("article", undefined, "action-card");
-      d.append(
-        node("div", action.kind, "eyebrow"),
-        node("h3", action.target),
-        node("p", action.purpose),
-        node("p", action.status, "action-status"),
+  const layer = $("sensors");
+  layer.replaceChildren();
+  const mobile = matchMedia("(max-width:740px)").matches;
+  $("well").classList.toggle("mobile", mobile);
+  const charged = {
+    "P-TPT": [28, 76, 392, 176],
+    "P-PDG": [28, 232, 392, 319],
+    "ABER-CKGL": [452, 6, 550, 152],
+  };
+  for (const [s, pos] of Object.entries(charged)) {
+    const [x, y, px, py] = pos,
+      w = 326,
+      h = 102,
+      st = state(s),
+      d = c().sensor_definitions[s];
+    const g = svg("g", {
+      class: `sensor-hit ${st.trend}${selected === s ? " selected" : ""}`,
+      role: "button",
+      tabindex: 0,
+      "aria-label": `${d.name}, ${s}, ${value(s, st.value)}, ${st.label}`,
+    });
+    const activate = () => {
+      selected = s;
+      contextSensor = true;
+      renderContext();
+      renderDiagram();
+    };
+    g.onclick = activate;
+    g.onkeydown = (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        activate();
+      }
+    };
+    g.append(
+      svg("title", {}, `${d.name}: ${d.description} ${s}. ${st.label}.`),
+      svg("path", {
+        d: `M${x + (x < 400 ? w : 0)} ${y + h * 0.5} L${px} ${py}`,
+        class: "sensor-connector",
+      }),
+      svg("rect", { x, y, width: w, height: h, rx: 8, class: "sensor-card" }),
+    );
+    const dy = [24, 43, 73, 94];
+    g.append(
+      svg(
+        "text",
+        { x: x + 13, y: y + dy[0], class: "sensor-title" },
+        s === "ABER-CKGL" ? "Gas-lift opening" : d.name,
+      ),
+      svg("text", { x: x + 13, y: y + dy[1], class: "sensor-id" }, s),
+      svg(
+        "text",
+        { x: x + 13, y: y + dy[2], class: "sensor-value" },
+        value(s, st.value),
+      ),
+      svg(
+        "text",
+        { x: x + 13, y: y + dy[3], class: "sensor-trend" },
+        `${symbols[st.trend]} ${st.delta && st.quality === "valid" ? (st.delta > 0 ? "+" : "") + fmt(scaled(s, st.delta), 3) + " " + unitDisplay(s) + " from first valid" : st.label}`,
+      ),
+    );
+    layer.append(g);
+  }
+}
+
+function sensorContext() {
+  const d = c().sensor_definitions[selected],
+    st = state(selected),
+    obs = c().observations[selected],
+    box = $("context");
+  box.append(
+    el("div", "01 / UNDERSTAND THE SENSOR", "eyebrow"),
+    el("h3", d.name),
+    el("span", selected, "pill"),
+    el("p", d.description),
+  );
+  if (pressure(selected))
+    box.append(
+      el(
+        "p",
+        "Pressure describes how strongly fluid pushes per unit area. A pressure change is an observation, not a diagnosis.",
+      ),
+    );
+  if (obs) {
+    const line = el("div", value(selected, st.value), "value-large");
+    box.append(
+      line,
+      el(
+        "p",
+        `${symbols[st.trend]} ${st.label}. ${st.quality === "valid" ? "Valid recorded sample." : st.quality === "invalid" ? "Rejected by numeric quality guardrail; not a physical danger threshold." : "No measurement is available."}`,
+      ),
+    );
+    if (st.value !== null)
+      box.append(
+        el("p", `Canonical recorded value: ${fmt(st.value, 4)} ${d.unit}.`),
       );
-      return d;
+    if (st.delta !== undefined && st.delta !== null)
+      box.append(
+        el(
+          "p",
+          `Difference from first valid: ${st.delta > 0 ? "+" : ""}${value(selected, st.delta)}. This is not a normal-operation or safety threshold.`,
+        ),
+      );
+    box.append(
+      el(
+        "p",
+        `Captured window quality: ${obs.count}/${obs.total} valid; ${obs.quality_status}. ${obs.is_constant ? "Constant readings are not automatically missing." : ""}`,
+      ),
+    );
+  } else
+    box.append(
+      el(
+        "p",
+        "Not observed in this audit. No value or physical state is inferred.",
+        "gap",
+      ),
+    );
+  box.append(
+    el(
+      "p",
+      `Documented association: ${d.equipment.replaceAll("_", " ")}. Unit: ${d.unit}${pressure(selected) ? ". Display conversion: MPa = Pa ÷ 1,000,000" : ""}.`,
+    ),
+  );
+  if (d.valve_encodings?.length)
+    box.append(
+      el(
+        "p",
+        "Documented ESTADO encoding: 0 closed, 1 open, 0.5 other. This is not an observed valve position or a hidden operational state label.",
+      ),
+    );
+  const source = el("a", "Sensor-definition source ↗");
+  source.href = d.location_fact.provenance.url;
+  source.target = "_blank";
+  source.rel = "noopener noreferrer";
+  box.append(source, el("p", d.scope, "context-note"));
+  const families = el("div", undefined, "family-buttons");
+  for (const s of ["T-TPT", "ESTADO-DHSV", "QGL"]) {
+    const b = el("button", c().sensor_definitions[s].name, "quiet");
+    b.onclick = () => {
+      selected = s;
+      renderContext();
+      renderDiagram();
+    };
+    families.append(b);
+  }
+  box.append(families);
+}
+function renderContext() {
+  const box = $("context");
+  box.replaceChildren();
+  if (scene <= 1 || contextSensor) {
+    sensorContext();
+    if (contextSensor && scene > 1) {
+      const back = el("button", "Return to investigation →", "quiet");
+      back.onclick = () => {
+        contextSensor = false;
+        renderContext();
+      };
+      box.append(back);
+    }
+    return;
+  }
+  if (scene === 2) {
+    box.append(
+      el("div", "03 / THE MODEL’S DIAGNOSIS", "eyebrow"),
+      el("h3", FAULTS[c().packet.baseline.prediction]),
+      el(
+        "p",
+        current === 0
+          ? "A hydrate blockage can obstruct the service line. The claim says two pressure rises prove that cause."
+          : "A safety-valve closure is plausible. This claim only compares recorded pressure directions with a published example.",
+      ),
+    );
+    const auditButton = el("button", "Audit this diagnosis →", "primary");
+    auditButton.onclick = () => goto(3);
+    box.append(auditButton);
+    box.append(
+      el("div", "THE CLAIM TO AUDIT", "eyebrow"),
+      el("p", c().packet.claim, "quote"),
+      el(
+        "p",
+        "Constructed evaluation claim using actual telemetry. The statistical score is uncalibrated and is not presented as a likelihood.",
+        "context-note",
+      ),
+    );
+    return;
+  }
+  if (scene === 3) {
+    box.append(
+      el("div", "04 / MUSE INVESTIGATES", "eyebrow"),
+      el("h3", "Which premise makes the leap?"),
+      el(
+        "p",
+        "Editorial guide: verify recorded changes → consult the document → examine the inference → identify the missing premise. This is not a fabricated tool chronology.",
+      ),
+    );
+    const f = c().audits.grounded.output.findings[2];
+    box.append(
+      el("p", f.statement, "quote"),
+      el("p", f.justification),
+      el(
+        "p",
+        current === 0
+          ? "Missing premise: " + f.missing_premise
+          : "The source supports this limited comparison. Generalizability is needed only for a stronger diagnosis.",
+        "gap",
+      ),
+    );
+    box.append(el("div", "ACTUAL CAPTURED TOOL ORDER", "eyebrow"));
+    for (const a of c().captured_activity.grounded) {
+      const d = el("div", undefined, "tool-step");
+      const label =
+        a.tool === "lookup_knowledge"
+          ? `Consult knowledge: ${a.topic}`
+          : a.tool === "search_history"
+            ? `Compare training history (${a.match_overlap.join(", ")} shared sensors)`
+            : a.error
+              ? "Submission rejected; repair requested"
+              : "Submit captured audit";
+      d.append(el("b", `${a.sequence}. ${label}`));
+      box.append(d);
+    }
+    box.append(
+      el(
+        "p",
+        "Muse started with three already charged sensor summaries. It did not request the raw samples or use this playback cursor.",
+        "context-note",
+      ),
+    );
+    return;
+  }
+  box.append(
+    el("div", "05 / THE BOUNDARY OF THE EVIDENCE", "eyebrow"),
+    el(
+      "h3",
+      current === 0
+        ? "Measured changes. Unestablished cause."
+        : "Supported comparison. Unestablished cause.",
+    ),
+    el(
+      "p",
+      current === 0
+        ? "Muse accepts that both recorded pressures increased. It does not accept that those measurements establish service-line hydrate."
+        : "Muse verifies that the two recorded directions match the published example. It does not upgrade a match into proof of valve closure.",
+    ),
+  );
+  for (const a of c().reviewed_actions) {
+    box.append(
+      el("div", a.kind, "eyebrow"),
+      el("p", a.target),
+      el("p", a.status, "context-note"),
+    );
+  }
+  box.append(
+    el(
+      "p",
+      "Concrete requests are editorial review annotations, not new captured Muse output. No verified fault-discriminating test is supplied.",
+      "context-note",
+    ),
+  );
+}
+function renderTime() {
+  const r = c().replay;
+  $("timing").textContent =
+    r.timing +
+    " No filling or resampling. " +
+    (r.mode === "raw"
+      ? `At ${$("speed").value}×, playback advances ${$("speed").value} measured samples per wall second; all 600 samples remain on the chart.`
+      : "The two points are not a continuous trace.");
+  $("slider").value = String(index);
+  $("clock").textContent =
+    r.mode === "raw"
+      ? `${Math.floor(index / 60)}:${String(index % 60).padStart(2, "0")} / 9:59`
+      : index === 0
+        ? "First valid values"
+        : "Last valid values";
+  $("endLabel").textContent =
+    r.mode === "raw" ? r.timestamps[index] : "2 captured endpoints";
+  $("charts").replaceChildren(...["P-PDG", "P-TPT"].map((s) => chart(s)));
+}
+function chart(s) {
+  const r = c().replay,
+    stream = r.series[s],
+    data = stream.samples.map((p) => scaled(s, p.value)),
+    valid = data.filter((v) => v !== null),
+    d = el("article", undefined, "chart-card");
+  const head = el("div", undefined, "chart-heading");
+  head.append(
+    el("strong", `${c().sensor_definitions[s].name} · ${s}`),
+    el("span", `${value(s, stream.samples[index].value)}`),
+  );
+  d.append(head);
+  const v = svg("svg", {
+    viewBox: "0 0 560 88",
+    class: "chart-svg",
+    role: "img",
+    "aria-label": `${s} ${r.mode === "raw" ? "real samples, gaps preserved" : "two endpoints only, no continuous trace"}`,
+  });
+  if (!valid.length) {
+    v.append(
+      svg("text", { x: 20, y: 40, class: "chart-axis" }, "No valid readings"),
+    );
+    d.append(v);
+    return d;
+  }
+  let lo = Math.min(...valid),
+    hi = Math.max(...valid);
+  if (lo === hi) {
+    lo -= 1;
+    hi += 1;
+  }
+  const x = (i) => 48 + (i / (data.length - 1)) * 493,
+    y = (p) => 57 - ((p - lo) / (hi - lo)) * 44;
+  v.append(
+    svg("text", { x: 0, y: 14, class: "chart-axis" }, `${fmt(hi, 2)}`),
+    svg("text", { x: 0, y: 57, class: "chart-axis" }, `${fmt(lo, 2)}`),
+    svg("text", { x: 3, y: 78, class: "chart-axis" }, unitDisplay(s)),
+  );
+  if (r.mode === "raw") {
+    let path = "",
+      connected = false;
+    for (let i = 0; i < data.length; i++) {
+      if (data[i] === null) {
+        connected = false;
+        continue;
+      }
+      path += (connected ? "L" : "M") + x(i) + " " + y(data[i]) + " ";
+      connected = true;
+    }
+    v.append(svg("path", { d: path, class: "chart-line" }));
+  } else
+    data.forEach((p, i) => {
+      if (p !== null)
+        v.append(
+          svg("circle", { cx: x(i), cy: y(p), r: 4, class: "chart-point" }),
+        );
+    });
+  v.append(
+    svg("line", {
+      x1: x(index),
+      x2: x(index),
+      y1: 5,
+      y2: 64,
+      class: "chart-cursor",
     }),
   );
+  if (data[index] !== null)
+    v.append(
+      svg("circle", {
+        cx: x(index),
+        cy: y(data[index]),
+        r: 4,
+        class: "chart-point",
+      }),
+    );
+  v.append(
+    svg(
+      "text",
+      { x: 48, y: 78, class: "chart-axis" },
+      r.mode === "raw" ? "0:00" : "First valid",
+    ),
+    svg(
+      "text",
+      { x: 490, y: 78, class: "chart-axis" },
+      r.mode === "raw" ? "9:59" : "Last valid",
+    ),
+  );
+  d.append(v);
+  return d;
+}
+function renderVerdict() {
+  const a = c().audits.grounded.output;
+  $("verdictTitle").textContent =
+    current === 0
+      ? "THE PRESSURE CHANGES ARE REAL. THE CLAIMED ROOT CAUSE IS NOT ESTABLISHED."
+      : "THE DOCUMENTED COMPARISON IS SUPPORTED. ROOT CAUSE IS NOT ESTABLISHED.";
+  const statements =
+    current === 0
+      ? [
+          [
+            "Observed",
+            "Downhole and tree-pressure endpoints increased. These recorded changes are real.",
+          ],
+          [
+            "Documented",
+            "The source describes hydrate obstruction in the service line. It does not supply a necessary or specific pressure criterion.",
+          ],
+          [
+            "Inferred",
+            "The claim upgrades those increases to proof of a physical cause. That connecting premise is missing.",
+          ],
+          [
+            "Needed",
+            "Request the applicable tag map and validated differential procedure. No verified discriminating test is supplied.",
+          ],
+        ]
+      : [
+          [
+            "Observed",
+            "Downhole pressure increased and tree pressure decreased.",
+          ],
+          [
+            "Documented",
+            "Those two directions match the cited published fault-2 example.",
+          ],
+          [
+            "Inferred",
+            "A limited example match does not prove a safety-valve closure or exclude another cause.",
+          ],
+          [
+            "Needed",
+            "No more evidence is required for this narrow comparison. Valve logs and differential criteria would concern a stronger causal claim.",
+          ],
+        ];
+  $("verdictColumns").replaceChildren(
+    ...statements.map(([h, p]) => {
+      const n = el("article");
+      n.append(el("h3", h), el("p", p));
+      return n;
+    }),
+  );
+}
+function renderDetails() {
+  const a = audit();
+  $("grounded").classList.toggle("selected", condition === "grounded");
+  $("ungrounded").classList.toggle("selected", condition === "ungrounded");
+  $("detailFindings").replaceChildren(
+    ...a.output.findings.map((f, i) => {
+      const n = el("article", undefined, "detail-finding");
+      n.append(
+        el("span", `${f.verdict} / ${f.basis}`, "tag"),
+        el("h3", f.statement),
+      );
+      const list = el("ul");
+      list.append(...f.premises.map((p) => el("li", p)));
+      n.append(
+        list,
+        el("p", f.justification),
+        el(
+          "p",
+          `Captured missing premise: ${f.missing_premise || "None stated"}`,
+        ),
+        el("p", `Captured next evidence: ${f.next_evidence}`),
+        el("p", "Editorial scope note: " + a.notes[i].text, "review-note"),
+      );
+      return n;
+    }),
+  );
+  const sources = $("sources");
+  sources.replaceChildren();
+  for (const [id, f] of Object.entries(a.sources)) {
+    const n = el("article", undefined, "source-card");
+    n.append(el("strong", id));
+    if (f.matched_sensors) {
+      n.append(
+        el(
+          "p",
+          `Historical label ${f.training_event}; ${f.shared_sensors} shared sensors: ${f.matched_sensors.join(", ")}. Distance ${f.distance}, not a probability.`,
+        ),
+      );
+      const p = el("progress");
+      p.max = Object.keys(c().observations).length;
+      p.value = f.shared_sensors;
+      n.append(p);
+    } else {
+      n.append(
+        el("p", `${f.subject} → ${f.relation} → ${f.object}`),
+        el("p", `${f.scope} · ${f.locator}`),
+      );
+      const link = el("a", "Open recorded source ↗");
+      link.href = f.provenance.url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      n.append(link);
+    }
+    sources.append(n);
+  }
   $("raw").textContent = JSON.stringify(
     {
-      attribution: hasLive
-        ? "New live v2 output"
-        : "Original captured real Muse output, unchanged",
-      protocol_id: hasLive
-        ? liveRows.get(c.id).protocol_id
-        : c.source_protocol_id,
-      output: r,
+      attribution: "Original captured real Muse output, unchanged",
+      protocol_id: c().source_protocol_id,
+      output: a.output,
+      baseline: c().packet.baseline,
+      chronology: c().captured_activity[condition],
     },
     null,
     2,
   );
-  renderEvidence();
+  $("liveRun").disabled = !status.live_enabled || liveBusy;
+  $("liveRun").textContent = liveBusy
+    ? "Muse is auditing…"
+    : status.live_enabled
+      ? "Run live v2 · uses API · separate protocol"
+      : "Live disabled · captured replay active";
+  const saved = liveResults.get(c().id);
+  $("liveRaw").hidden = !saved;
+  if (saved) $("liveRaw").textContent = JSON.stringify(saved, null, 2);
 }
-function renderEvidence() {
-  for (const t of ["Measurements", "Knowledge", "History"])
-    $("tab" + t).classList.toggle("selected", t === tab);
-  const e = $("evidence");
-  e.replaceChildren();
-  const c = activeCase();
-  const a = activeAudit();
-  if (tab === "Measurements") {
-    e.append(
-      node(
-        "div",
-        "Recorded endpoints and quality summaries from a 600-second diagnostic window. Endpoint comparison, not a reconstructed time series. No new sensor access.",
-        "evidence-info",
-      ),
-    );
-    for (const [sensor, s] of Object.entries(c.observations)) {
-      const d = node("article", undefined, "sensor-card");
-      const head = node("div", undefined, "sensor-name");
-      head.append(
-        node("span", sensor),
-        node(
-          "span",
-          `${s.count}/${s.total} valid · ${s.quality_status}`,
-          "quality" + (!s.available ? " missing" : ""),
-        ),
-      );
-      d.append(head);
-      if (s.available) {
-        const ends = node("div", undefined, "endpoints");
-        const first = node("div");
-        first.append(
-          node("small", "FIRST RECORDED"),
-          node("strong", number(s.first)),
-        );
-        const last = node("div");
-        last.append(
-          node("small", "LAST RECORDED"),
-          node("strong", number(s.last)),
-        );
-        ends.append(
-          first,
-          node(
-            "span",
-            s.delta === 0 ? "→" : s.delta > 0 ? "↗" : "↘",
-            "endpoint-arrow",
-          ),
-          last,
-        );
-        d.append(
-          ends,
-          node(
-            "div",
-            `Δ ${s.delta > 0 ? "+" : ""}${number(s.delta)} ${sensor.startsWith("P-") ? "Pa" : "%"}`,
-            "delta",
-          ),
-        );
-      } else
-        d.append(
-          node(
-            "p",
-            "No observed value. Do not infer an opening or valve position.",
-            "evidence-info",
-          ),
-        );
-      d.append(
-        node(
-          "div",
-          s.available
-            ? "Recorded values establish this numerical observation, not its physical cause."
-            : "Missing readings remain missing; legitimate zeros would remain valid.",
-          "sensor-caption",
-        ),
-      );
-      e.append(d);
-    }
-  } else if (tab === "Knowledge") {
-    e.append(
-      node(
-        "div",
-        "Facts actually retrieved in this run. Documented generic semantics and published examples are not verified per-well topology.",
-        "evidence-info",
-      ),
-    );
-    const facts = Object.values(a.sources).filter((f) => f.provenance);
-    if (!facts.length)
-      e.append(
-        node(
-          "p",
-          "This ungrounded audit received no documentary context. Withholding documentary verification is reasonable.",
-          "evidence-info",
-        ),
-      );
-    for (const f of facts) {
-      const d = node("article", undefined, "fact-card");
-      const g = node("div", undefined, "fact-graph");
-      g.append(
-        node("span", f.subject, "fact-node"),
-        node("span", f.relation.replace("example:", "example / "), "relation"),
-        node("span", f.object, "fact-node"),
-      );
-      d.append(
-        g,
-        node("p", `${f.status} · ${nice(f.scope)}`),
-        node("p", f.locator),
-      );
-      const url = f.provenance.url;
-      if (
-        url &&
-        /^https:\/\/(arxiv\.org|github\.com|api\.github\.com)\//.test(url)
-      ) {
-        const link = node("a", "Open source ↗");
-        link.href = url;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        d.append(link);
-      }
-      e.append(d);
-    }
-    e.append(
-      node(
-        "div",
-        "Valve-code review: the registered Table 3 semantics are 0 closed, 1 open, 0.5 other. Neither captured audit queried them; no actual ESTADO-DHSV measurement is in these packets. This is review context, not captured Muse reasoning.",
-        "evidence-info",
-      ),
-    );
-  } else {
-    e.append(
-      node(
-        "div",
-        "Relative-median analogues from training wells only. Distances are not fault probabilities. Compare overlap before interpreting similarity.",
-        "evidence-info",
-      ),
-    );
-    const matches = Object.values(a.sources).filter((f) => f.matched_sensors);
-    if (!matches.length)
-      e.append(
-        node(
-          "p",
-          "No historical evidence was returned to this condition.",
-          "evidence-info",
-        ),
-      );
-    for (const m of matches) {
-      const d = node("article", undefined, "fact-card");
-      d.append(
-        node(
-          "div",
-          `${m.citation_id} / historical event ${m.training_event}`,
-          "eyebrow",
-        ),
-        node(
-          "h3",
-          `${m.shared_sensors} of ${Object.keys(c.observations).length} observed sensors shared`,
-        ),
-      );
-      const progress = node("progress");
-      progress.max = Object.keys(c.observations).length;
-      progress.value = m.shared_sensors;
-      progress.setAttribute("aria-label", "Shared observed sensors");
-      d.append(progress);
-      for (const s of m.matched_sensors)
-        d.append(node("span", s, "sensor-tag"));
-      d.append(
-        node(
-          "p",
-          `Distance ${m.distance}. Shared sensor names do not establish a shared physical cause.`,
-        ),
-      );
-      e.append(d);
-    }
-  }
-}
-$("inspect").onclick = () => {
-  opened = true;
-  selected = condition === "grounded" ? 2 : current === 0 ? 3 : 2;
+$("caseSelect").onchange = () => {
+  resetPlayback();
+  contextSensor = false;
+  current = Number($("caseSelect").value);
+  index = c().replay.mode === "raw" ? 0 : 1;
+  scene = 0;
+  selected = "P-TPT";
   render();
-  $("auditArea").scrollIntoView({ behavior: "smooth", block: "start" });
 };
+$("nextScene").onclick = () => goto(scene === 4 ? 0 : scene + 1);
+$("slider").oninput = () => {
+  index = Number($("slider").value);
+  renderDiagram();
+  renderTime();
+  if (scene <= 1 || contextSensor) renderContext();
+};
+$("speed").onchange = () => renderTime();
+$("play").onclick = () => {
+  if (!c().replay.can_play) return;
+  if (timer) {
+    resetPlayback();
+    $("play").textContent = "▶ Play";
+    return;
+  }
+  if (index >= 599) index = 0;
+  timer = setInterval(() => {
+    index = Math.min(599, index + Number($("speed").value));
+    renderDiagram();
+    renderTime();
+    if (scene <= 1 || contextSensor) renderContext();
+    if (index === 599) {
+      resetPlayback();
+      $("play").textContent = "▶ Play";
+    }
+  }, 1000);
+  $("play").textContent = "Ⅱ Pause";
+};
+$("inspectDetails").onclick = () => {
+  $("details").hidden = false;
+  renderDetails();
+  $("details").scrollIntoView({ behavior: "smooth", block: "start" });
+};
+$("closeDetails").onclick = () => ($("details").hidden = true);
 $("grounded").onclick = () => {
   condition = "grounded";
-  selected = 2;
-  renderAudit();
+  renderDetails();
 };
 $("ungrounded").onclick = () => {
   condition = "ungrounded";
-  selected = current === 0 ? 3 : 2;
-  renderAudit();
-};
-for (const t of ["Measurements", "Knowledge", "History"])
-  $("tab" + t).onclick = () => {
-    tab = t;
-    renderEvidence();
-  };
-$("replayMode").onclick = () => setMode("replay");
-$("liveMode").onclick = () => {
-  if (status.live_enabled) setMode("live");
+  renderDetails();
 };
 $("downloadReview").onclick = async () => {
-  const r = await fetch("/api/review");
-  const blob = new Blob([JSON.stringify(await r.json(), null, 2)], {
-    type: "application/json",
-  });
-  const a = document.createElement("a");
+  const blob = new Blob(
+    [JSON.stringify(await (await fetch("/api/review")).json(), null, 2)],
+    { type: "application/json" },
+  );
+  const a = el("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "petromind-mechanical-claim-review.json";
+  a.download = "petromind-claim-review.json";
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 };
 $("liveRun").onclick = async () => {
-  const b = $("liveRun");
-  b.disabled = true;
-  b.textContent = "Muse is auditing…";
-  const id = activeCase().id;
+  if (liveBusy) return;
+  liveBusy = true;
+  renderDetails();
+  const id = c().id;
   try {
     const response = await fetch("/api/live", {
       method: "POST",
@@ -449,28 +791,31 @@ $("liveRun").onclick = async () => {
     });
     const r = await response.json();
     if (!response.ok || r.status !== "completed")
-      throw new Error(r.error || r.reason || "Live run failed");
-    liveRows.set(id, r);
-    selected = 0;
-    if (activeCase().id === id) renderAudit();
-  } catch (error) {
-    showError(
-      `Live execution did not complete: ${error.message}. No replay has been substituted for this live result.`,
-    );
+      throw new Error(r.error || r.reason);
+    liveResults.set(id, r);
+    $("liveResult").textContent =
+      "New live v2 result, independent review pending. Captured replay and verdict were not changed.";
+  } catch (e) {
+    showError(`Live failed: ${e.message}. No replay was substituted.`);
   } finally {
-    b.disabled = false;
-    b.textContent = "Run live v2 · uses API";
+    liveBusy = false;
+    renderDetails();
   }
 };
+window.addEventListener("resize", () => {
+  if (cases.length) renderDiagram();
+});
 (async () => {
   try {
-    const [c, s] = await Promise.all([
+    const [cr, sr] = await Promise.all([
       fetch("/api/cases"),
       fetch("/api/status"),
     ]);
-    if (!c.ok || !s.ok) throw new Error("Cannot load reviewed capture");
-    cases = (await c.json()).cases;
-    status = await s.json();
+    if (!cr.ok || !sr.ok)
+      throw new Error("Reviewed capture could not be loaded");
+    cases = (await cr.json()).cases;
+    status = await sr.json();
+    index = c().replay.mode === "raw" ? 0 : 1;
     render();
   } catch (e) {
     showError(e.message);

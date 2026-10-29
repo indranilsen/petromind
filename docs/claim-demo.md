@@ -1,5 +1,9 @@
 # PetroMind: follow the evidence
 
+The frontend has been redesigned into a five-scene physical-system investigation.
+Use the current [guided experience and replay setup](guided-investigation.md).
+The sections below retain the original captured-audit and live-v2 boundaries.
+
 A local interactive demonstration of two **captured real Muse Spark audits**:
 
 - Recorded pressures rise, but the claim that they establish service-line hydrate
@@ -43,10 +47,10 @@ Knowledge and Analogues. History displays the exact shared sensor names/counts.
 Switch Grounded / Ungrounded to compare actual outputs, not invented responses.
 Expand the original payload to inspect unchanged model text.
 
-Measurements show recorded first/last values, deltas, counts and quality. **They
-are endpoint comparisons, not fabricated time-series plots.** Full 600-point
-telemetry is not included in the captured packet. A real timeline would require
-the original raw series and the same charged-sensor isolation; none is invented.
+The new optional private raw-data adapter can load and verify the original
+600-point series; see the guided setup. Without raw data, measurements remain
+endpoint comparisons, not fabricated time-series plots. Raw samples are viewer
+only; Muse still receives only the fixed captured summary packet.
 
 ## Scope-aware live v2 (present, disabled by default)
 
