@@ -1,11 +1,23 @@
 # PetroMind
 
-**Current direction: Muse Spark audits industrial diagnostic claims.** It traces
-observations to charged telemetry, retrieves documented context, identifies
-missing premises, and proposes the smallest next evidence needed. The
-[claim-auditor pilot](docs/claim-auditor.md) is implemented and offline-tested;
-its live capability gate is **PENDING**, so no production UI or accuracy benefit
-is claimed. See [actual execution status](docs/claim-auditor-status.md).
+**PetroMind uses Muse Spark to identify when an industrial diagnosis outruns its evidence.**
+The [interactive claim-audit demo](docs/claim-demo.md) follows two real captured
+Muse investigations from measured pressure changes to documented context, missing
+premises and specific evidence requests. Replay is explicitly labeled; live v2
+is separately enabled and cost-bounded. Captured output is unchanged.
+
+```bash
+python -m pip install -e '.[test,agent]'
+python scripts/demo_claim_audit.py serve --capture .petromind/claim-audit-v1
+# Open http://127.0.0.1:8765 — no API key needed for replay
+```
+
+The original reviewed capture is required and is not redistributed with the repo.
+See the [claim-level review / expert packet](docs/claim-level-review.md),
+[setup and live-v2 boundaries](docs/claim-demo.md), and
+[three-minute flow / submission description](docs/hackathon-demo.md).
+Independent engineering review remains pending. The demo does not certify
+physical correctness or retroactively pass an experimental gate.
 
 The earlier experiments remain intact. Conventional adaptive diagnosis achieved
 60.6% on the frozen 33 incidents; direct Muse sensor-only/GraphRAG achieved
