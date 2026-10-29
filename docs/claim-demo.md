@@ -1,6 +1,6 @@
 # PetroMind: follow the evidence
 
-The frontend has been redesigned into a five-scene physical-system investigation.
+The frontend has been redesigned into a three-scene guided investigation.
 Use the current [guided experience and replay setup](guided-investigation.md).
 The sections below retain the original captured-audit and live-v2 boundaries.
 
@@ -41,11 +41,13 @@ explicit numeric observations and source citations. A pinned semantic digest
 rejects altered captured outputs. The API projects only public packets, results
 and source context; no evaluation targets, test labels, wells or filenames.
 
-Choose either example; select **Follow the evidence**. Click each finding to
-inspect public premises, exact measurements and source IDs. Switch Measurements,
-Knowledge and Analogues. History displays the exact shared sensor names/counts.
-Switch Grounded / Ungrounded to compare actual outputs, not invented responses.
-Expand the original payload to inspect unchanged model text.
+Choose either example. **See the diagnosis → Ask Muse to investigate** reaches
+the verdict in two clicks. This is explicitly captured replay, not a new live call.
+Click a pressure sensor for its optional value/chart; no charts are visible by
+default. **Explore evidence**, available after the verdict, opens the complete
+source/measurement/output drawer. Switch actual Grounded / Ungrounded outputs
+there. History includes the exact shared sensor names/counts. Live v2 remains
+inside that drawer and requires separate explicit authorization/configuration.
 
 The new optional private raw-data adapter can load and verify the original
 600-point series; see the guided setup. Without raw data, measurements remain

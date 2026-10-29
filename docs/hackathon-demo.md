@@ -1,26 +1,25 @@
-# Three-minute guided demo flow
+# Three-minute demo: a fact is not yet a cause
 
-Start on **See the well**. The badge identifies a real captured Muse audit replay.
-Check the data badge before recording: raw data must be privately mapped and
-verified to enable Play. Otherwise show only the actual captured endpoints and
-say so. Never stage a continuous replay with generated readings.
+Open case **01 · Two pressures rise**. This is a replay of a genuine captured Muse
+audit, not a new API execution. The main story takes two clicks. Do not begin in
+the evidence drawer or narrate every implementation detail.
 
 | Time | Scene and action | Suggested narration |
 |---|---|---|
-| 0:00–0:25 | See the well; click Tree pressure, then Downhole pressure | “This is a production well. These sensors record pressure at the wellhead and downhole. The equipment associations are documented; this simplified layout is illustrative, not an exact well piping diagram.” |
-| 0:25–0:50 | Replay the change; if verified raw data is loaded, Play at 10× and drag the cursor | “The values come from real timestamped measurements. Color means change from the first valid sample—not dangerous pressure. Missing and invalid readings stay distinct.” **If endpoint mode:** “The raw dataset is not loaded here. These are the actual recorded first/last valid values, not a simulated time series.” |
-| 0:50–1:10 | The diagnosis | “Both recorded pressures increased. The statistical model suggests hydrate blockage in the service line. Here is our constructed claim: those increases establish that cause.” |
-| 1:10–1:45 | Audit this diagnosis | “Muse separates the measured facts from the physical inference. The document describes hydrate obstruction, but supplies no necessary or sufficiently specific joint-pressure rule. Here is the missing premise.” Show actual captured tool order; do not present the editorial guide as a live model transcript. |
-| 1:45–2:10 | The verdict | “The pressure changes are real. The claimed root cause is not established. Moving the slider changes the viewer, not what Muse saw or concluded. There is no verified discriminating test in this registry; request the applicable tag map and validated differential procedure instead of inventing one.” |
-| 2:10–2:40 | Select example 02; go to The verdict / optional provenance | “A careful auditor also accepts a limited valid comparison. These two directions match a documented fault-2 example. Muse supports that comparison without upgrading it into proof of valve closure.” |
-| 2:40–3:00 | Evidence & provenance; briefly show source and overlap | “These are genuine captured model outputs. Analogue matches have unequal overlap, and source citations do not certify physical truth. Live integration is separate and cost-bounded; independent engineering review remains pending.” |
+| 0:00–0:30 | **What happened?** Show the well and its two sensor indicators. Optionally scrub. | “Two pressure sensors in a production well ended higher than they started. One is deep down; the ‘tree’ is equipment near the top. These changes are real.” If raw loading is verified, Play runs real samples at 10×. Otherwise say: “These are captured start/end values; raw replay isn’t loaded.” |
+| 0:30–0:55 | Click **See the diagnosis**. | “The statistical engine suggests service-line hydrate: ice-like material that can restrict flow. We constructed a plausible claim to test: both pressures rose, so that establishes this cause. Does it?” |
+| 0:55–1:30 | Click **Ask Muse to investigate**. Pause on the verdict. | “The pressures really rose. But that doesn’t prove the cause. Muse accepted the measurements, consulted the documented context, and found no supplied verified rule establishing that these pressure increases are necessary or specific to hydrate.” The large story is editorial explanation; the quoted finding is exact captured Muse output. Do not imply a new live call or staged tool chronology. |
+| 1:30–1:55 | Read the missing-evidence sentence; optionally open **Explore evidence**. | “The missing piece is the causal rule—not another decimal place. We would request the applicable well documentation and a validated way to distinguish causes. We don’t invent a discriminating test that our sources don’t supply.” The drawer contains original claims, measured values, documents and exact model findings. |
+| 1:55–2:25 | Close the drawer. Select **02 · A pattern matches**; use the same two actions. | “The auditor can also accept a narrow supported claim. One pressure rose, the other fell, matching a published valve-closure example. Muse supports the comparison, without treating it as proof of valve closure.” |
+| 2:25–2:45 | Optional: **Explore evidence**, actual grounded/ungrounded output. | “These are genuine captured outputs, with citations and historical overlap preserved. Raw replay is for the viewer; Muse received fixed sensor summaries. Moving a slider never changes its verdict.” |
+| 2:45–3:00 | Return attention to the verdict. | “PetroMind catches the moment when a convincing diagnosis says more than its evidence establishes. It supports engineering judgment; it does not certify root cause or control equipment.” |
 
-Judges should understand the well, sensor meaning, observed change, suggested
-failure and missing causal premise without knowing the original sensor IDs.
-Friendly names are primary; identifiers, units and source provenance remain
-inspectable. Keep the original statistical diagnosis unchanged. Do not present
-the constructed claims as real expert diagnoses or the endpoint chart as a full
-sensor timeline. See [the inventory and mapping guarantees](guided-investigation.md).
+Before recording, verify the dataset and private protocol locally if you intend
+to show Play. Do not replace missing raw data with generated samples. Only open a
+sensor chart if asked; the story should be understandable without it. Exact well
+geometry is illustrative. Independent engineering review is pending. Live Muse
+integration is separate, opt-in and cost-bounded; do not run it during this replay
+without an explicitly authorized fresh execution.
 
 # Submission description
 
