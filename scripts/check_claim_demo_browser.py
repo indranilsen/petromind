@@ -128,6 +128,24 @@ def main():
                 page.keyboard.press("Escape")
                 assert page.locator("#sensorDialog").is_hidden()
                 for scene in range(3):
+                    if scene == 1:
+                        assert (
+                            "statistical classifier"
+                            in page.locator("#headline").inner_text()
+                        )
+                        assert (
+                            "Muse Spark audits the claim"
+                            in page.locator("#subtitle").inner_text()
+                        )
+                        assert (
+                            "CONSTRUCTED CLAIM TO AUDIT"
+                            in page.locator(".claim-copy").inner_text()
+                        )
+                    if scene == 2:
+                        assert (
+                            "STATISTICAL CLASSIFIER"
+                            in page.locator(".model-suggestion").inner_text()
+                        )
                     page.mouse.move(0, 0)
                     page.wait_for_timeout(450)  # capture after editorial fade
                     assert page.evaluate(
