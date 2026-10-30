@@ -143,12 +143,12 @@ function render() {
     current === 0
       ? [
           "Two pressures rose.",
-          "The model proposes\na hydrate restriction.",
+          "The statistical classifier\nsuggests service-line hydrate.",
           "Audit result:\ncause not established.",
         ]
       : [
           "Two pressures.\nDifferent directions.",
-          "The model proposes\na closed safety valve.",
+          "The statistical classifier\nsuggests safety-valve closure.",
           "Audit result:\ncomparison supported.",
         ];
   $("headline").textContent = headings[scene];
@@ -158,7 +158,7 @@ function render() {
         ? "Two sensors in a production well recorded higher ending pressures."
         : "Downhole pressure rose. Tree pressure fell."
       : scene === 1
-        ? "An observed pressure change. A possible explanation to check."
+        ? "Its sensor-based prediction is a hypothesis. Muse Spark audits the claim below."
         : "A plausible diagnosis is not the same as a proven cause.";
   $("allSensors").hidden = scene !== 0;
   $("trendLegend").hidden = scene !== 0;
