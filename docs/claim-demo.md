@@ -52,7 +52,9 @@ inside that drawer and requires separate explicit authorization/configuration.
 The new optional private raw-data adapter can load and verify the original
 600-point series; see the guided setup. Without raw data, measurements remain
 endpoint comparisons, not fabricated time-series plots. Raw samples are viewer
-only; Muse still receives only the fixed captured summary packet.
+only; Muse still receives only the fixed captured summary packet. The full
+27-channel inventory and broader viewer-only telemetry are described in
+[the instrument landscape](instrument-landscape.md).
 
 ## Scope-aware live v2 (present, disabled by default)
 

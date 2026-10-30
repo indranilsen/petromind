@@ -23,16 +23,6 @@
     <main id="experience" data-scene="0">
       <section class="story-heading" aria-live="polite">
         <p id="chapter" class="eyebrow">01 / WHAT HAPPENED</p>
-        <ol
-          id="museChecks"
-          class="muse-checks"
-          hidden
-          aria-label="Editorial guide to Muse’s captured audit"
-        >
-          <li><b>1</b>Read the measurements</li>
-          <li><b>2</b>Consult engineering sources</li>
-          <li><b>3</b>Check the causal claim</li>
-        </ol>
         <h1 id="headline">Two pressures rose.</h1>
         <p id="subtitle">Two sensors in a production well recorded a change.</p>
       </section>
@@ -40,7 +30,7 @@
         <section
           id="wellPanel"
           class="well-panel"
-          aria-label="An illustrative production well and five sensor indicators"
+          aria-label="An illustrative production well and twelve sensor indicators"
         >
           <div class="ocean-glow"></div>
           <svg
@@ -152,7 +142,10 @@
             <path d="M487 405H374L345 374" class="leader" />
           </svg>
           <div id="sensors"></div>
-          <div class="secondary-geometry" aria-hidden="true">◇</div>
+          <button id="allSensors" class="all-sensors-button">
+            All 27 sensors ↗
+          </button>
+
           <span class="illustration-note"
             >Illustrative layout · generic sensor associations</span
           >
@@ -183,33 +176,68 @@
       </div>
       <section
         id="discovery"
-        class="discovery"
+        class="discovery audit-result"
         hidden
-        aria-label="Muse’s captured findings"
+        aria-label="Muse’s captured investigation result"
       >
-        <div class="logic-chain">
-          <div class="observation-node">
-            <span class="status-label">✓ VERIFIED OBSERVATIONS</span>
-            <p id="observedSummary"></p>
+        <section class="model-suggestion">
+          <span class="small-label">WHAT THE MODEL SUGGESTED</span
+          ><strong id="modelSuggestion"></strong>
+        </section>
+        <section class="checks-section">
+          <h2>What Muse checked</h2>
+          <ol id="museChecks" class="muse-checks">
+            <li>
+              <b>1</b>
+              <div>
+                <strong>Measurements</strong>
+                <p id="measurementCheck"></p>
+              </div>
+            </li>
+            <li>
+              <b>2</b>
+              <div>
+                <strong>Engineering sources</strong>
+                <p id="sourceCheck"></p>
+              </div>
+            </li>
+            <li>
+              <b>3</b>
+              <div>
+                <strong>Causal reasoning</strong>
+                <p>
+                  Does the evidence justify the claimed cause, or only make it
+                  plausible?
+                </p>
+              </div>
+            </li>
+          </ol>
+        </section>
+        <section class="conclusions">
+          <h2>What Muse concluded</h2>
+          <div class="conclusion-pair">
+            <article>
+              <span class="status-label">✓ SUPPORTED</span>
+              <p id="observedSummary"></p>
+            </article>
+            <article>
+              <span class="status-label">NOT ESTABLISHED</span>
+              <p id="causeSummary"></p>
+            </article>
           </div>
-          <div class="inference-link">
-            <span>does this prove</span><b>··· ? ···</b>
+          <div class="captured-line">
+            <span>MUSE · EXACT CAPTURED EXCERPT</span>
+            <blockquote id="museQuote"></blockquote>
           </div>
-          <div class="cause-node">
-            <span class="status-label">NOT ESTABLISHED</span>
-            <p id="causeSummary"></p>
-          </div>
-        </div>
-        <div class="muse-finding">
-          <div class="muse-label">
-            <span class="spark">✧</span> MUSE SPARK
-            <span>Exact captured excerpt</span>
-          </div>
-          <blockquote id="museQuote"></blockquote>
-        </div>
-        <p id="nextEvidence" class="next-evidence"></p>
+        </section>
+        <section class="next-section">
+          <h2>What would be needed next</h2>
+          <p id="nextEvidence"></p>
+          <p id="whyItMatters" class="why-it-matters"></p>
+        </section>
         <span class="editorial-label"
-          >Story and next steps: editorial guide to the captured audit</span
+          >Editorial map of captured work, not a tool-call timeline. Original
+          findings and sources are unchanged in Explore evidence.</span
         >
       </section>
       <div
@@ -249,6 +277,19 @@
       </div>
       <p id="error" role="alert" hidden></p>
     </main>
+    <dialog
+      id="inventoryDialog"
+      class="evidence-drawer inventory-drawer"
+      aria-labelledby="inventoryTitle"
+    >
+      <div class="details-head">
+        <h2 id="inventoryTitle">All sensors</h2>
+        <button id="closeInventory" class="quiet">Close ×</button>
+      </div>
+      <p id="inventoryScope"></p>
+      <nav id="inventoryNav" aria-label="Sensor categories"></nav>
+      <div id="inventoryGroups"></div>
+    </dialog>
     <dialog
       id="sensorDialog"
       class="sensor-dialog"

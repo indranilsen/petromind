@@ -1,4 +1,7 @@
-# Replay and explanation refinement
+# Replay and explanation refinement — PR #15 snapshot
+
+This records the earlier five-indicator implementation. The current 12-indicator,
+27-channel viewer extension is documented in [instrument-landscape.md](instrument-landscape.md).
 
 The three scenes, two-click path, visual style, backend and frozen captures remain
 unchanged in scope. This pass adds instructive context rather than a new layout.

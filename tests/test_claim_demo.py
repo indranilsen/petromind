@@ -322,6 +322,9 @@ def test_mock_live_v2_execution_is_separate_idempotent_and_budgeted(
         assert "true_event" not in canonical(body) and "review_target" not in canonical(
             body
         )
+        assert "viewer_series" not in canonical(
+            body
+        ) and "present_in_incident" not in canonical(body)
         assert body["instructions"].find("SCOPE REFINEMENT v2") >= 0
         return httpx.Response(
             200,
