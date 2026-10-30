@@ -32,7 +32,84 @@ FRIENDLY = {
         "Encoded downhole safety-valve state; no actual state was supplied to these audits.",
     ),
 }
+# Public catalog names describe generic documented associations, never an exact
+# installed layout. Only the allowlisted measurement columns can reach a viewer.
+_EXTRA_NAMES = {
+    "ABER-CKP": "Production-choke opening",
+    "P-ANULAR": "Annulus pressure",
+    "P-JUS-BS": "Service-pump outlet pressure",
+    "P-JUS-CKGL": "Gas-lift choke outlet pressure",
+    "P-JUS-CKP": "Production-choke outlet pressure",
+    "P-MON-CKGL": "Gas-lift choke inlet pressure",
+    "P-MON-CKP": "Production-choke inlet pressure",
+    "P-MON-SDV-P": "Production shutdown-valve inlet pressure",
+    "PT-P": "Production wing-valve outlet pressure",
+    "QBS": "Service-pump flow",
+    "T-JUS-CKP": "Production-choke outlet temperature",
+    "T-MON-CKP": "Production-choke inlet temperature",
+}
+for _sensor, _info in SENSORS.items():
+    if _sensor not in FRIENDLY:
+        _name = _EXTRA_NAMES.get(
+            _sensor, _info["equipment"].replace("_", " ").capitalize() + " state"
+        )
+        FRIENDLY[_sensor] = (
+            _name,
+            _info["quantity_relation"].replace("_", " ").capitalize()
+            + " "
+            + _info["equipment"].replace("_", " ")
+            + ".",
+        )
 DISPLAY_SENSORS = tuple(FRIENDLY)
+
+
+def sensor_group(sensor):
+    if SENSORS[sensor]["quantity_relation"].startswith("pressure"):
+        return "Pressure"
+    if sensor.startswith("T-"):
+        return "Temperature"
+    if sensor.startswith("ESTADO-"):
+        return "Valve / equipment state"
+    return "Flow / opening / other"
+
+
+def inventory(case, window=None):
+    """Column presence is unknown without raw data; an all-missing column is
+    distinct from an absent column and from a channel not given to Muse."""
+    result = []
+    for sensor in SENSORS:
+        captured = case["observations"].get(sensor)
+        summary = (
+            summarize(window[sensor]).to_dict()
+            if window is not None and sensor in window
+            else captured
+        )
+        present = (
+            sensor in window
+            if window is not None
+            else (True if captured and captured["available"] else None)
+        )
+        result.append(
+            {
+                "sensor": sensor,
+                "group": sensor_group(sensor),
+                "present_in_incident": bool(present) if present is not None else None,
+                "observed_by_muse": captured is not None,
+                "availability": "not_present"
+                if present is False
+                else "unknown"
+                if summary is None
+                else "available"
+                if summary["available"]
+                else "no_valid_measurements",
+                "valid_count": None if summary is None else summary["count"],
+                "missing_count": None
+                if summary is None
+                else summary.get("missing_count"),
+                "invalid_count": None if summary is None else summary["invalid_count"],
+            }
+        )
+    return result
 
 
 def definitions():
@@ -101,6 +178,8 @@ def endpoints(case, reason="raw_dataset_unavailable"):
         }
     return {
         "mode": "endpoints",
+        "inventory": inventory(case),
+        "viewer_series": {},
         "availability": reason,
         "timestamps": None,
         "elapsed_seconds": None,
@@ -116,7 +195,10 @@ def endpoints(case, reason="raw_dataset_unavailable"):
 
 
 def raw_payload(window, case):
-    """Public projection contains only previously charged sensor series and time."""
+    """Keep captured evidence separate from allowlisted post-hoc viewer telemetry.
+
+    This public viewer projection must never be supplied to an agent.
+    """
     if (
         len(window) != 600
         or not isinstance(window.index, pd.DatetimeIndex)
@@ -145,8 +227,27 @@ def raw_payload(window, case):
             "reference_index": first,
             "reference_kind": "first valid diagnostic-window sample, not verified normal",
         }
+    # Explicitly separate post-hoc viewer channels from the immutable audit
+    # evidence. Never put these values in case.packet or an agent tool response.
+    viewer_series = {}
+    for sensor in SENSORS:
+        if sensor in case["observations"]:
+            continue
+        values = window[sensor] if sensor in window else pd.Series([None] * 600)
+        samples = [sample(v) for v in values]
+        first = next(
+            (i for i, v in enumerate(samples) if v["quality"] == "valid"), None
+        )
+        viewer_series[sensor] = {
+            "samples": samples,
+            "agent_received": "not_observed_in_audit",
+            "reference": None if first is None else samples[first]["value"],
+            "reference_kind": "first valid viewer-window sample, not verified normal",
+        }
     return {
         "mode": "raw",
+        "inventory": inventory(case, window),
+        "viewer_series": viewer_series,
         "availability": "verified_raw_window",
         "can_play": True,
         "timestamps": [t.isoformat() for t in window.index],
@@ -156,7 +257,7 @@ def raw_payload(window, case):
         "timing": "600 observations at 1 Hz; 599 seconds from first to last. Original timestamps retained; timezone as encoded (may be unspecified).",
         "interpolation": "none",
         "downsampling": "none",
-        "visibility": "Viewer-only raw samples. Muse received fixed captured summaries, not this sample stream or slider position.",
+        "visibility": "Viewer-only raw samples, including additional allowlisted channels. Muse received only the original fixed captured summaries; viewer channels and slider position never enter agent input.",
         "reference_note": "Change from each sensor's first valid observation; not a safe/normal pressure threshold.",
     }
 

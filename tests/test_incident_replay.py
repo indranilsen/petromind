@@ -217,3 +217,53 @@ def test_fitting_or_test_well_cannot_be_mapped_as_development(replay_fixture):
     claim["source_protocol_id"] = science["protocol_id"]
     with pytest.raises(ValueError, match="development"):
         attach_replay(case, claim, dataset=root, science_protocol=science)
+
+
+def test_full_inventory_distinguishes_unknown_absent_and_unobserved(replay_fixture):
+    from petromind.knowledge import SENSORS
+
+    _, _, frame, _, _, case = replay_fixture
+    fallback = endpoints(case)
+    rows = {r["sensor"]: r for r in fallback["inventory"]}
+    assert len(rows) == len(definitions()) == len(SENSORS) == 27
+    assert rows["P-PDG"]["present_in_incident"] is True
+    assert rows["T-TPT"]["present_in_incident"] is None
+    assert rows["T-TPT"]["availability"] == "unknown"
+    assert rows["T-TPT"]["observed_by_muse"] is False
+    assert fallback["viewer_series"] == {}
+    raw = raw_payload(frame.iloc[20:], case)
+    rows = {r["sensor"]: r for r in raw["inventory"]}
+    assert rows["T-TPT"]["present_in_incident"] is True
+    assert rows["T-TPT"]["availability"] == "available"
+    assert rows["T-TPT"]["observed_by_muse"] is False
+    assert rows["QGL"]["present_in_incident"] is False
+    assert rows["QGL"]["availability"] == "not_present"
+    assert rows["P-PDG"]["observed_by_muse"] is True
+
+
+def test_viewer_channels_are_whitelisted_real_samples_and_never_change_audit(
+    replay_fixture,
+):
+    from petromind.knowledge import SENSORS
+
+    _, _, frame, _, _, case = replay_fixture
+    window = frame.iloc[20:].copy()
+    window["QGL"] = [None] * 600
+    window["ESTADO-DHSV"] = [0] * 600
+    window["secret_filename"] = "hidden event metadata"
+    before = canonical(case)
+    raw = raw_payload(window, case)
+    assert set(raw["series"]) == set(case["observations"])
+    assert set(raw["viewer_series"]) == set(SENSORS) - set(case["observations"])
+    assert (
+        raw["viewer_series"]["T-TPT"]["samples"][15]["value"]
+        == window["T-TPT"].iloc[15]
+    )
+    assert raw["viewer_series"]["ESTADO-DHSV"]["samples"][0]["value"] == 0
+    rows = {r["sensor"]: r for r in raw["inventory"]}
+    assert rows["QGL"]["present_in_incident"] is True
+    assert rows["QGL"]["availability"] == "no_valid_measurements"
+    assert rows["ESTADO-DHSV"]["valid_count"] == 600
+    assert "hidden event metadata" not in canonical(raw)
+    assert "secret_filename" not in canonical(raw)
+    assert canonical(case) == before

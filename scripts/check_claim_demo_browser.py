@@ -46,8 +46,9 @@ def main():
             ):
                 page.set_viewport_size({"width": width, "height": height})
                 page.locator("#caseSelect").select_option(str(case_index))
+                page.evaluate("window.scrollTo(0,0)")
                 assert page.locator("#experience").get_attribute("data-scene") == "0"
-                assert page.locator(".sensor-hit").count() == 5
+                assert page.locator(".sensor-hit").count() == 12
                 assert page.locator("#inspectDetails").is_hidden()
                 assert page.locator(".chart-svg:visible").count() == 0
                 assert page.locator("#details").is_hidden()
@@ -63,9 +64,10 @@ def main():
                 for position in (0, maximum):
                     page.locator("#slider").fill(str(position))
                 assert page.locator(".claim-sensor").count() == 2
-                assert page.locator(".secondary-sensor").count() == 3
+                assert page.locator(".secondary-sensor").count() == 10
                 assert (
-                    "Not observed in audit" in page.locator(".tree-temp").inner_text()
+                    "Not observed in audit"
+                    in page.locator('[data-sensor="T-TPT"]').inner_text()
                 )
                 # Endpoints visibly change both numbers and marker colors.
                 page.locator("#slider").fill("0")
@@ -81,23 +83,43 @@ def main():
                 assert ("rising" if case_index == 0 else "falling") in page.locator(
                     "#treePoint"
                 ).get_attribute("class")
-                assert page.locator(".choke .sensor-reading").count() == (
-                    1 if case_index == 0 else 0
-                )
+                assert page.locator(
+                    '[data-sensor="ABER-CKGL"] .sensor-reading'
+                ).count() == (1 if case_index == 0 else 0)
                 assert "not danger" in page.locator("#trendLegend").inner_text()
                 # A measured secondary uses its actual unit; an unobserved one has no chart.
-                page.locator(".choke").click()
+                page.locator('[data-sensor="ABER-CKGL"]').click()
                 assert ("53 %" if case_index == 0 else "Not observed") in page.locator(
                     "#sensorValue"
                 ).inner_text()
                 page.keyboard.press("Escape")
-                page.locator(".tree-temp").click()
+                page.locator('[data-sensor="T-TPT"]').click()
                 assert page.locator("#sensorChart .chart-svg").count() == 0
                 assert (
                     "No measurements were supplied"
                     in page.locator("#sensorChart").inner_text()
                 )
                 page.keyboard.press("Escape")
+                page.locator("#allSensors").click()
+                assert page.locator(".inventory-row").count() == 27
+                assert page.locator(".inventory-section").count() == 4
+                assert (
+                    "Unknown without raw data"
+                    in page.locator("#inventoryGroups").inner_text()
+                )
+                assert (
+                    "not observed in audit"
+                    in page.locator("#inventoryGroups").inner_text()
+                )
+                if a.screenshots and case_index == 0:
+                    page.mouse.move(0, 0)
+                    page.screenshot(
+                        path=str(a.screenshots / f"all-sensors-{viewport}.png")
+                    )
+                page.keyboard.press("Escape")
+                assert page.locator("#allSensors").evaluate(
+                    "e => e === document.activeElement"
+                )
                 # Sensor is optional. Its modal contains one chart and real units.
                 page.locator(".sensor-hit.tree").click()
                 assert "MPa" in page.locator("#sensorValue").inner_text()
@@ -137,11 +159,22 @@ def main():
                                 / f"case{case_index + 1}-{viewport}-{scene + 1}.png"
                             )
                         )
+                        if width < 741 and scene == 2:
+                            page.evaluate(
+                                "window.scrollTo(0,document.body.scrollHeight)"
+                            )
+                            page.screenshot(
+                                path=str(
+                                    a.screenshots
+                                    / f"case{case_index + 1}-mobile-verdict-next.png"
+                                )
+                            )
+                            page.evaluate("window.scrollTo(0,0)")
                     if scene < 2:
                         page.locator("#nextScene").click()
                 # Exactly two main-action clicks reached the fixed verdict.
                 assert page.locator("#experience").get_attribute("data-scene") == "2"
-                assert "prove the cause" in page.locator("#headline").inner_text()
+                assert "Audit result" in page.locator("#headline").inner_text()
                 assert (
                     page.locator("#museQuote").text_content()
                     in case["audits"]["grounded"]["output"]["findings"][2][
@@ -214,6 +247,18 @@ def main():
                         for i in range(600)
                     ]
                     stream["reference"] = stream["samples"][0]["value"]
+                r["viewer_series"] = {
+                    "T-TPT": {
+                        "samples": [
+                            {"value": float(10 + i / 10), "quality": "valid"}
+                            for i in range(600)
+                        ],
+                        "reference": 10.0,
+                    }
+                }
+                for row in r["inventory"]:
+                    if row["sensor"] == "T-TPT":
+                        row.update(present_in_incident=True, availability="available")
             testpage = browser.new_page(viewport={"width": 1440, "height": 900})
             testpage.on("pageerror", lambda e: errors.append(str(e)))
             testpage.route("**/api/cases", lambda route: route.fulfill(json=toy))
@@ -228,6 +273,16 @@ def main():
             assert "0 MPa" in testpage.locator(".down .sensor-reading").inner_text()
             assert "stable" in testpage.locator("#downPoint").get_attribute("class")
             testpage.locator("#slider").fill("10")
+            assert (
+                testpage.locator('[data-sensor="T-TPT"] .sensor-reading').inner_text()
+                == "11 °C"
+            )
+            assert (
+                "Viewer only" in testpage.locator('[data-sensor="T-TPT"]').inner_text()
+            )
+            testpage.locator("#allSensors").click()
+            assert "11 °C" in testpage.locator("#inventoryGroups").inner_text()
+            testpage.keyboard.press("Escape")
             assert testpage.locator(".down .sensor-reading").inner_text() == "10 MPa"
             assert testpage.locator(".tree .sensor-reading").inner_text() == "590 MPa"
             assert (

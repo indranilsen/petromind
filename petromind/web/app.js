@@ -30,34 +30,64 @@ const fmt = (v, d = 2) =>
   v === null || v === undefined
     ? "Not observed"
     : Number(v).toLocaleString("en-US", { maximumFractionDigits: d });
-const pressure = (s) => s.startsWith("P-");
+const pressure = (s) => c().sensor_definitions[s]?.unit === "Pa";
 const scaled = (s, v) => (v === null ? null : pressure(s) ? v / 1e6 : v);
 const unitDisplay = (s) =>
-  pressure(s) ? "MPa" : c().sensor_definitions[s]?.unit || "unknown";
+  pressure(s)
+    ? "MPa"
+    : { degC: "°C", "m3/s": "m³/s", dimensionless: "code" }[
+        c().sensor_definitions[s]?.unit
+      ] ||
+      c().sensor_definitions[s]?.unit ||
+      "unknown";
 const value = (s, v) =>
   v === null ? "Not observed" : `${fmt(scaled(s, v), 3)} ${unitDisplay(s)}`;
 const names = {
   "P-PDG": "Downhole pressure",
   "P-TPT": "Tree pressure",
-  "ABER-CKGL": "Choke opening",
   "T-TPT": "Tree temperature",
   "T-PDG": "Downhole temperature",
+  "ABER-CKGL": "Gas-lift choke",
+  "ABER-CKP": "Production choke",
+  QGL: "Gas-lift flow",
+  "ESTADO-DHSV": "Safety-valve state",
+  "ESTADO-SDV-P": "Shutdown-valve state",
+  "P-ANULAR": "Annulus pressure",
+  "P-MON-CKP": "Choke inlet pressure",
+  "P-JUS-CKP": "Choke outlet pressure",
 };
-const sensorPositions = {
-  "P-TPT": "tree",
-  "P-PDG": "down",
-  "ABER-CKGL": "choke",
-  "T-TPT": "tree-temp",
-  "T-PDG": "down-temp",
-};
+const groups = [
+  { name: "Gas lift", cls: "gas-group", sensors: ["ABER-CKGL", "QGL"] },
+  {
+    name: "Production equipment",
+    cls: "production-group",
+    sensors: ["ABER-CKP", "P-MON-CKP", "P-JUS-CKP", "ESTADO-SDV-P"],
+  },
+  {
+    name: "Other well instruments",
+    cls: "well-group",
+    sensors: ["T-TPT", "T-PDG", "ESTADO-DHSV", "P-ANULAR"],
+  },
+];
+const sensorPositions = { "P-TPT": "tree", "P-PDG": "down" };
+const streamFor = (s) => c().replay.series[s] || c().replay.viewer_series?.[s];
+const inventoryFor = (s) =>
+  c().replay.inventory.find((row) => row.sensor === s);
 function state(s) {
-  const stream = c().replay.series[s];
+  const stream = streamFor(s);
   if (!stream)
     return {
       value: null,
       quality: "unobserved",
       trend: "missing",
       label: "— Not observed in audit",
+    };
+  if (inventoryFor(s)?.present_in_incident === false)
+    return {
+      value: null,
+      quality: "absent",
+      trend: "missing",
+      label: "— Not present in incident",
     };
   const sample = stream.samples[index];
   if (sample.quality !== "valid")
@@ -114,12 +144,12 @@ function render() {
       ? [
           "Two pressures rose.",
           "The model proposes\na hydrate restriction.",
-          "The pressures really rose.\nBut that doesn’t prove the cause.",
+          "Audit result:\ncause not established.",
         ]
       : [
           "Two pressures.\nDifferent directions.",
           "The model proposes\na closed safety valve.",
-          "The pattern matches.\nThat doesn’t prove the cause.",
+          "Audit result:\ncomparison supported.",
         ];
   $("headline").textContent = headings[scene];
   $("subtitle").textContent =
@@ -129,8 +159,8 @@ function render() {
         : "Downhole pressure rose. Tree pressure fell."
       : scene === 1
         ? "An observed pressure change. A possible explanation to check."
-        : "Muse checks whether the proposed cause follows from the evidence.";
-  $("museChecks").hidden = scene !== 2;
+        : "A plausible diagnosis is not the same as a proven cause.";
+  $("allSensors").hidden = scene !== 0;
   $("trendLegend").hidden = scene !== 0;
   $("stage").hidden = scene === 2;
   $("diagnosis").hidden = scene !== 1;
@@ -168,10 +198,30 @@ function render() {
     current === 0
       ? "“Both pressures rose. This establishes service-line hydrate.”"
       : "“These pressure directions match a published valve-closure example—not proof of root cause.”";
+  $("modelSuggestion").textContent =
+    current === 0
+      ? "Service-line hydrate — a possible flow restriction."
+      : "Unexpected closure of the downhole safety valve.";
+  $("measurementCheck").textContent =
+    current === 0
+      ? "Read the two recorded pressure increases, rather than treating the diagnosis as a fact."
+      : "Read the deeper pressure increase and tree-pressure decrease.";
+  $("sourceCheck").textContent =
+    current === 0
+      ? "Retrieved descriptions of hydrate obstruction. No necessary or specific joint-pressure rule was supplied."
+      : "Retrieved a published example showing those two pressure directions, scoped to that example.";
   $("observedSummary").textContent =
-    current === 0 ? "Both pressures rose." : "Downhole ↑  ·  Tree ↓";
+    current === 0
+      ? "Both recorded pressures rose."
+      : "The two directions match the published example.";
   $("causeSummary").textContent =
-    current === 0 ? "“This proves hydrate.”" : "Safety-valve closure";
+    current === 0
+      ? "“These rises prove hydrate.”"
+      : "That the same physical cause occurred here.";
+  $("whyItMatters").textContent =
+    current === 0
+      ? "Muse’s contribution: it accepts the readings but identifies the unsupported step from pressure change to a specific cause."
+      : "Muse’s contribution: it accepts the narrow documented comparison without turning it into proof of valve closure.";
   const f = c().audits.grounded.output.findings[2];
   // An exact first-sentence excerpt; the full original remains in the drawer.
   $("museQuote").textContent =
@@ -203,34 +253,49 @@ function renderTelemetry() {
     r.mode === "raw"
       ? "Recorded data · 10×"
       : "Captured endpoints · raw replay unavailable";
+  const makeSensor = (s, primary = false) => {
+    const st = state(s);
+    const b = el(
+      "button",
+      undefined,
+      `sensor-hit ${sensorPositions[s] || ""} ${primary ? "claim-sensor" : "secondary-sensor"} ${st.trend}`,
+    );
+    b.dataset.sensor = s;
+    b.setAttribute(
+      "aria-label",
+      `${names[s]}: ${value(s, st.value)}, ${st.label}. Show details`,
+    );
+    b.append(
+      el("span", names[s] || c().sensor_definitions[s].name, "sensor-name"),
+    );
+    if (
+      !primary &&
+      inventoryFor(s) &&
+      !inventoryFor(s).observed_by_muse &&
+      streamFor(s)
+    )
+      b.append(el("small", "Viewer only", "viewer-tag"));
+    if (st.quality === "valid")
+      b.append(el("strong", value(s, st.value), "sensor-reading"));
+    b.append(el("span", st.label, "sensor-direction"));
+    if (s === "P-TPT")
+      b.append(el("small", "Equipment near the top of the well"));
+    b.onclick = () => {
+      selected = s;
+      resetPlayback();
+      renderTelemetry();
+      renderSensor();
+      $("sensorDialog").showModal();
+    };
+    return b;
+  };
   $("sensors").replaceChildren(
-    ...Object.keys(sensorPositions).map((s) => {
-      const st = state(s),
-        primary = pressure(s);
-      const b = el(
-        "button",
-        undefined,
-        `sensor-hit ${sensorPositions[s]} ${primary ? "claim-sensor" : "secondary-sensor"} ${st.trend}`,
-      );
-      b.dataset.sensor = s;
-      b.setAttribute(
-        "aria-label",
-        `${names[s]}: ${value(s, st.value)}, ${st.label}. Show details`,
-      );
-      b.append(el("span", names[s], "sensor-name"));
-      if (st.quality === "valid")
-        b.append(el("strong", value(s, st.value), "sensor-reading"));
-      b.append(el("span", st.label, "sensor-direction"));
-      if (s === "P-TPT")
-        b.append(el("small", "Equipment near the top of the well"));
-      b.onclick = () => {
-        selected = s;
-        resetPlayback();
-        renderTelemetry();
-        renderSensor();
-        $("sensorDialog").showModal();
-      };
-      return b;
+    ...Object.keys(sensorPositions).map((s) => makeSensor(s, true)),
+    ...groups.map((group) => {
+      const box = el("section", undefined, "instrument-group " + group.cls);
+      box.append(el("h3", group.name));
+      for (const s of group.sensors) box.append(makeSensor(s));
+      return box;
     }),
   );
   // State colors reflect comparison with the first valid observation, not
@@ -250,17 +315,18 @@ function renderTelemetry() {
     $(point).setAttribute("class", `gauge-point ${st.trend}`);
   }
   if ($("sensorDialog").open) renderSensor();
+  if ($("inventoryDialog").open) renderInventory();
 }
 function renderSensor() {
   const st = state(selected),
     d = c().sensor_definitions[selected];
-  $("sensorTitle").textContent = names[selected];
+  $("sensorTitle").textContent = names[selected] || d.name;
   $("sensorValue").replaceChildren(
     el("strong", value(selected, st.value)),
     el("span", st.label),
   );
   $("sensorChart").replaceChildren(
-    ...(c().replay.series[selected]
+    ...(streamFor(selected)
       ? [chart(selected)]
       : [
           el(
@@ -286,13 +352,85 @@ function renderSensor() {
     link,
     el(
       "p",
-      "Generic measurement associations are documented; exact sensor placement and piping in this illustration are not verified for this well. Raw playback is viewer-only. Muse received the fixed captured summaries, not these individual samples.",
+      `Generic associations are documented; exact placement and piping are illustrative. ${inventoryFor(selected).observed_by_muse ? "Raw samples are viewer-only. Muse received this sensor’s fixed summary, not these individual samples." : "This sensor was NOT observed by Muse. Any raw samples here are viewer-only and never added to the captured or live audit."}`,
     ),
+  );
+}
+function renderInventory() {
+  const r = c().replay;
+  $("inventoryScope").textContent =
+    r.mode === "raw"
+      ? "27 documented channels. Presence and quality are checked in this incident’s verified window. Extra raw channels are viewer-only; Muse received only its three captured summaries."
+      : "27 documented channels. Raw data is unavailable: column presence and availability are unknown unless established by captured measurements. Not observed by Muse does not mean missing from the incident.";
+  $("inventoryGroups").replaceChildren(
+    ...[
+      "Pressure",
+      "Temperature",
+      "Valve / equipment state",
+      "Flow / opening / other",
+    ].map((group) => {
+      const section = el("section", undefined, "inventory-section");
+      const rows = r.inventory.filter((row) => row.group === group);
+      section.append(el("h3", `${group} · ${rows.length}`));
+      for (const row of rows) {
+        const d = c().sensor_definitions[row.sensor],
+          st = state(row.sensor),
+          item = el("article", undefined, "inventory-row " + st.trend);
+        const title = el("div", undefined, "inventory-name");
+        title.append(el("strong", d.name), el("code", row.sensor));
+        const presence =
+          row.present_in_incident === null
+            ? "Unknown without raw data"
+            : row.present_in_incident
+              ? "Present"
+              : "Not present";
+        item.append(
+          title,
+          el("p", `In incident: ${presence}`),
+          el(
+            "p",
+            `Muse: ${row.observed_by_muse ? "received captured summary" : "not observed in audit"}`,
+          ),
+          el(
+            "p",
+            `Window availability: ${row.availability.replaceAll("_", " ")}`,
+          ),
+          el(
+            "p",
+            `Selected reading: ${st.quality === "valid" ? value(row.sensor, st.value) + " · " + st.label : st.label}`,
+          ),
+        );
+        const inspect = el("button", "Inspect", "quiet");
+        inspect.onclick = () => {
+          selected = row.sensor;
+          $("inventoryDialog").close();
+          renderSensor();
+          $("sensorDialog").showModal();
+        };
+        item.append(inspect);
+        section.append(item);
+      }
+      return section;
+    }),
+  );
+  const sections = Array.from($("inventoryGroups").children);
+  $("inventoryNav").replaceChildren(
+    ...sections.map((section, i) => {
+      const button = el(
+        "button",
+        ["Pressure · 10", "Temperature · 4", "State · 9", "Flow / opening · 4"][
+          i
+        ],
+        "quiet",
+      );
+      button.onclick = () => section.scrollIntoView({ block: "start" });
+      return button;
+    }),
   );
 }
 function chart(s) {
   const r = c().replay,
-    stream = r.series[s],
+    stream = streamFor(s),
     data = stream.samples.map((p) => scaled(s, p.value)),
     valid = data.filter((v) => v !== null),
     d = el("article", undefined, "chart-card");
@@ -521,6 +659,13 @@ $("liveRun").onclick = async () => {
     renderDetails();
   }
 };
+$("allSensors").onclick = () => {
+  resetPlayback();
+  renderTelemetry();
+  renderInventory();
+  $("inventoryDialog").showModal();
+};
+$("closeInventory").onclick = () => $("inventoryDialog").close();
 $("caseSelect").onchange = () => {
   resetPlayback();
   current = Number($("caseSelect").value);

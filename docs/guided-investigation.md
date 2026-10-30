@@ -4,8 +4,9 @@ The defining sequence is: **two pressures rose → a diagnosis sounds plausible
 → Muse finds the unsupported causal leap**. The frontend is a three-scene science
 exhibit, not an industrial monitoring dashboard. Two main-action clicks reach the
 verdict. Two pressure indicators remain prominent, now showing selected values and signed
-changes. Three smaller indicators add instrument context: the measured choke
-opening and two temperature channels explicitly marked unobserved. No default
+changes. Ten grouped secondary indicators add temperature, valve, opening, flow and
+pressure context. An optional All sensors drawer lists the full 27-channel
+catalog, separating incident presence, data availability and audit scope. No default
 charts, identifiers, quality tables, sidebar, step-navigation bar or provenance
 link compete with the story. Clicking a sensor opens one optional chart. After the verdict, one
 **Explore evidence** drawer contains the full audit and scientific limitations.
@@ -51,10 +52,10 @@ asserted by the drawing.
 | P-PDG | Downhole pressure | Pa | Pressure at permanent downhole gauge | Captured summary; raw viewer stream only when verified |
 | P-TPT | Tree pressure | Pa | Pressure at subsea-tree transducer | Captured summary; raw viewer stream only when verified |
 | ABER-CKGL | Gas-lift choke opening | % | Opening of gas-lift choke | Captured summary; raw viewer stream only when verified |
-| T-PDG | Downhole temperature | °C (`degC`) | Temperature at permanent downhole gauge | Definition only; not queried in these audits |
-| T-TPT | Tree temperature | °C (`degC`) | Temperature at subsea-tree transducer | Definition only; not queried |
-| QGL | Gas-lift flow | m³/s | Gas-lift flow | Definition only; not queried |
-| ESTADO-DHSV | Safety-valve state | Dimensionless | Encoded DHSV state | Definition only; actual valve position unknown |
+| T-PDG | Downhole temperature | °C (`degC`) | Temperature at permanent downhole gauge | Not in audit; viewer-only samples if raw verified |
+| T-TPT | Tree temperature | °C (`degC`) | Temperature at subsea-tree transducer | Not in audit; viewer-only samples if raw verified |
+| QGL | Gas-lift flow | m³/s | Gas-lift flow | Not in audit; viewer-only samples if raw verified |
+| ESTADO-DHSV | Safety-valve state | Dimensionless | Encoded DHSV state | Not in audit; viewer-only encoded samples if raw verified |
 
 Each definition carries the exact location/unit fact, locator, source/version and
 scope. Optional pressure details display MPa for readability, explicitly computed as
@@ -67,9 +68,11 @@ hidden operational `state`/`class` labels are never substituted for readings.
 coordinates, wellbore shape and dashed pipe connections. Dotted sensor callouts
 represent generic documented equipment associations, not surveyed coordinates or
 verified hydraulic paths. P-PDG and P-TPT dominate the drawing; ABER-CKGL is a secondary measured indicator.
-T-TPT and T-PDG are secondary definition-only indicators, explicitly marked
-“Not observed in audit.” No temperature sample is read or inferred. The choke
-marker is a functional callout, not a verified installed position or pipe route.
+The current illustration has 12 indicators: two primary and ten secondary.
+The [complete hierarchy](instrument-landscape.md) lists them. Additional raw
+channels may be shown to the viewer only after verification; channels unseen
+by Muse are explicitly marked. Functional groups are not verified installed
+positions or pipe routes.
 
 ## Raw-data mapping and timing
 
@@ -85,7 +88,9 @@ marker is a functional callout, not a verified installed position or pipe route.
    window. The trusted retrospective loader uses the original transient onset;
    labels remain private and are used neither for display nor new model fitting.
 5. Verifies that each charged sensor's full-window summary equals the captured
-   evidence. Only those sensor series and actual timestamps are exported.
+   evidence. Captured channels remain in `series`; additional allowlisted
+   measurement channels are separately projected in `viewer_series`. Hidden
+   labels, paths, unrecognized columns and evaluator metadata are excluded.
 
 A raw window is exactly **600 ordered observations at 1 Hz**, with **599 seconds
 between first and last**, using original timestamps with their encoded timezone
@@ -128,7 +133,8 @@ shown explicitly (3,3,1 versus 2,2,2); distances are not fault probabilities.
 The explanatory schematic/definitions are viewer context, not retroactively
 claimed as consulted by Muse. A raw series, if available, is **post-hoc viewer-only
 visualization** of already charged sensors. It is never attached to `case.packet`
-or live agent input. No extra sensor channels are exposed by the adapter. Moving
+or live agent input. Extra catalog channels are projected only as post-hoc viewer telemetry, never
+into the audit packet or an agent tool. Moving
 the slider changes neither the original five-query accounting (three charged here)
 nor the immutable captured audit verdict. No ground-truth reveal is implemented.
 
@@ -148,7 +154,7 @@ python scripts/check_claim_demo_browser.py \
   --url http://127.0.0.1:8765 --screenshots .petromind/cinematic-screenshots
 ```
 
-363 offline tests passed. Chromium checks cover both actual captured examples at
+365 offline tests passed. Chromium checks cover both actual captured examples at
 1440×900 and 390×844, both cases and all three scenes, endpoint controls, optional
 sensor details, original output equality and verdict immutability under cursor
 changes. Replay assertions check changing values, signed deltas, orange/blue/gray

@@ -18,8 +18,10 @@ The original reviewed capture is required and is not redistributed with the repo
 The three-scene experience shows two pressure changes, a plausible diagnosis,
 and Muse’s missing-premise finding—in two main-action clicks. There is no
 monitoring dashboard. Values, signed changes and warm/cool markers update with
-the selected recorded sample. Two pressure sensors lead; choke opening and two
-explicitly unobserved temperature markers are secondary. Optional charts appear
+the selected recorded sample. Two pressure sensors lead; ten grouped secondary instruments show the broader
+system. **All 27 sensors** opens the complete inventory, including column
+presence, availability and whether Muse received that channel. Extra raw channels
+are viewer-only and never added to the audit. Optional charts appear
 only when clicked; detailed
 sources and unchanged outputs live in one verdict-only **Explore evidence** drawer. Raw replay loads
 only after a private protocol mapping and data-fingerprint check. If unavailable,
