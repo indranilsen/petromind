@@ -132,106 +132,7 @@ function goto(n) {
   render();
 }
 function render() {
-  $("experience").dataset.scene = String(scene);
-  $("caseSelect").value = String(current);
-  $("chapter").textContent = [
-    "01 / WHAT HAPPENED",
-    "02 / CAN WE TRUST THE DIAGNOSIS?",
-    "03 / WHAT MUSE DISCOVERED",
-  ][scene];
-  const headings =
-    current === 0
-      ? [
-          "Two pressures rose.",
-          "The model proposes\na hydrate restriction.",
-          "Audit result:\ncause not established.",
-        ]
-      : [
-          "Two pressures.\nDifferent directions.",
-          "The model proposes\na closed safety valve.",
-          "Audit result:\ncomparison supported.",
-        ];
-  $("headline").textContent = headings[scene];
-  $("subtitle").textContent =
-    scene === 0
-      ? current === 0
-        ? "Two sensors in a production well recorded higher ending pressures."
-        : "Downhole pressure rose. Tree pressure fell."
-      : scene === 1
-        ? "An observed pressure change. A possible explanation to check."
-        : "A plausible diagnosis is not the same as a proven cause.";
-  $("allSensors").hidden = scene !== 0;
-  $("trendLegend").hidden = scene !== 0;
-  $("stage").hidden = scene === 2;
-  $("diagnosis").hidden = scene !== 1;
-  $("discovery").hidden = scene !== 2;
-  $("transport").hidden = scene !== 0;
-  $("nextScene").hidden = scene === 2;
-  $("inspectDetails").hidden = scene !== 2;
-  $("back").hidden = scene === 0;
-  $("nextScene").replaceChildren(
-    document.createTextNode(
-      scene === 0 ? "See the diagnosis " : "Ask Muse to investigate ",
-    ),
-    el("span", "→"),
-  );
-  $("diagnosisObservations").replaceChildren(
-    el(
-      "li",
-      current === 0
-        ? "Pressure near the top of the well increased."
-        : "Pressure near the top of the well decreased.",
-    ),
-    el("li", "Pressure deeper in the well increased."),
-  );
-  $("plausibility").textContent =
-    current === 0
-      ? "Why it might fit: a restriction could affect pressures in the system. This is a plausible hypothesis, not a verified rule for this well."
-      : "Why it might fit: the two pressure directions match a published valve-closure example. A match alone does not identify the cause.";
-  $("cause").textContent =
-    current === 0 ? "Service-line hydrate." : "Downhole safety-valve closure.";
-  $("definition").textContent =
-    current === 0
-      ? "Hydrate is an ice-like material that can form in production equipment and restrict flow."
-      : "A safety valve can shut off flow from deep inside the well.";
-  $("claimSummary").textContent =
-    current === 0
-      ? "“Both pressures rose. This establishes service-line hydrate.”"
-      : "“These pressure directions match a published valve-closure example—not proof of root cause.”";
-  $("modelSuggestion").textContent =
-    current === 0
-      ? "Service-line hydrate — a possible flow restriction."
-      : "Unexpected closure of the downhole safety valve.";
-  $("measurementCheck").textContent =
-    current === 0
-      ? "Read the two recorded pressure increases, rather than treating the diagnosis as a fact."
-      : "Read the deeper pressure increase and tree-pressure decrease.";
-  $("sourceCheck").textContent =
-    current === 0
-      ? "Retrieved descriptions of hydrate obstruction. No necessary or specific joint-pressure rule was supplied."
-      : "Retrieved a published example showing those two pressure directions, scoped to that example.";
-  $("observedSummary").textContent =
-    current === 0
-      ? "Both recorded pressures rose."
-      : "The two directions match the published example.";
-  $("causeSummary").textContent =
-    current === 0
-      ? "“These rises prove hydrate.”"
-      : "That the same physical cause occurred here.";
-  $("whyItMatters").textContent =
-    current === 0
-      ? "Muse’s contribution: it accepts the readings but identifies the unsupported step from pressure change to a specific cause."
-      : "Muse’s contribution: it accepts the narrow documented comparison without turning it into proof of valve closure.";
-  const f = c().audits.grounded.output.findings[2];
-  // An exact first-sentence excerpt; the full original remains in the drawer.
-  $("museQuote").textContent =
-    f.justification.split(". ")[0] +
-    (f.justification.split(". ").length > 1 ? "." : "");
-  $("nextEvidence").textContent =
-    current === 0
-      ? "Missing: a verified rule showing this pressure pattern identifies hydrate rather than another cause. Next: applicable well documentation and validated diagnostic criteria; no verified discriminating test is supplied."
-      : "The published comparison is supported. To establish valve closure itself, request valve records and validated criteria that distinguish other causes; those are not supplied by a matching example.";
-  renderTelemetry();
+  renderPlatform();
 }
 function renderTelemetry() {
   const r = c().replay;
@@ -629,36 +530,6 @@ $("downloadReview").onclick = async () => {
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 };
-$("liveRun").onclick = async () => {
-  if (liveBusy) return;
-  liveBusy = true;
-  renderDetails();
-  const id = c().id;
-  try {
-    const response = await fetch("/api/live", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-PetroMind-Token": status.token,
-      },
-      body: JSON.stringify({
-        case_id: id,
-        request_id: crypto.randomUUID().replaceAll("-", ""),
-      }),
-    });
-    const r = await response.json();
-    if (!response.ok || r.status !== "completed")
-      throw new Error(r.error || r.reason);
-    liveResults.set(id, r);
-    $("liveResult").textContent =
-      "New live v2 result, independent review pending. Captured replay and verdict were not changed.";
-  } catch (e) {
-    showError(`Live failed: ${e.message}. No replay was substituted.`);
-  } finally {
-    liveBusy = false;
-    renderDetails();
-  }
-};
 $("allSensors").onclick = () => {
   resetPlayback();
   renderTelemetry();
@@ -666,16 +537,6 @@ $("allSensors").onclick = () => {
   $("inventoryDialog").showModal();
 };
 $("closeInventory").onclick = () => $("inventoryDialog").close();
-$("caseSelect").onchange = () => {
-  resetPlayback();
-  current = Number($("caseSelect").value);
-  scene = 0;
-  condition = "grounded";
-  index = c().replay.mode === "raw" ? 599 : 1;
-  render();
-};
-$("nextScene").onclick = () => goto(scene + 1);
-$("back").onclick = () => goto(scene - 1);
 $("slider").oninput = () => {
   index = Number($("slider").value);
   renderTelemetry();
@@ -701,18 +562,692 @@ $("inspectDetails").onclick = () => {
 };
 $("closeDetails").onclick = () => $("details").close();
 $("closeSensor").onclick = () => $("sensorDialog").close();
+
+// One state/event model powers the operator and evidence views. No private reasoning.
+let pageName =
+  location.pathname === "/technology"
+    ? "technology"
+    : location.pathname === "/demo"
+      ? "demo"
+      : "home";
+let workspaceView = "operator",
+  execution = "captured",
+  synthetic = false,
+  focusSensor = null;
+const investigations = new Map(),
+  playbackPositions = new Map();
+function investigation() {
+  const key = `${c().id}:${execution}`;
+  if (!investigations.has(key))
+    investigations.set(key, {
+      phase: 0,
+      events: [],
+      cursor: 0,
+      row: null,
+      error: null,
+    });
+  return investigations.get(key);
+}
+function visibleEvents() {
+  const r = investigation();
+  return execution === "captured" ? r.events.slice(0, r.cursor) : r.events;
+}
+function navigate(page, push = true) {
+  pageName = page;
+  if (push) history.pushState({}, "", page === "home" ? "/" : "/" + page);
+  renderPlatform();
+  window.scrollTo(0, 0);
+}
+function renderPlatform() {
+  if (!cases.length) return;
+  for (const name of ["home", "demo", "technology"])
+    $(name + "Page").hidden = pageName !== name;
+  document
+    .querySelectorAll(".site-nav a")
+    .forEach((a) =>
+      a.setAttribute(
+        "aria-current",
+        a.getAttribute("href") === (pageName === "home" ? "/" : "/" + pageName)
+          ? "page"
+          : "false",
+      ),
+    );
+  $("caseSelect").value = String(current);
+  $("caseSelect").disabled = liveBusy;
+  $("scenarioSelect").disabled = liveBusy;
+  $("executionSelect").disabled = liveBusy;
+  $("executionSelect").value = execution;
+  $("executionSelect").options[1].disabled = !status.live_enabled;
+  $("syntheticNotice").hidden = !synthetic;
+  $("historicalWorkspace").hidden = synthetic;
+  $("consoleView").hidden = workspaceView !== "operator";
+  $("insidePanel").hidden = workspaceView !== "inside";
+  $("operatorView").classList.toggle("active", workspaceView === "operator");
+  $("insideView").classList.toggle("active", workspaceView === "inside");
+  $("experience").dataset.scene = "0";
+  $("dataBadge").textContent =
+    c().replay.mode === "raw"
+      ? "Verified real window · viewer only"
+      : "Captured endpoints · raw replay unavailable";
+  const r = investigation();
+  $("diagnosisCard").hidden = r.phase !== 1;
+  $("investigationHypothesis").hidden = r.phase !== 2;
+  $("activeHypothesis").textContent =
+    current === 0 ? "Service-line hydrate" : "Safety-valve closure";
+  $("preDiagnosis").hidden = r.phase !== 0;
+  $("cause").textContent =
+    current === 0 ? "Service-line hydrate" : "Unexpected safety-valve closure";
+  $("definition").textContent =
+    current === 0
+      ? "Ice-like material can form in production equipment and restrict flow."
+      : "A valve deep in the well can shut off production flow.";
+  $("diagnosisObservations").replaceChildren(
+    el("li", "Downhole pressure increased."),
+    el(
+      "li",
+      current === 0 ? "Tree pressure increased." : "Tree pressure decreased.",
+    ),
+  );
+  $("plausibility").textContent =
+    "This statistical prediction is a hypothesis. Its uncalibrated score is not a proven physical cause.";
+  $("claimSummary").textContent = c().packet.claim;
+  $("runBadge").textContent =
+    execution === "captured"
+      ? `Captured v1 · ${r.cursor}/${r.events.length} records revealed`
+      : liveBusy
+        ? "Live v2 · actual tool events arriving"
+        : "Live v2 · explicit API execution";
+  $("runInstruction").textContent =
+    execution === "captured"
+      ? "This replays genuine captured activity, not a new API call. Advance records to inspect what happened."
+      : status.live_enabled
+        ? `Explicit action uses the Meta API. Fresh protocol limits: ${status.live_limits?.estimated_usd ?? 2} USD estimated, ${status.live_limits?.requests ?? 12} requests and ${status.live_limits?.output_tokens ?? 49152} output tokens globally; Python enforces remaining reservations.`
+        : "Live is disabled. Prepare a fresh live protocol and restart with --enable-live; no API calls occur in replay.";
+  $("capabilityText").textContent =
+    "This claim-auditor mode exposes lookup_knowledge, search_history and submit_audit. It receives three already charged sensor summaries within the shared five-sensor ceiling. It cannot request extra sensors or traverse well-specific topology. Knowledge lookup returns source-scoped graph facts; history uses the restricted prepared training incidents and those fixed observations only.";
+  $("nextScene").disabled =
+    liveBusy || (execution === "live" && !status.live_enabled && r.phase > 0);
+  $("nextScene").textContent =
+    r.phase === 0
+      ? "Reveal statistical diagnosis →"
+      : r.phase === 1
+        ? execution === "live"
+          ? "Investigate with Muse Spark · live API"
+          : "Investigate with Muse · captured replay"
+        : liveBusy
+          ? "Muse is running…"
+          : "Start a new investigation";
+  $("back").hidden = r.phase === 0 || liveBusy;
+  $("back").textContent = "Reset this view";
+  $("activityPanel").hidden = r.phase < 2;
+  $("nextRecord").hidden =
+    execution !== "captured" || r.cursor >= r.events.length;
+  $("graphAdvance").hidden =
+    execution !== "captured" || r.cursor >= r.events.length;
+  $("eventFeed").replaceChildren(
+    ...visibleEvents().map((e) => {
+      const li = el("li");
+      li.append(el("strong", e.title || e.kind));
+      if (e.topic) li.append(el("span", `Topic: ${e.topic}`));
+      if (e.matches)
+        li.append(
+          el(
+            "span",
+            e.matches.length
+              ? e.matches
+                  .map(
+                    (m) =>
+                      `${m.shared_sensors} shared: ${m.matched_sensors.join(", ")}`,
+                  )
+                  .join(" · ")
+              : "No historical matches returned.",
+          ),
+        );
+      if (e.validation)
+        li.append(
+          el(
+            "span",
+            e.validation.code
+              ? `Python validation: ${e.validation.code} / ${e.validation.field}`
+              : "Python structural/numeric validation passed; physical correctness unverified.",
+          ),
+        );
+      if (e.kind === "completion")
+        li.append(el("span", `${e.status} · ${e.reason}`));
+      return li;
+    }),
+  );
+  const result =
+    r.row?.output || visibleEvents().findLast((e) => e.assessment)?.assessment;
+  const box = $("operatorResult");
+  box.replaceChildren();
+  if (r.error) box.append(el("h3", "No completed audit"), el("p", r.error));
+  if (result) {
+    box.append(
+      el(
+        "div",
+        `${execution === "live" ? "NEW LIVE" : "CAPTURED"} ASSESSMENT`,
+        "eyebrow",
+      ),
+      el("h3", result.verdict.replaceAll("_", " ")),
+    );
+    const keyFinding =
+      result.findings.find((f) =>
+        ["NOT_ESTABLISHED", "PARTIALLY_SUPPORTED", "CONTRADICTED"].includes(
+          f.verdict,
+        ),
+      ) || result.findings[result.findings.length - 1];
+    if (keyFinding)
+      box.append(
+        el(
+          "p",
+          `${keyFinding.verdict}: ${keyFinding.statement}`,
+          "key-finding",
+        ),
+      );
+    for (const f of result.findings) {
+      const d = el("details");
+      d.append(
+        el("summary", `${f.verdict}: ${f.statement}`),
+        el("p", f.justification),
+        el(
+          "p",
+          `Missing: ${f.missing_premise || "None stated for this scope"}`,
+        ),
+        el(
+          "p",
+          `Next evidence: ${typeof f.next_evidence === "string" ? f.next_evidence : JSON.stringify(f.next_evidence)}`,
+        ),
+        el("p", `Received citation IDs: ${f.citations.join(", ") || "None"}`),
+      );
+      box.append(d);
+    }
+    if (execution === "captured") {
+      const follow = el("details");
+      follow.append(
+        el("summary", "Next-evidence requests · editorial source review"),
+      );
+      for (const action of c().reviewed_actions)
+        follow.append(el("p", action.target), el("p", action.status));
+      follow.append(
+        el(
+          "p",
+          "These are editorial requests, not newly generated Muse findings or a verified discriminating test.",
+        ),
+      );
+      box.append(follow);
+    }
+    box.append(
+      el(
+        "p",
+        "Public Muse findings; Python validates numbers/structure, not physical entailment. Independent engineering review pending.",
+        "fine-print",
+      ),
+    );
+  }
+  renderTelemetry();
+  renderEvidenceGraph();
+  if (focusSensor)
+    document
+      .querySelector(`[data-sensor="${focusSensor}"]`)
+      ?.classList.add("evidence-focus");
+}
+function beginInvestigation() {
+  const r = investigation();
+  if (r.phase === 0) {
+    r.phase = 1;
+    renderPlatform();
+    return;
+  }
+  if (r.phase === 2 && !liveBusy) {
+    r.phase = 1;
+    r.events = [];
+    r.cursor = 0;
+    r.row = null;
+    r.error = null;
+    renderPlatform();
+    return;
+  }
+  if (execution === "captured") {
+    r.phase = 2;
+    r.events = c().investigation_events.grounded;
+    r.cursor = 1;
+    renderPlatform();
+  } else startLive();
+}
+async function startLive() {
+  if (liveBusy || !status.live_enabled || synthetic) return;
+  resetPlayback();
+  const r = investigation();
+  const runCaseId = c().id;
+  r.phase = 2;
+  r.events = [];
+  r.row = null;
+  r.error = null;
+  liveBusy = true;
+  renderPlatform();
+  try {
+    const response = await fetch("/api/live/stream", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-PetroMind-Token": status.token,
+      },
+      body: JSON.stringify({
+        case_id: runCaseId,
+        request_id: crypto.randomUUID().replaceAll("-", ""),
+      }),
+    });
+    if (!response.ok)
+      throw new Error((await response.json()).error || "Live request rejected");
+    const reader = response.body.getReader(),
+      decoder = new TextDecoder();
+    let buffer = "",
+      terminal = false;
+    const consume = (line) => {
+      if (!line.trim()) return;
+      const event = JSON.parse(line);
+      r.events.push(event);
+      if (event.kind === "completion") {
+        terminal = true;
+        r.row = event.row;
+        if (event.status !== "completed") r.error = event.reason;
+        else liveResults.set(runCaseId, event.row);
+      }
+      if (event.kind === "failure") {
+        terminal = true;
+        r.error = event.code;
+      }
+      renderPlatform();
+    };
+    while (true) {
+      const { value: chunk, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(chunk, { stream: true });
+      let end;
+      while ((end = buffer.indexOf("\n")) >= 0) {
+        consume(buffer.slice(0, end));
+        buffer = buffer.slice(end + 1);
+      }
+    }
+    buffer += decoder.decode();
+    if (buffer.trim()) consume(buffer);
+    if (!terminal)
+      throw new Error(
+        "Stream interrupted; no automatic retry. Inspect the saved request before rerunning.",
+      );
+  } catch (e) {
+    r.error = e.message;
+  } finally {
+    liveBusy = false;
+    renderPlatform();
+  }
+}
+function advanceRecord() {
+  const r = investigation();
+  r.cursor = Math.min(r.events.length, r.cursor + 1);
+  renderPlatform();
+}
+function inspectNode(node) {
+  $("nodeTitle").textContent = node.label;
+  $("nodeKind").textContent = node.kind;
+  $("nodeData").textContent = JSON.stringify(node.data, null, 2);
+  $("nodeLinks").replaceChildren();
+  const url = node.data.provenance?.url;
+  if (
+    url &&
+    (url.startsWith("https://arxiv.org/") ||
+      url.startsWith("https://github.com/"))
+  ) {
+    const a = el("a", "Open actual source ↗");
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    $("nodeLinks").append(a);
+  }
+  if (node.sensor) {
+    focusSensor = node.sensor;
+    document
+      .querySelector(`[data-sensor="${focusSensor}"]`)
+      ?.classList.add("evidence-focus");
+  }
+  $("nodeDialog").showModal();
+}
+function renderEvidenceGraph() {
+  const nodes = new Map(),
+    edges = [];
+  const add = (id, label, kind, data, layer, sensor) => {
+    if (!nodes.has(id)) nodes.set(id, { id, label, kind, data, layer, sensor });
+    return id;
+  };
+  const link = (from, to, label) => edges.push({ from, to, label });
+  const events = visibleEvents();
+  for (const e of events) {
+    if (e.kind === "evidence_received") {
+      add(
+        "hypothesis",
+        `Classifier: fault ${e.hypothesis}`,
+        "Statistical hypothesis",
+        { prediction: e.hypothesis, calibrated: false },
+        0,
+      );
+      add(
+        "claim",
+        "Constructed claim to audit",
+        "Constructed evaluation claim",
+        { claim: e.claim },
+        0,
+      );
+      link("hypothesis", "claim", "audited claim");
+      for (const [s, summary] of Object.entries(e.observations)) {
+        const id = "measurement:" + s;
+        add(
+          id,
+          names[s] || s,
+          summary.available
+            ? "Measured summary"
+            : "Unavailable measurement summary",
+          {
+            sensor: s,
+            ...summary,
+            scope: "Fixed summary supplied to Muse, not raw playback",
+          },
+          1,
+          s,
+        );
+        link(id, "claim", "received evidence");
+      }
+    }
+    if (e.kind === "tool_result") {
+      const request = "request:" + e.sequence;
+      add(
+        request,
+        `${e.sequence}. ${e.tool}`,
+        e.validation?.code ? "Python validation" : "Actual tool response",
+        e,
+        1,
+      );
+      link("claim", request, "observable request");
+      for (const f of e.facts || []) {
+        const id = f.citation_id || f.id;
+        add(
+          id,
+          `${f.subject} ${f.relation} ${f.object}`,
+          `Documented relationship · ${f.scope}`,
+          f,
+          2,
+        );
+        link(request, id, "returned fact");
+      }
+      for (const m of e.matches || []) {
+        const id = m.citation_id;
+        add(
+          id,
+          `History: ${m.shared_sensors} shared sensors`,
+          "Empirical correlation · not cause",
+          m,
+          2,
+        );
+        link(request, id, "returned analogue");
+      }
+      if (e.assessment) {
+        e.assessment.findings.forEach((f, i) => {
+          const id = "finding:" + i;
+          add(id, f.statement, `Muse public assessment · ${f.verdict}`, f, 3);
+          link(request, id, "submitted finding");
+          for (const cite of f.citations)
+            if (nodes.has(cite)) link(cite, id, "model cites");
+          if (f.missing_premise) {
+            const gap = "gap:" + i;
+            add(
+              gap,
+              f.missing_premise,
+              "Unresolved premise · model assessment",
+              {
+                missing_premise: f.missing_premise,
+                next_evidence: f.next_evidence,
+              },
+              3,
+            );
+            link(id, gap, "missing premise");
+          }
+        });
+      }
+    }
+  }
+  const graph = $("evidenceGraph"),
+    counts = [0, 0, 0, 0];
+  for (const n of nodes.values()) {
+    n.x = 15 + n.layer * 265;
+    n.y = 20 + counts[n.layer]++ * 88;
+  }
+  graph.setAttribute(
+    "viewBox",
+    `0 0 1060 ${Math.max(330, Math.max(...counts) * 88 + 35)}`,
+  );
+  graph.replaceChildren();
+  for (const edge of edges) {
+    const a = nodes.get(edge.from),
+      b = nodes.get(edge.to);
+    if (!a || !b) continue;
+    const p = svg("path", {
+      d: `M${a.x + 215} ${a.y + 31} C${a.x + 245} ${a.y + 31},${b.x - 20} ${b.y + 31},${b.x} ${b.y + 31}`,
+      class: "evidence-edge",
+    });
+    p.append(svg("title", {}, edge.label));
+    graph.append(p);
+  }
+  for (const n of nodes.values()) {
+    const g = svg("g", {
+      class: `evidence-node layer-${n.layer}`,
+      role: "button",
+      tabindex: 0,
+      "aria-label": n.label,
+    });
+    g.append(
+      svg("rect", { x: n.x, y: n.y, width: 215, height: 64, rx: 9 }),
+      svg(
+        "text",
+        { x: n.x + 12, y: n.y + 19, class: "node-kind" },
+        n.kind.slice(0, 29),
+      ),
+    );
+    const label = n.label.replaceAll("_", " ");
+    g.append(
+      svg("text", { x: n.x + 12, y: n.y + 38 }, label.slice(0, 29)),
+      svg("text", { x: n.x + 12, y: n.y + 54 }, label.slice(29, 58)),
+    );
+    g.onclick = () => inspectNode(n);
+    g.onkeydown = (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        inspectNode(n);
+      }
+    };
+    graph.append(g);
+  }
+  $("graphNodeList").replaceChildren(
+    ...Array.from(nodes.values()).map((n) => {
+      const b = el("button", n.label, "quiet");
+      b.onclick = () => inspectNode(n);
+      return b;
+    }),
+  );
+  if (!nodes.size)
+    graph.append(
+      svg(
+        "text",
+        { x: 40, y: 80 },
+        "Begin or replay an investigation to see actual received evidence.",
+      ),
+    );
+}
+const architectureData = [
+  [
+    "Telemetry",
+    "Real replay / synthetic boundary",
+    "Verified private mapping selects a real 600-sample window. All allowlisted viewer channels remain separate from Muse’s frozen packet. Synthetic scenario mode is deferred.",
+  ],
+  [
+    "Statistical engine",
+    "A hypothesis, not root-cause proof",
+    "The preserved conventional classifier supplies the initial fault hypothesis and charged summaries. Its score is uncalibrated; the UI does not replace it with Muse’s verdict.",
+  ],
+  [
+    "Muse Spark",
+    "Substantive claim investigation",
+    "The live Meta Responses client uses muse-spark-1.3 and actual tool calls: lookup_knowledge, search_history, submit_audit. Muse decomposes public claims, cites received evidence and identifies gaps. No private reasoning is exported.",
+  ],
+  [
+    "Knowledge / history",
+    "Source-backed context",
+    "Topic lookups return documented generic graph facts and scope. Historical matches are restricted prepared training incidents and disclose overlap. Neither establishes exact well topology or causal confirmation.",
+  ],
+  [
+    "Python safeguards",
+    "Deterministic enforcement",
+    "DiagnosticSession enforces the shared five-sensor budget. This auditor inherits three summaries, cannot query extras, validates exact numbers/citations, bounds repairs and reserves API spend. A fresh protocol pins source/runtime/prompt/schema hashes.",
+  ],
+  [
+    "Audit / replay",
+    "Inspectable, reproducible evidence",
+    "The same public event projection renders immutable captured runs and new live tool events. Hash-linked audit entries, actual source IDs, validation failures and completed public assessments remain inspectable. Physical judgments require independent engineering review.",
+  ],
+];
+function buildArchitecture() {
+  const show = (i) => {
+    $("architectureDetail").replaceChildren(
+      el("span", architectureData[i][1], "eyebrow"),
+      el("h3", architectureData[i][0]),
+      el("p", architectureData[i][2]),
+    );
+    $("architectureNodes")
+      .querySelectorAll("button")
+      .forEach((b, j) => b.classList.toggle("active", j === i));
+  };
+  $("architectureNodes").replaceChildren(
+    ...architectureData.map((a, i) => {
+      const b = el(
+        "button",
+        `${i + 1} · ${a[0]} ${i < 5 ? "→" : ""}`,
+        "architecture-node",
+      );
+      b.onclick = () => show(i);
+      return b;
+    }),
+  );
+  show(2);
+}
+document.querySelectorAll(".page-link").forEach(
+  (a) =>
+    (a.onclick = (e) => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      if (a.dataset.case !== undefined && !liveBusy) {
+        playbackPositions.set(c().id, index);
+        current = Number(a.dataset.case);
+        synthetic = false;
+        $("scenarioSelect").value = "historical";
+        index =
+          playbackPositions.get(c().id) ??
+          (c().replay.mode === "raw" ? 599 : 1);
+      }
+      navigate(
+        a.getAttribute("href") === "/"
+          ? "home"
+          : a.getAttribute("href").slice(1),
+      );
+    }),
+);
+window.onpopstate = () =>
+  navigate(
+    location.pathname === "/technology"
+      ? "technology"
+      : location.pathname === "/demo"
+        ? "demo"
+        : "home",
+    false,
+  );
+$("caseSelect").onchange = () => {
+  resetPlayback();
+  playbackPositions.set(c().id, index);
+  current = Number($("caseSelect").value);
+  index =
+    playbackPositions.get(c().id) ?? (c().replay.mode === "raw" ? 599 : 1);
+  condition = "grounded";
+  focusSensor = null;
+  renderPlatform();
+};
+$("executionSelect").onchange = () => {
+  execution = $("executionSelect").value;
+  renderPlatform();
+};
+$("scenarioSelect").onchange = () => {
+  synthetic = $("scenarioSelect").value === "synthetic";
+  resetPlayback();
+  renderPlatform();
+};
+$("returnHistorical").onclick = () => {
+  synthetic = false;
+  $("scenarioSelect").value = "historical";
+  renderPlatform();
+};
+$("operatorView").onclick = () => {
+  workspaceView = "operator";
+  renderPlatform();
+};
+$("insideView").onclick = () => {
+  workspaceView = "inside";
+  renderPlatform();
+};
+$("nextScene").onclick = beginInvestigation;
+$("nextRecord").onclick = advanceRecord;
+$("graphAdvance").onclick = advanceRecord;
+$("back").onclick = () => {
+  if (liveBusy) return;
+  const r = investigation();
+  r.phase = 0;
+  r.events = [];
+  r.cursor = 0;
+  r.row = null;
+  r.error = null;
+  renderPlatform();
+};
+$("liveRun").onclick = () => {
+  if (!status.live_enabled || liveBusy) return;
+  $("details").close();
+  execution = "live";
+  startLive();
+};
+$("closeNode").onclick = () => $("nodeDialog").close();
 (async () => {
   try {
     const [cr, sr] = await Promise.all([
       fetch("/api/cases"),
       fetch("/api/status"),
     ]);
-    if (!cr.ok || !sr.ok)
-      throw new Error("Captured investigation could not be loaded");
+    if (!cr.ok || !sr.ok) throw Error("Reviewed capture could not be loaded");
     cases = (await cr.json()).cases;
     status = await sr.json();
     index = c().replay.mode === "raw" ? 599 : 1;
-    render();
+    const art = $("well").cloneNode(true);
+    art.removeAttribute("id");
+    art.setAttribute(
+      "aria-label",
+      "Illustrative production well; generic instrument locations",
+    );
+    for (const n of art.querySelectorAll("[id]")) {
+      const id = n.id;
+      n.id = "home-" + id;
+      for (const attr of ["fill", "stroke"]) {
+        art
+          .querySelectorAll(`[${attr}="url(#${id})"]`)
+          .forEach((x) => x.setAttribute(attr, `url(#home-${id})`));
+      }
+    }
+    $("homeArt").append(art);
+    buildArchitecture();
+    renderPlatform();
   } catch (e) {
     showError(e.message);
   }

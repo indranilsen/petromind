@@ -1,3 +1,43 @@
+# Current three-page product screenshots
+
+Actual Chromium viewport captures at **1440×900** and **390×844**, converted to
+lossless WebP. All model activity shown here is genuine **captured replay**. No
+mocked live responses or synthetic sensor fixtures appear in these images. The
+raw dataset is absent here; Operator Console honestly shows actual endpoints
+with Play disabled. Old iteration images remain below for traceability.
+
+| Page / view | Desktop | Mobile |
+|---|---|---|
+| Home | [View](platform-home-desktop.webp) | [View](platform-home-mobile.webp) |
+| Demo: Operator Console | [View](platform-operator-desktop.webp) | [View](platform-operator-mobile.webp) |
+| Demo: Inside Muse | [View](platform-inside-muse-desktop.webp) | [View](platform-inside-muse-mobile.webp) |
+| Technology | [View](platform-technology-desktop.webp) | [View](platform-technology-mobile.webp) |
+
+Visual review checked hierarchy, navigation, readable instrument grouping, source
+scope and evidence-graph interaction. Mobile content stacks and scrolls; the graph
+pans inside its own container rather than expanding the page. Exact nodes are
+inspectable, not a fabricated private reasoning transcript. Only real returned
+facts and empirical matches are linked. The synthetic mode is explicitly deferred.
+
+Validation: **368 pytest tests passed**. Browser checks exercised all three pages,
+both historical captures, preserved case/cursor state between views, full inventory,
+exact captured-output equality, replay events, graph inspection and raw-widget gaps.
+A separate real server/runner/client test with mocked HTTP responses verified that
+a first tool event reached the browser and graph before the next response was
+released. It made two mocked responses and **zero paid requests**, with no mock
+screenshots. This is software validation, not a new live efficacy result or a
+20-second user comprehension study.
+
+![Home](platform-home-desktop.webp)
+
+![Inside Muse: actual captured evidence](platform-inside-muse-desktop.webp)
+
+Full scope, run commands and limitations: [platform-demo.md](../platform-demo.md).
+
+---
+
+# Prior interface iteration
+
 # Three scenes, two clicks
 
 Actual Chromium screenshots at **1440×900** and **390×844**. All images are

@@ -1,38 +1,55 @@
 # PetroMind
 
-**PetroMind uses Muse Spark to identify when an industrial diagnosis outruns its evidence.**
-The [guided physical-system demo](docs/guided-investigation.md) follows two real captured
-Muse investigations from measured pressure changes to documented context, missing
-premises and specific evidence requests. Replay is explicitly labeled; live v2
-is separately enabled and cost-bounded. Captured output is unchanged.
+**An AI investigation platform for industrial diagnostic claims.**
+A statistical classifier proposes a failure. Meta Muse Spark examines measurements,
+source-scoped engineering knowledge and restricted historical analogues to audit
+what the proposed diagnosis actually establishes.
+
+The product has exactly three pages: **Home · Demo · Technology**. Demo combines
+the **Operator Console** and interactive **Inside Muse** evidence graph. Both
+views share incident, telemetry cursor and actual investigation events. Captured
+replay and explicitly initiated live v2 runs are visibly distinct.
 
 ```bash
 python -m pip install -e '.[test,agent]'
-python scripts/demo_claim_audit.py serve --capture .petromind/claim-audit-v1 \
+python scripts/demo_claim_audit.py serve \
+  --capture .petromind/claim-audit-v1 \
   --dataset ../3W/dataset \
   --science-protocol .petromind/science-m5-v1/protocol.json
-# Open http://127.0.0.1:8765 — no API key needed for replay
+# Open http://127.0.0.1:8765 — captured replay makes no paid calls
 ```
 
-The original reviewed capture is required and is not redistributed with the repo.
-The three-scene experience shows two pressure changes, a plausible diagnosis,
-and Muse’s missing-premise finding—in two main-action clicks. There is no
-monitoring dashboard. Values, signed changes and warm/cool markers update with
-the selected recorded sample. Two pressure sensors lead; ten grouped secondary instruments show the broader
-system. **All 27 sensors** opens the complete inventory, including column
-presence, availability and whether Muse received that channel. Extra raw channels
-are viewer-only and never added to the audit. Optional charts appear
-only when clicked; detailed
-sources and unchanged outputs live in one verdict-only **Explore evidence** drawer. Raw replay loads
-only after a private protocol mapping and data-fingerprint check. If unavailable,
-the UI explicitly shows two actual endpoints with Play disabled; it never invents
-a continuous trace. See the [sensor/replay inventory](docs/guided-investigation.md)
-and [desktop/mobile screenshots](docs/screenshots/).
-See the [claim-level review / expert packet](docs/claim-level-review.md),
-[setup and live-v2 boundaries](docs/claim-demo.md), and
-[three-minute flow / submission description](docs/hackathon-demo.md).
-Independent engineering review remains pending. The demo does not certify
-physical correctness or retroactively pass an experimental gate.
+To enable live execution, use an already exported `MODEL_API_KEY`, stop the old
+server, and create a fresh capped protocol (preparation makes no API requests):
+
+```bash
+python scripts/demo_claim_audit.py prepare-live \
+  --capture .petromind/claim-audit-v1 \
+  --out .petromind/demo-platform-live-v1 --max-cost-usd 1
+python scripts/demo_claim_audit.py serve \
+  --capture .petromind/claim-audit-v1 \
+  --dataset ../3W/dataset \
+  --science-protocol .petromind/science-m5-v1/protocol.json \
+  --enable-live .petromind/demo-platform-live-v1
+```
+
+In Demo, select **Live Muse API · v2 · paid**, reveal the statistical diagnosis,
+and click **Investigate with Muse Spark · live API**. That action spends API
+budget. Sources and actual tool results stream to both views. No private model
+reasoning is displayed. The current auditor exposes knowledge lookup, restricted
+history and structured claim submission; **new sensor queries and per-well
+topology traversal are not exposed in this mode**. Extra viewer telemetry never
+enters the fixed three-summary audit packet.
+
+The original reviewed capture is required and not redistributed. Raw replay loads
+only after private protocol mapping/fingerprint/window checks; otherwise actual
+captured endpoints appear with Play disabled. Synthetic Challenge is explicitly
+not enabled; no physics simulation or synthetic success is claimed.
+
+See [complete setup, architecture and limits](docs/platform-demo.md),
+[screenshots](docs/screenshots/), [three-minute demo](docs/hackathon-demo.md),
+[submission description](docs/hackathon-submission.md), and
+[claim-level expert-review packet](docs/claim-level-review.md).
 
 The earlier experiments remain intact. Conventional adaptive diagnosis achieved
 60.6% on the frozen 33 incidents; direct Muse sensor-only/GraphRAG achieved
