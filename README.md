@@ -1,3 +1,5 @@
+> Replay and live refinements: see [exact local verification and opt-in v3 instructions](docs/live-investigation-verification.md). `request_sensor` is available only with a fresh active protocol and verified raw development windows. Real-data and paid Meta execution have **not** been verified in the implementation workspace; offline/mock checks are separate.
+
 # PetroMind
 
 **An AI investigation platform for industrial diagnostic claims.**

@@ -32,6 +32,13 @@ def main():
             q.add_argument("--out", type=Path, required=True)
             if name == "prepare-live":
                 q.add_argument("--max-cost-usd", type=float, default=2)
+                q.add_argument("--active-sensors", action="store_true")
+                q.add_argument("--dataset", type=Path, default=Path("../3W/dataset"))
+                q.add_argument(
+                    "--science-protocol",
+                    type=Path,
+                    default=Path(".petromind/science-m5-v1/protocol.json"),
+                )
     a = p.parse_args()
     try:
         if a.command == "review":
@@ -50,7 +57,21 @@ def main():
                 )
             )
         elif a.command == "prepare-live":
-            print(json.dumps(freeze_live(a.capture, a.out, max_cost=a.max_cost_usd)))
+            source = (
+                json.loads(a.science_protocol.read_text()) if a.active_sensors else None
+            )
+            print(
+                json.dumps(
+                    freeze_live(
+                        a.capture,
+                        a.out,
+                        max_cost=a.max_cost_usd,
+                        active_sensors=a.active_sensors,
+                        dataset=a.dataset,
+                        science_protocol=source,
+                    )
+                )
+            )
         else:
             source = (
                 json.loads(a.science_protocol.read_text())

@@ -98,3 +98,18 @@ dataset, evaluator labels, private protocol or credentials are included.
   to reach.
 
 ![Grouped full sensor inventory](all-sensors-desktop.webp)
+
+
+## Focused replay/live refinement
+
+`refinement-operator-{desktop,mobile}.webp`,
+`refinement-assessment-{desktop,mobile}.webp`,
+`refinement-assessment-detail-{desktop,mobile}.webp`, and
+`refinement-inside-muse-{desktop,mobile}.webp` show the unchanged captured
+fault-9 claim audit in the current interface. Desktop viewport: 1440×900;
+mobile: 390×844. Assessment-detail images are full element captures so the
+operator's evidence explanation can be reviewed without opening the graph.
+Raw data is absent here: these images show actual endpoints, not continuous
+3W replay. They contain no mocked Meta outputs or generated telemetry.
+Mocked live and exhaustive constructed replay checks are separate and are
+not photographed as actual runs. See [verification instructions](../live-investigation-verification.md).

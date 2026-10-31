@@ -7,7 +7,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 
-def mock_live_browser(browser, capture):
+def mock_live_browser(browser, capture, *, fail=False):
     """Real server/runner/client path, HTTP mocked. No screenshots or paid calls."""
     import os
     import tempfile
@@ -50,6 +50,17 @@ def mock_live_browser(browser, capture):
         else:
             if not gate.wait(20):
                 raise AssertionError("Browser did not release streaming test gate")
+            if fail:
+                return httpx.Response(
+                    200,
+                    json={
+                        "status": "incomplete",
+                        "error": None,
+                        "output": [],
+                        "incomplete_details": {"reason": "max_output_tokens"},
+                        "usage": {"input_tokens": 10, "output_tokens": 10},
+                    },
+                )
             name, payload = "submit_audit", args
         return httpx.Response(
             200,
@@ -110,11 +121,21 @@ def mock_live_browser(browser, capture):
             assert page.locator("#caseSelect").is_disabled()
             gate.set()
             page.locator("#operatorView").click()
-            page.get_by_text("NEW LIVE ASSESSMENT", exact=True).wait_for()
-            assert (
-                "Software-test measurement assertion."
-                in page.locator("#operatorResult").inner_text()
-            )
+            if fail:
+                page.get_by_text(
+                    "Investigation stopped · no completed audit", exact=True
+                ).wait_for()
+                assert "response limit" in page.locator("#operatorResult").inner_text()
+                assert (
+                    "NEW LIVE ASSESSMENT"
+                    not in page.locator("#operatorResult").inner_text()
+                )
+            else:
+                page.get_by_text("NEW LIVE ASSESSMENT", exact=True).wait_for()
+                assert (
+                    "Software-test measurement assertion."
+                    in page.locator("#operatorResult").inner_text()
+                )
             assert len(calls) == 2
         finally:
             gate.set()
@@ -126,6 +147,169 @@ def mock_live_browser(browser, capture):
                 os.environ.pop("MODEL_API_KEY", None)
             else:
                 os.environ["MODEL_API_KEY"] = old
+    return len(calls)
+
+
+def mock_active_browser(browser, capture):
+    """Constructed telemetry + mocked Meta; real active session/HTTP/UI path.
+
+    No screenshots: this fixture must never be presented as a real 3W run.
+    """
+    import os
+    import tempfile
+    import threading
+    from copy import deepcopy
+    from unittest.mock import patch
+
+    import httpx
+    import numpy as np
+    import pandas as pd
+
+    from petromind.audit import canonical
+    from petromind.claim_demo import DemoApp, freeze_live, make_server
+    from petromind.claim_review import demo_cases
+    from petromind.incident_replay import raw_payload
+    from petromind.measurements import summarize
+    from petromind.meta_api import MetaResponsesClient
+
+    cases = demo_cases(capture)
+    window = pd.DataFrame(
+        {s: np.linspace(1, 3, 600) for s in ["P-PDG", "P-TPT", "ABER-CKGL"]},
+        index=pd.date_range("2020", periods=600, freq="s"),
+    )
+    window["T-TPT"] = 55.0
+    for c in cases:
+        c["observations"] = json.loads(
+            canonical(
+                {
+                    s: summarize(window[s]).to_dict()
+                    for s in ["P-PDG", "P-TPT", "ABER-CKGL"]
+                }
+            )
+        )
+        c["packet"]["observations"] = deepcopy(c["observations"])
+    calls, gate = [], threading.Event()
+    assessment = {
+        "verdict": "SUPPORTED",
+        "findings": [
+            {
+                "statement": "Software fixture: temperature summary is constant.",
+                "premises": ["The queried summary has median 55."],
+                "basis": "measurement",
+                "verdict": "SUPPORTED",
+                "citations": ["measurement:T-TPT"],
+                "missing_premise": "",
+                "next_evidence": {"kind": "none", "target": "", "purpose": ""},
+                "justification": "Software test only; no physical inference.",
+                "scope": "measured_observation",
+            }
+        ],
+        "numeric_observations": [
+            {"sensor": "T-TPT", "metric": "median", "value": 55.0}
+        ],
+    }
+    actions = [
+        ("lookup_knowledge", {"topic": "T-TPT"}),
+        (
+            "request_sensor",
+            {
+                "sensor_name": "T-TPT",
+                "source_id": "knowledge:location:T-TPT",
+                "purpose": "Inspect documented tree temperature.",
+            },
+        ),
+        ("submit_audit", assessment),
+    ]
+
+    def callback(request):
+        body = json.loads(request.content)
+        assert "viewer_series" not in canonical(body) and "true_event" not in canonical(
+            body
+        )
+        if len(calls) < 2:
+            # Temperature itself remains unavailable until its query returns.
+            assert "measurement:T-TPT" not in canonical(body["input"][0])
+        name, args = actions[len(calls)]
+        calls.append(body)
+        if len(calls) == 3:
+            assert gate.wait(20)
+        return httpx.Response(
+            200,
+            json={
+                "status": "completed",
+                "error": None,
+                "output": [
+                    {
+                        "type": "function_call",
+                        "name": name,
+                        "call_id": str(len(calls)),
+                        "arguments": canonical(args),
+                    }
+                ],
+                "usage": {"input_tokens": 10, "output_tokens": 10},
+            },
+        )
+
+    def factory(**kw):
+        return MetaResponsesClient(**kw, transport=httpx.MockTransport(callback))
+
+    with (
+        tempfile.TemporaryDirectory(prefix="petromind-active-mock-") as directory,
+        patch.dict(os.environ, {"MODEL_API_KEY": "software-test-only"}),
+        patch("petromind.claim_demo.demo_cases", side_effect=lambda _: deepcopy(cases)),
+        patch(
+            "petromind.claim_demo.active_windows",
+            return_value=({c["id"]: window for c in cases}, "constructed-fixture"),
+        ),
+    ):
+        out = Path(directory) / "live"
+        freeze_live(capture, out, max_cost=0.5, active_sensors=True)
+        app = DemoApp(capture, out, client_factory=factory)
+        for c in app.cases:
+            c["replay"] = raw_payload(window, c)
+        server = make_server(app, 0)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        try:
+            page.goto(
+                f"http://127.0.0.1:{server.server_port}/demo", wait_until="networkidle"
+            )
+            page.locator("#executionSelect").select_option("live")
+            page.locator("#nextScene").click()
+            page.locator("#nextScene").click()
+            page.get_by_text(
+                "Muse requests a documented sensor summary", exact=True
+            ).wait_for()
+            assert (
+                "Muse requested summary"
+                in page.locator('[data-sensor="T-TPT"]').inner_text()
+            )
+            assert "1 queries left" in page.locator("#eventFeed").inner_text()
+            page.locator("#insideView").click()
+            assert (
+                page.get_by_role("button", name="Tree temperature", exact=True).count()
+                > 0
+            )
+            assert (
+                "NEW LIVE ASSESSMENT"
+                not in page.locator("#operatorResult").inner_text()
+            )
+            gate.set()
+            page.locator("#operatorView").click()
+            page.get_by_text("NEW LIVE ASSESSMENT", exact=True).wait_for()
+            assert (
+                "Tree temperature (charged)"
+                in page.locator("#operatorResult").inner_text()
+            )
+            assert "Software fixture" in page.locator("#operatorResult").inner_text()
+            assert len(calls) == 3
+        finally:
+            gate.set()
+            page.close()
+            server.shutdown()
+            server.server_close()
+            thread.join()
     return len(calls)
 
 
@@ -169,6 +353,15 @@ def raw_widget_browser(browser, url, payload):
             row["present_in_incident"] = (
                 row["sensor"] in r["series"] or row["sensor"] == "T-TPT"
             )
+        for sensor in case["sensor_definitions"]:
+            if sensor not in r["series"] and sensor not in r["viewer_series"]:
+                r["viewer_series"][sensor] = {
+                    "samples": [
+                        {"value": None, "quality": "missing"} for _ in range(600)
+                    ],
+                    "reference": None,
+                }
+
     page = browser.new_page(viewport={"width": 1440, "height": 900})
     try:
         page.route("**/api/cases", lambda route: route.fulfill(json=fixture))
@@ -192,6 +385,17 @@ def raw_widget_browser(browser, url, payload):
         assert page.locator(".chart-line").get_attribute("d").count("M") >= 2
     finally:
         page.close()
+    # Run the exhaustive verifier against an EXPLICITLY CONSTRUCTED route fixture.
+    # This checks its browser logic, never certifies real 3W replay.
+    from petromind.replay_verification import verify_browser
+
+    class FixtureBrowser:
+        def new_page(self, **kwargs):
+            p = browser.new_page(**kwargs)
+            p.route("**/api/cases", lambda route: route.fulfill(json=fixture))
+            return p
+
+    verify_browser(FixtureBrowser(), url, fixture)
 
 
 def main():
@@ -288,6 +492,8 @@ def main():
                 )
                 if i == 0:
                     shot("assessment-" + label)
+                    if a.screenshots:
+                        page.locator("#operatorResult").screenshot(path=str(a.screenshots / ("assessment-detail-" + label + ".png")))
                 page.locator("#inspectDetails").click()
                 assert (
                     json.loads(page.locator("#raw").text_content())["output"]
@@ -311,6 +517,16 @@ def main():
             if a.mock_live_capture
             else 0
         )
+        active_calls = (
+            mock_active_browser(browser, a.mock_live_capture)
+            if a.mock_live_capture
+            else 0
+        )
+        failure_calls = (
+            mock_live_browser(browser, a.mock_live_capture, fail=True)
+            if a.mock_live_capture
+            else 0
+        )
         browser.close()
         print(
             json.dumps(
@@ -321,7 +537,9 @@ def main():
                     "viewports": ["1440x900", "390x844"],
                     "javascript_errors": 0,
                     "paid_requests": 0,
-                    "mocked_live_requests": mock_calls,
+                    "mocked_live_requests": mock_calls + active_calls + failure_calls,
+                    "active_sensor_and_failure_paths": bool(a.mock_live_capture),
+                    "raw_browser_fixture": "constructed software fixture, not real-data verification",
                     "captured_outputs_unchanged": True,
                 }
             )
