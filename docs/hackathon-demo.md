@@ -1,3 +1,5 @@
+> Optional live v3: [prepare, verify and run instructions](live-investigation-verification.md). First demonstrate the unchanged captured cases. Additional sensor summaries are available only when explicitly queried under the shared five-sensor budget; never describe viewer scrubbing as new Muse evidence. Active sensor selection efficacy and physical correctness remain unestablished.
+
 # Three-minute platform demo
 
 Use captured replay for a reliable recording. It contains real past Muse executions,
@@ -6,21 +8,23 @@ explicitly select live mode. Do not claim a new live call while showing replay.
 
 | Time | Page / action | Narration |
 |---|---|---|
-| 0:00–0:25 | Home hero and problem explanation | “A production well has dozens of signals. Some are missing, some are constant, and different physical causes can look similar. A classifier can suggest a fault without proving its cause.” |
-| 0:25–0:50 | Explore a real investigation → Operator Console | “These are real 3W development measurements. Two pressures are prominent; the broader catalog is inspectable. Here we have captured endpoints. If verified raw data is loaded locally, Play uses the actual 600-sample window; no values are invented.” |
-| 0:50–1:10 | Reveal statistical diagnosis | “The statistical classifier suggests service-line hydrate: ice-like material that can restrict flow. We constructed a claim to audit: the two pressure increases establish that cause. The prediction is not itself proof.” |
-| 1:10–1:45 | Investigate with Muse → advance genuine captured records | “Muse receives a fixed evidence packet, retrieves source-backed facts and compares training analogues. These are the actual recorded tool responses, including a Python rejection and repair if present. No private reasoning or fictitious calls are staged.” |
-| 1:45–2:15 | Inside Muse → click knowledge, history and a finding | “The graph shows what evidence was actually received and cited. This source describes hydrate obstruction, not a necessary or specific joint-pressure rule. These analogues have different sensor overlap. Muse accepts the readings but identifies the unsupported causal leap.” |
-| 2:15–2:35 | Operator Console result / optional second captured case | “Not established does not mean disproven. The next step is applicable well documentation and validated discriminating evidence, not an invented test. In the other case, Muse supports a narrow published-example comparison without proving valve closure.” |
-| 2:35–3:00 | Technology → select Muse / safeguards | “Muse decomposes and audits the claim; Python checks numbers, citations, budgets and spending. Conventional adaptive diagnosis beat direct Muse classification in our frozen benchmark. This is evidence-based decision support, not certified root-cause verification.” |
+| 0:00–0:20 | Home → Open historical incident replay | “This production well has pressure, temperature, flow and equipment-state measurements. Some readings are missing or constant. Similar measurements can have different causes.” |
+| 0:20–0:55 | Monitoring at sample 0 → Play or scrub | “We start at the first recorded observation. Values, relative trends, the sample counter and chart cursor follow the same sample. Raw mode replays actual samples; without the local dataset, this is an explicitly labeled two-endpoint comparison.” |
+| 0:55–1:15 | Reach the marked checkpoint | “The replay has reached the end of the diagnostic window. This is a demo investigation checkpoint, not a historical alarm. The saved classifier needs full-window summaries, so we do not show it as an earlier prediction.” |
+| 1:15–1:35 | Diagnosis expands automatically | “The statistical classifier suggests service-line hydrate: ice-like material that can restrict flow. These pressure increases are observations; a statistical pattern does not establish the cause. The stronger claim was constructed for evaluation.” |
+| 1:35–2:05 | Click Investigate with Muse Spark → advance actual captured events | “Only now do we ask Muse to investigate. In this recording, these are genuine captured tool responses, not a new API call. Muse checks measurements, source-backed knowledge and restricted training analogues.” |
+| 2:05–2:35 | Inside Muse → inspect a source, then Console assessment | “The evidence graph records actual requests and citations. A generic description of hydrate obstruction does not establish a necessary or specific pressure response. Muse distinguishes the supported pressure changes from the unsupported causal premise.” |
+| 2:35–2:50 | Rewind/forward or briefly show the second case | “Rewinding hides the diagnosis and preserves the audit; returning does not call the model again. In the second example, a published-pattern comparison has a narrow supported scope, not proof of root cause.” |
+| 2:50–3:00 | Technology | “Python enforces evidence budgets, provenance and validation. Statistical methods performed better at fault classification in our earlier benchmark. Muse's role here is evidence assessment, not certified root-cause determination.” |
 
-For a live demonstration, the explicit action invokes Meta and streams genuine
-observable events. The selected live claim-auditor mode supports source-topic
-knowledge lookup, restricted history and claim submission—not new sensor queries
-or general topology traversal. Do not narrate unsupported capabilities. Live
-results may differ or fail; replay is separately selected and never silently
-substituted. Synthetic Challenge remains visibly deferred. Full commands:
-[platform-demo.md](platform-demo.md).
+For live mode, first prepare a fresh capped protocol after installing the current
+code. Reaching the checkpoint does not spend money: only the explicitly selected
+live investigation action invokes Meta. Actual events stream as they happen. V3
+can request up to two additional sensor summaries within the original total of
+five; v2 cannot. Knowledge is generic/source-scoped, not exact well topology.
+Replay never silently substitutes for a failed live run. Synthetic Challenge
+remains deferred. [Run and real-data verification commands](monitoring-workflow.md).
+
 
 # Submission description
 

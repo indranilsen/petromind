@@ -98,3 +98,33 @@ dataset, evaluator labels, private protocol or credentials are included.
   to reach.
 
 ![Grouped full sensor inventory](all-sensors-desktop.webp)
+
+
+## Focused replay/live refinement
+
+`refinement-operator-{desktop,mobile}.webp`,
+`refinement-assessment-{desktop,mobile}.webp`,
+`refinement-assessment-detail-{desktop,mobile}.webp`, and
+`refinement-inside-muse-{desktop,mobile}.webp` show the unchanged captured
+fault-9 claim audit in the current interface. Desktop viewport: 1440×900;
+mobile: 390×844. Assessment-detail images are full element captures so the
+operator's evidence explanation can be reviewed without opening the graph.
+Raw data is absent here: these images show actual endpoints, not continuous
+3W replay. They contain no mocked Meta outputs or generated telemetry.
+Mocked live and exhaustive constructed replay checks are separate and are
+not photographed as actual runs. See [verification instructions](../live-investigation-verification.md).
+
+
+## Monitoring-to-investigation workflow
+
+`workflow-monitoring-{desktop,mobile}.webp` shows first-position monitoring,
+without a classifier result or Muse action. `workflow-checkpoint-{desktop,mobile}.webp`
+shows the explicitly labeled final-position **demo checkpoint**, revealed statistical
+diagnosis and investigation action. The mobile after-checkpoint viewport follows
+the actual attention shift to the diagnosis. `workflow-home-*` and
+`workflow-investigation-*` capture the factual page copy and actual captured graph.
+
+Desktop: 1440×900. Mobile: 390×844. These are genuine captured values and events in
+**endpoint mode**, not raw 600-sample replay, mock-model output, an operational alarm
+or an early-warning result. The original screenshot sets remain unchanged.
+See [checkpoint rule, state behavior and local verification](../monitoring-workflow.md).

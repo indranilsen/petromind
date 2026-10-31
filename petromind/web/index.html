@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>PetroMind · Investigate the evidence</title>
+    <title>PetroMind · Industrial diagnosis investigation</title>
     <link rel="stylesheet" href="/style.css" />
     <script defer src="/app.js"></script>
   </head>
@@ -17,15 +17,15 @@
         ><a href="/demo" class="page-link">DEMO</a
         ><a href="/technology" class="page-link">TECHNOLOGY</a>
       </nav>
-      <span class="header-caption">Evidence before certainty</span>
+      <span class="header-caption">Industrial evidence assessment</span>
     </header>
     <section id="homePage" class="site-page">
       <div class="home-hero">
         <div>
           <p class="eyebrow">INDUSTRIAL FAILURE INVESTIGATION</p>
           <h1>
-            A well has dozens of sensors.<br /><em
-              >Knowing what failed<br />is much harder.</em
+            Industrial sensor measurements.<br /><em
+              >Statistical diagnosis.<br />Evidence assessment.</em
             >
           </h1>
           <p class="hero-copy">
@@ -34,7 +34,7 @@
             what the evidence actually supports before they trust a diagnosis.
           </p>
           <a href="/demo" class="primary page-link" data-case="0"
-            >Explore a real investigation <span>↗</span></a
+            >Open historical incident replay <span>↗</span></a
           >
         </div>
         <div class="home-illustration">
@@ -55,12 +55,12 @@
         </div>
       </div>
       <section class="home-section">
-        <p class="eyebrow">THE PROBLEM</p>
-        <h2>Signals are measurable.<br />Causes take investigation.</h2>
+        <p class="eyebrow">MEASUREMENT CONTEXT</p>
+        <h2>Measurements and diagnostic uncertainty</h2>
         <div class="explanation-grid">
           <article>
             <span>01 / MANY SIGNALS</span>
-            <h3>One system. Many viewpoints.</h3>
+            <h3>Different measurement locations</h3>
             <p>
               Pressure deep in the well, temperature near the tree, valve codes
               and flow readings describe different parts of the system. None
@@ -69,7 +69,7 @@
           </article>
           <article>
             <span>02 / INCOMPLETE EVIDENCE</span>
-            <h3>Missing isn’t zero.</h3>
+            <h3>Missing and constant measurements</h3>
             <p>
               In our captured examples, choke opening is constant in one window
               and unavailable in another. Constant readings can be legitimate. A
@@ -78,7 +78,7 @@
           </article>
           <article>
             <span>03 / AMBIGUOUS CAUSES</span>
-            <h3>A match isn’t a cause.</h3>
+            <h3>Similarity does not establish cause</h3>
             <p>
               Similar signals and historical analogues can make a fault
               plausible. They do not automatically distinguish it from another
@@ -89,7 +89,7 @@
       </section>
       <section class="home-section pipeline-section">
         <p class="eyebrow">THE DIVISION OF RESPONSIBILITY</p>
-        <h2>A prediction starts the investigation.</h2>
+        <h2>Statistical diagnosis and evidence assessment</h2>
         <div class="pipeline">
           <span>Real telemetry</span><b>→</b
           ><span
@@ -109,7 +109,7 @@
       </section>
       <section class="home-example">
         <p class="eyebrow">A REAL CAPTURED INVESTIGATION</p>
-        <h2>Both pressures rose.<br />Did that establish hydrate?</h2>
+        <h2>Pressure increases and the proposed hydrate diagnosis</h2>
         <p>
           A statistical classifier suggested service-line hydrate—ice-like
           material that can restrict flow. Muse accepted the readings but found
@@ -121,7 +121,7 @@
           engineering review pending.
         </p>
         <a href="/demo" class="primary page-link" data-case="0"
-          >Investigate this incident <span>→</span></a
+          >Open this incident <span>→</span></a
         >
       </section>
     </section>
@@ -129,7 +129,7 @@
       <div class="demo-heading">
         <div>
           <p class="eyebrow">INVESTIGATION WORKSPACE</p>
-          <h1>Follow the evidence.</h1>
+          <h1>Historical incident replay</h1>
         </div>
         <div class="workspace-selectors">
           <label
@@ -141,8 +141,8 @@
             </select></label
           ><label
             >INCIDENT<select id="caseSelect">
-              <option value="0">01 · Pressure rise / hydrate claim</option>
-              <option value="1">02 · Published pattern comparison</option>
+              <option value="0">01 · Pressure measurements</option>
+              <option value="1">02 · Pressure-pattern comparison</option>
             </select></label
           >
         </div>
@@ -152,10 +152,10 @@
           <button id="operatorView" class="tab active">Operator Console</button
           ><button id="insideView" class="tab">Inside Muse</button>
         </div>
-        <label
+        <label id="executionControl" hidden
           >EXECUTION<select id="executionSelect">
             <option value="captured">Captured real Muse run · v1</option>
-            <option value="live">Live Muse API · v2 · paid</option>
+            <option value="live">Live Muse API · paid</option>
           </select></label
         ><span id="runBadge" class="badge"
           >Captured replay · not a new call</span
@@ -165,19 +165,26 @@
         <h2>Synthetic challenge is not enabled.</h2>
         <p>
           No physics-validated synthetic scenario or fitted statistical-model
-          bundle is supplied here. We prioritized the historical investigation
-          rather than inventing a favorable result. No synthetic measurements or
-          root causes are sent to Muse.
+          bundle is supplied here. Only historical development incidents are
+          available. No synthetic measurements or root causes are sent to Muse.
         </p>
         <button id="returnHistorical" class="quiet">
-          Use real historical incident →
+          Use historical incident →
         </button>
       </div>
-      <div id="historicalWorkspace">
+      <div id="historicalWorkspace" data-workflow-stage="monitoring">
+        <div
+          id="workflowStatus"
+          class="workflow-status"
+          role="status"
+          aria-live="polite"
+        >
+          Monitoring · recorded measurements
+        </div>
         <div id="consoleView" class="console-layout">
           <main id="experience" data-scene="0">
             <div class="console-title">
-              <h2>A production well, instrumented.</h2>
+              <h2>Production well</h2>
               <span id="dataBadge"></span>
             </div>
             <div class="stage">
@@ -318,6 +325,10 @@
               ><span>→ Unchanged</span><span>— Unavailable</span
               ><small>vs first valid value · not danger</small>
             </div>
+            <p id="checkpointCaption" class="checkpoint-caption">
+              Demo investigation checkpoint at the end of the evidence · not a
+              historical alarm
+            </p>
             <div id="transport" class="transport">
               <button
                 id="play"
@@ -325,30 +336,50 @@
                 aria-label="Play real telemetry"
                 disabled
               >
-                ▶</button
-              ><input
-                id="slider"
-                type="range"
-                min="0"
-                max="1"
-                value="1"
-                step="1"
-                aria-label="Recorded sample or captured endpoint"
-              /><span id="clock"></span><span id="replayLabel"></span>
+                ▶
+              </button>
+              <div class="timeline-track">
+                <span
+                  id="checkpointMarker"
+                  class="checkpoint-marker"
+                  role="img"
+                  aria-label="Upcoming demo investigation checkpoint"
+                  >▲</span
+                ><input
+                  id="slider"
+                  type="range"
+                  min="0"
+                  max="1"
+                  value="0"
+                  step="1"
+                  aria-label="Recorded sample or captured endpoint"
+                />
+              </div>
+              <span id="sampleCounter"></span><span id="clock"></span
+              ><span id="replayLabel"></span>
             </div>
             <p class="viewer-boundary">
-              Replay is viewer-only. Muse’s evidence is the fixed captured
-              summary packet; exploring another channel does not add it to the
-              audit.
+              Replay is viewer-only. Scrubbing never adds evidence. Only an
+              explicit budgeted Muse request can add a summary in active mode.
             </p>
           </main>
           <aside class="operator-panel">
+            <section
+              id="checkpointAlert"
+              class="checkpoint-alert"
+              hidden
+              role="status"
+            >
+              <p class="eyebrow">▲ DEMO INVESTIGATION CHECKPOINT</p>
+              <h3 id="checkpointTitle">Investigation checkpoint reached</h3>
+              <p id="checkpointExplanation"></p>
+            </section>
             <div id="investigationHypothesis" hidden>
               <p class="eyebrow">STATISTICAL HYPOTHESIS</p>
               <h2 id="activeHypothesis"></h2>
             </div>
-            <section id="diagnosisCard">
-              <p class="eyebrow">STATISTICAL CLASSIFIER · HYPOTHESIS</p>
+            <section id="diagnosisCard" hidden>
+              <p class="eyebrow">STATISTICAL FAULT DIAGNOSIS · SUSPECTED FAULT</p>
               <h2 id="cause"></h2>
               <p id="definition"></p>
               <ul id="diagnosisObservations"></ul>
@@ -360,17 +391,19 @@
             </section>
             <section id="preDiagnosis">
               <p class="eyebrow">BEGIN WITH MEASUREMENTS</p>
-              <h2>Explore the incident.</h2>
+              <h2>Monitoring sensor measurements</h2>
               <p>
-                Inspect sensors, scrub the recorded window and compare what
-                changed. Then reveal the classifier’s suspected fault.
+                Play or scrub the recorded measurements. The diagnosis becomes
+                available at the marked end-of-evidence checkpoint.
               </p>
             </section>
-            <button id="nextScene" class="primary">
-              Reveal statistical diagnosis →
+            <p id="executionNote" class="fine-print" hidden></p>
+            <button id="nextScene" class="primary" hidden>
+              Investigate with Muse Spark
             </button>
-            <p id="runInstruction" class="fine-print"></p>
+            <p id="runInstruction" class="fine-print" hidden></p>
             <section id="activityPanel" hidden>
+              <div id="operatorResult"></div>
               <div class="activity-heading">
                 <h3>Observable investigation activity</h3>
                 <button id="nextRecord" class="quiet">
@@ -378,14 +411,13 @@
                 </button>
               </div>
               <ol id="eventFeed"></ol>
-              <div id="operatorResult"></div>
             </section>
-            <button id="inspectDetails" class="quiet">
+            <button id="inspectDetails" class="quiet" hidden>
               Explore original captured evidence ↗</button
             ><button id="back" class="quiet" hidden>
               Restart captured replay
             </button>
-            <details class="capability-details">
+            <details id="capabilityDetails" class="capability-details" hidden>
               <summary>Tools, scope and spending limits</summary>
               <p id="capabilityText"></p>
               <p>
@@ -407,11 +439,15 @@
                 causation.
               </p>
             </div>
-            <button id="graphAdvance" class="quiet">
+            <button id="graphAdvance" class="quiet" hidden>
               Next recorded event →
             </button>
           </div>
-          <div class="graph-legend">
+          <p id="insidePending" class="notice">
+            Review the recorded measurements to the checkpoint before the
+            diagnosis and investigation are available.
+          </p>
+          <div id="graphLegend" class="graph-legend">
             <span>◇ Statistical hypothesis</span><span>● Measured summary</span
             ><span>▧ Documented fact</span><span>◌ Empirical analogue</span
             ><span>□ Model assessment / gap</span
@@ -435,12 +471,13 @@
     </section>
     <section id="technologyPage" class="site-page" hidden>
       <div class="technology-hero">
-        <p class="eyebrow">TECHNOLOGY / UNDER THE INVESTIGATION</p>
-        <h1>Statistics propose.<br /><em>Muse examines the evidence.</em></h1>
+        <p class="eyebrow">TECHNOLOGY / SYSTEM DESIGN</p>
+        <h1>
+          Statistical fault diagnosis.<br /><em>Muse evidence assessment.</em>
+        </h1>
         <p>
-          The distinctive capability is auditing the evidential basis of a
-          diagnosis—not presenting tool calling or graph retrieval as novel by
-          themselves.
+          The statistical engine proposes a fault. Muse examines its
+          measurements, documented sources, and unsupported premises.
         </p>
       </div>
       <section class="architecture">
@@ -454,7 +491,7 @@
           <article>
             <h3>Available to Muse</h3>
             <p>
-              Fixed sensor summaries, source-scoped knowledge graph lookups,
+              Initial sensor summaries, source-scoped knowledge graph lookups,
               restricted training-only historical analogues and structured claim
               submission.
             </p>
@@ -462,10 +499,9 @@
           <article>
             <h3>Not exposed in this mode</h3>
             <p>
-              New sensor queries and general topology traversal.
-              DiagnosticSession supports budgeted acquisition elsewhere in the
-              repository; the live claim auditor cannot inspect extra viewer
-              channels.
+              Exact well topology and unqueried viewer telemetry. Optional live
+              v3 can request up to two additional summaries from a verified raw
+              window; audit-only v2 cannot acquire measurements.
             </p>
           </article>
           <article>
@@ -480,7 +516,7 @@
         </div>
       </section>
       <section class="home-section">
-        <h2>Results, not a victory lap.</h2>
+        <h2>Frozen classification evaluation</h2>
         <table class="results-table">
           <thead>
             <tr>
@@ -525,7 +561,7 @@
         </p>
       </section>
       <section class="home-section">
-        <h2>Boundaries worth keeping visible.</h2>
+        <h2>Scope and limitations</h2>
         <div class="explanation-grid">
           <article>
             <h3>Source scope</h3>
@@ -538,8 +574,8 @@
           <article>
             <h3>Replay versus live</h3>
             <p>
-              Replay displays unchanged captured v1 events. Live v2 invokes Muse
-              only after explicit action, with fresh protocol hashes,
+              Replay displays unchanged captured v1 events. Live v2/v3 invokes
+              Muse only after explicit action, with fresh protocol hashes,
               request/token limits and a global estimated spending cap. No
               hidden chain of thought is displayed.
             </p>
@@ -635,8 +671,9 @@
       <details>
         <summary>Live Muse integration · separate versioned execution</summary>
         <p>
-          Live v2 uses a separate fresh protocol and an explicit API-spending
-          action. No playback data is added to the agent’s fixed packet.
+          Live v2/v3 uses a separate fresh protocol and an explicit API-spending
+          action. Playback never sends data; v3 queries require Python budget
+          checks.
         </p>
         <button id="liveRun" disabled>
           Live disabled · captured replay active
