@@ -1,3 +1,5 @@
+> Optional live v3: [prepare, verify and run instructions](live-investigation-verification.md). First demonstrate the unchanged captured cases. Additional sensor summaries are available only when explicitly queried under the shared five-sensor budget; never describe viewer scrubbing as new Muse evidence. Active sensor selection efficacy and physical correctness remain unestablished.
+
 # Three-minute platform demo
 
 Use captured replay for a reliable recording. It contains real past Muse executions,

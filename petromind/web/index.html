@@ -155,7 +155,7 @@
         <label
           >EXECUTION<select id="executionSelect">
             <option value="captured">Captured real Muse run · v1</option>
-            <option value="live">Live Muse API · v2 · paid</option>
+            <option value="live">Live Muse API · paid</option>
           </select></label
         ><span id="runBadge" class="badge"
           >Captured replay · not a new call</span
@@ -337,9 +337,8 @@
               /><span id="clock"></span><span id="replayLabel"></span>
             </div>
             <p class="viewer-boundary">
-              Replay is viewer-only. Muse’s evidence is the fixed captured
-              summary packet; exploring another channel does not add it to the
-              audit.
+              Replay is viewer-only. Scrubbing never adds evidence. Only an
+              explicit budgeted Muse request can add a summary in active mode.
             </p>
           </main>
           <aside class="operator-panel">
@@ -371,6 +370,7 @@
             </button>
             <p id="runInstruction" class="fine-print"></p>
             <section id="activityPanel" hidden>
+              <div id="operatorResult"></div>
               <div class="activity-heading">
                 <h3>Observable investigation activity</h3>
                 <button id="nextRecord" class="quiet">
@@ -378,7 +378,6 @@
                 </button>
               </div>
               <ol id="eventFeed"></ol>
-              <div id="operatorResult"></div>
             </section>
             <button id="inspectDetails" class="quiet">
               Explore original captured evidence ↗</button
@@ -454,7 +453,7 @@
           <article>
             <h3>Available to Muse</h3>
             <p>
-              Fixed sensor summaries, source-scoped knowledge graph lookups,
+              Initial sensor summaries, source-scoped knowledge graph lookups,
               restricted training-only historical analogues and structured claim
               submission.
             </p>
@@ -462,10 +461,9 @@
           <article>
             <h3>Not exposed in this mode</h3>
             <p>
-              New sensor queries and general topology traversal.
-              DiagnosticSession supports budgeted acquisition elsewhere in the
-              repository; the live claim auditor cannot inspect extra viewer
-              channels.
+              Exact well topology and unqueried viewer telemetry. Optional live
+              v3 can request up to two additional summaries from a verified raw
+              window; audit-only v2 cannot acquire measurements.
             </p>
           </article>
           <article>
@@ -538,8 +536,8 @@
           <article>
             <h3>Replay versus live</h3>
             <p>
-              Replay displays unchanged captured v1 events. Live v2 invokes Muse
-              only after explicit action, with fresh protocol hashes,
+              Replay displays unchanged captured v1 events. Live v2/v3 invokes
+              Muse only after explicit action, with fresh protocol hashes,
               request/token limits and a global estimated spending cap. No
               hidden chain of thought is displayed.
             </p>
@@ -635,8 +633,9 @@
       <details>
         <summary>Live Muse integration · separate versioned execution</summary>
         <p>
-          Live v2 uses a separate fresh protocol and an explicit API-spending
-          action. No playback data is added to the agent’s fixed packet.
+          Live v2/v3 uses a separate fresh protocol and an explicit API-spending
+          action. Playback never sends data; v3 queries require Python budget
+          checks.
         </p>
         <button id="liveRun" disabled>
           Live disabled · captured replay active

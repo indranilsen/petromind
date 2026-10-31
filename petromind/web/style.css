@@ -2853,3 +2853,18 @@ select {
     padding: 17px 0;
   }
 }
+
+/* Compact operator explanation uses only actual received events/findings. */
+.operator-brief {
+  font-size: 0.87rem;
+  line-height: 1.5;
+  margin: 1rem 0;
+}
+.operator-brief dt {
+  color: var(--muted, #98a7b8);
+  font-weight: 600;
+  margin-top: 0.7rem;
+}
+.operator-brief dd {
+  margin: 0.15rem 0 0;
+}

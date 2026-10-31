@@ -73,6 +73,21 @@ const sensorPositions = { "P-TPT": "tree", "P-PDG": "down" };
 const streamFor = (s) => c().replay.series[s] || c().replay.viewer_series?.[s];
 const inventoryFor = (s) =>
   c().replay.inventory.find((row) => row.sensor === s);
+function newlyInspected(s) {
+  return (
+    execution === "live" &&
+    visibleEvents().some(
+      (e) => e.tool === "request_sensor" && e.sensor === s && e.summary,
+    )
+  );
+}
+function observationStatus(s) {
+  return inventoryFor(s)?.observed_by_muse
+    ? "Received captured summary"
+    : newlyInspected(s)
+      ? "Requested in this live audit"
+      : "Viewer only · not observed by Muse";
+}
 function state(s) {
   const stream = streamFor(s);
   if (!stream)
@@ -162,6 +177,10 @@ function renderTelemetry() {
       `sensor-hit ${sensorPositions[s] || ""} ${primary ? "claim-sensor" : "secondary-sensor"} ${st.trend}`,
     );
     b.dataset.sensor = s;
+    b.dataset.value = st.value === null ? "" : String(st.value);
+    b.dataset.quality = st.quality;
+    b.dataset.trend = st.trend;
+    b.dataset.index = String(index);
     b.setAttribute(
       "aria-label",
       `${names[s]}: ${value(s, st.value)}, ${st.label}. Show details`,
@@ -173,9 +192,12 @@ function renderTelemetry() {
       !primary &&
       inventoryFor(s) &&
       !inventoryFor(s).observed_by_muse &&
+      !newlyInspected(s) &&
       streamFor(s)
     )
       b.append(el("small", "Viewer only", "viewer-tag"));
+    if (newlyInspected(s))
+      b.append(el("small", "Muse requested summary", "viewer-tag"));
     if (st.quality === "valid")
       b.append(el("strong", value(s, st.value), "sensor-reading"));
     b.append(el("span", st.label, "sensor-direction"));
@@ -253,7 +275,7 @@ function renderSensor() {
     link,
     el(
       "p",
-      `Generic associations are documented; exact placement and piping are illustrative. ${inventoryFor(selected).observed_by_muse ? "Raw samples are viewer-only. Muse received this sensor’s fixed summary, not these individual samples." : "This sensor was NOT observed by Muse. Any raw samples here are viewer-only and never added to the captured or live audit."}`,
+      `Generic associations are documented; exact placement and piping are illustrative. ${inventoryFor(selected).observed_by_muse || newlyInspected(selected) ? "Raw samples are viewer-only. Muse received this sensor’s fixed summary, not these individual samples." : "This sensor was NOT observed by Muse. Any raw samples here are viewer-only and never added to the captured or live audit."}`,
     ),
   );
 }
@@ -261,7 +283,7 @@ function renderInventory() {
   const r = c().replay;
   $("inventoryScope").textContent =
     r.mode === "raw"
-      ? "27 documented channels. Presence and quality are checked in this incident’s verified window. Extra raw channels are viewer-only; Muse received only its three captured summaries."
+      ? "27 documented channels. Presence and quality are checked in this incident’s verified window. Raw channels remain viewer-only. Inventory marks original summaries and any new explicitly requested live summary."
       : "27 documented channels. Raw data is unavailable: column presence and availability are unknown unless established by captured measurements. Not observed by Muse does not mean missing from the incident.";
   $("inventoryGroups").replaceChildren(
     ...[
@@ -288,10 +310,7 @@ function renderInventory() {
         item.append(
           title,
           el("p", `In incident: ${presence}`),
-          el(
-            "p",
-            `Muse: ${row.observed_by_muse ? "received captured summary" : "not observed in audit"}`,
-          ),
+          el("p", `Muse: ${observationStatus(row.sensor)}`),
           el(
             "p",
             `Window availability: ${row.availability.replaceAll("_", " ")}`,
@@ -342,6 +361,9 @@ function chart(s) {
   );
   d.append(head);
   const v = svg("svg", {
+    "data-index": index,
+    "data-sensor": s,
+    "data-timestamp": r.timestamps?.[index] || "",
     viewBox: "0 0 560 88",
     class: "chart-svg",
     role: "img",
@@ -504,7 +526,7 @@ function renderDetails() {
   $("liveRun").textContent = liveBusy
     ? "Muse is auditing…"
     : status.live_enabled
-      ? "Run live v2 · uses API · separate protocol"
+      ? "Run live · uses API · separate protocol"
       : "Live disabled · captured replay active";
   const saved = liveResults.get(c().id);
   $("liveRaw").hidden = !saved;
@@ -655,16 +677,17 @@ function renderPlatform() {
     execution === "captured"
       ? `Captured v1 · ${r.cursor}/${r.events.length} records revealed`
       : liveBusy
-        ? "Live v2 · actual tool events arriving"
-        : "Live v2 · explicit API execution";
+        ? `${status.capabilities?.new_sensor_queries ? "Live v3" : "Live v2"} · actual tool events arriving`
+        : `${status.capabilities?.new_sensor_queries ? "Live v3" : "Live v2"} · explicit API execution`;
   $("runInstruction").textContent =
     execution === "captured"
       ? "This replays genuine captured activity, not a new API call. Advance records to inspect what happened."
       : status.live_enabled
         ? `Explicit action uses the Meta API. Fresh protocol limits: ${status.live_limits?.estimated_usd ?? 2} USD estimated, ${status.live_limits?.requests ?? 12} requests and ${status.live_limits?.output_tokens ?? 49152} output tokens globally; Python enforces remaining reservations.`
         : "Live is disabled. Prepare a fresh live protocol and restart with --enable-live; no API calls occur in replay.";
-  $("capabilityText").textContent =
-    "This claim-auditor mode exposes lookup_knowledge, search_history and submit_audit. It receives three already charged sensor summaries within the shared five-sensor ceiling. It cannot request extra sensors or traverse well-specific topology. Knowledge lookup returns source-scoped graph facts; history uses the restricted prepared training incidents and those fixed observations only.";
+  $("capabilityText").textContent = status.capabilities?.new_sensor_queries
+    ? "Live v3 adds request_sensor: at most two additional summaries, after lookup of their documented generic location. Initial and new sensors share five queries; missing queries count and cached repeats are free. No raw playback enters Muse. History remains the initial training-only snapshot; no exact well topology is available. Captured runs remain unchanged."
+    : "Live evidence auditing exposes lookup_knowledge, search_history and submit_audit. Three inherited summaries count toward five queries. Extra sensors require a fresh active-sensor protocol and verified raw dataset. No exact well topology is available. History uses initial evidence only.";
   $("nextScene").disabled =
     liveBusy || (execution === "live" && !status.live_enabled && r.phase > 0);
   $("nextScene").textContent =
@@ -688,6 +711,13 @@ function renderPlatform() {
     ...visibleEvents().map((e) => {
       const li = el("li");
       li.append(el("strong", e.title || e.kind));
+      if (e.sensor)
+        li.append(
+          el(
+            "span",
+            `${names[e.sensor] || e.sensor}: ${e.summary.available ? "summary available" : "no valid readings"} · ${e.cached ? "cached" : "charged"} · ${e.remaining_budget} queries left. Purpose: ${e.purpose}`,
+          ),
+        );
       if (e.topic) li.append(el("span", `Topic: ${e.topic}`));
       if (e.matches)
         li.append(
@@ -721,7 +751,21 @@ function renderPlatform() {
     r.row?.output || visibleEvents().findLast((e) => e.assessment)?.assessment;
   const box = $("operatorResult");
   box.replaceChildren();
-  if (r.error) box.append(el("h3", "No completed audit"), el("p", r.error));
+  if (r.error)
+    box.append(
+      el("h3", "Investigation stopped · no completed audit"),
+      el(
+        "p",
+        {
+          model_output_token_limit:
+            "Muse reached its response limit before submitting. No conclusion is substituted.",
+          sensor_budget_exhausted: "The five-sensor budget is exhausted.",
+          live_precondition_failed:
+            "Check the fresh protocol, exported key, verified dataset and remaining cost cap.",
+        }[r.error] ||
+          `Stopped: ${r.error}. No captured result was substituted.`,
+      ),
+    );
   if (result) {
     box.append(
       el(
@@ -745,6 +789,94 @@ function renderPlatform() {
           "key-finding",
         ),
       );
+    if (keyFinding?.missing_premise)
+      box.append(
+        el("h4", "The missing link"),
+        el("p", keyFinding.missing_premise),
+      );
+    if (keyFinding?.next_evidence) {
+      const n = keyFinding.next_evidence;
+      box.append(
+        el("h4", "What to verify next"),
+        el(
+          "p",
+          typeof n === "string"
+            ? n
+            : `${n.target ? n.target + ": " : ""}${n.purpose || "No additional evidence requested for this scope."}`,
+        ),
+      );
+    }
+    if (execution === "captured" && keyFinding?.next_evidence)
+      box.append(
+        el(
+          "p",
+          "Editorial scope: this is a captured recommendation, not a supplied procedure. No verified fault-discriminating test is available in this package.",
+          "fine-print",
+        ),
+      );
+    const events = visibleEvents(),
+      received = events.find((e) => e.kind === "evidence_received");
+    const requested = events.filter(
+      (e) => e.tool === "request_sensor" && e.summary,
+    );
+    const facts = events.flatMap((e) => e.facts || []),
+      matches = events.flatMap((e) => e.matches || []);
+    const brief = el("dl", undefined, "operator-brief");
+    brief.append(
+      el("dt", "Classifier hypothesis"),
+      el(
+        "dd",
+        current === 0
+          ? "Service-line hydrate · statistical prediction, not proven cause"
+          : "Unexpected safety-valve closure · statistical prediction, not proven cause",
+      ),
+      el("dt", "Evidence Muse inspected"),
+      el(
+        "dd",
+        Object.keys(received?.observations || {})
+          .map(
+            (s) =>
+              `${names[s] || s}${received.observations[s].available ? "" : " (unavailable)"}`,
+          )
+          .join(", "),
+      ),
+      el("dt", "Additional measurements"),
+      el(
+        "dd",
+        requested.length
+          ? requested
+              .map(
+                (e) =>
+                  `${names[e.sensor] || e.sensor}${e.cached ? " (cached)" : " (charged)"}${e.summary.available ? "" : " · unavailable"}`,
+              )
+              .join(", ")
+          : "None requested. Viewer playback did not add evidence.",
+      ),
+      el("dt", "Retrieved context"),
+      el(
+        "dd",
+        `${facts.length} returned documented facts; ${matches.length} training analogues${matches.length ? " (overlap: " + matches.map((m) => m.shared_sensors).join(", ") + " sensors)" : ""}. Similarity does not prove cause.`,
+      ),
+    );
+    const locators = [...new Set(facts.map((f) => f.locator).filter(Boolean))];
+    if (locators.length)
+      brief.append(
+        el("dt", "Document sections actually returned"),
+        el("dd", locators.join("; ")),
+      );
+    const supported = result.findings.filter((f) => f.verdict === "SUPPORTED");
+    if (supported.length)
+      brief.append(
+        el("dt", "Supported at the stated scope"),
+        el(
+          "dd",
+          supported
+            .slice(0, 2)
+            .map((f) => f.statement)
+            .join(" "),
+        ),
+      );
+    box.append(brief);
     for (const f of result.findings) {
       const d = el("details");
       d.append(
@@ -968,6 +1100,20 @@ function renderEvidenceGraph() {
         1,
       );
       link("claim", request, "observable request");
+      if (e.sensor && e.summary) {
+        const id = e.citation_id;
+        add(
+          id,
+          names[e.sensor] || e.sensor,
+          "Additional charged summary",
+          { sensor: e.sensor, ...e.summary, scope: e.scope },
+          1,
+          e.sensor,
+        );
+        link(request, id, e.cached ? "cached summary" : "charged measurement");
+        if (nodes.has(e.source_id))
+          link(e.source_id, request, "cited generic sensor location");
+      }
       for (const f of e.facts || []) {
         const id = f.citation_id || f.id;
         add(
@@ -1096,7 +1242,7 @@ const architectureData = [
   [
     "Muse Spark",
     "Substantive claim investigation",
-    "The live Meta Responses client uses muse-spark-1.3 and actual tool calls: lookup_knowledge, search_history, submit_audit. Muse decomposes public claims, cites received evidence and identifies gaps. No private reasoning is exported.",
+    "The live Meta Responses client uses muse-spark-1.3 and actual tool calls: lookup_knowledge, search_history, submit_audit; optional v3 adds documented request_sensor. Muse decomposes public claims, cites received evidence and identifies gaps. No private reasoning is exported.",
   ],
   [
     "Knowledge / history",
@@ -1106,7 +1252,7 @@ const architectureData = [
   [
     "Python safeguards",
     "Deterministic enforcement",
-    "DiagnosticSession enforces the shared five-sensor budget. This auditor inherits three summaries, cannot query extras, validates exact numbers/citations, bounds repairs and reserves API spend. A fresh protocol pins source/runtime/prompt/schema hashes.",
+    "DiagnosticSession enforces the shared five-sensor budget. This auditor inherits three summaries. Optional v3 charges up to two additional unique sensors; cached requests are free and missing queries count. It validates exact numbers/citations, bounds repairs and reserves API spend. A fresh protocol pins source/runtime/prompt/schema hashes.",
   ],
   [
     "Audit / replay",

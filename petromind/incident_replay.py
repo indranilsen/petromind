@@ -268,6 +268,11 @@ def attach_replay(case, claim_protocol, *, dataset=None, science_protocol=None):
         return endpoints(case)
     if science_protocol is None:
         return endpoints(case, "private_source_protocol_required")
+    return raw_payload(resolve_window(case, claim_protocol, dataset, science_protocol), case)
+
+
+def resolve_window(case, claim_protocol, dataset, science_protocol):
+    """Trusted server-only frozen development locator; never an agent tool."""
     checked_protocol(science_protocol)
     parent = science_protocol["parent"]
     checked_protocol(parent)
@@ -314,4 +319,5 @@ def attach_replay(case, claim_protocol, *, dataset=None, science_protocol=None):
         pd.to_numeric(raw["class"], errors="coerce").isin(range(101, 110)).to_numpy()
     )
     window = raw.iloc[int(positions[0]) : int(positions[0]) + 600]
-    return raw_payload(window, case)
+    # Never return labels/operating state, identifiers or out-of-window rows.
+    return window.loc[:, [s for s in SENSORS if s in window]].copy(deep=True)

@@ -1,3 +1,5 @@
+> Current refinement: [replay verification and optional v3 sensor acquisition](live-investigation-verification.md). The v2 commands and tool limits below describe audit-only mode; v3 is a separate opt-in protocol requiring the matching raw dataset. Existing captures remain v1.
+
 # PetroMind platform: Home, Demo, Technology
 
 Exactly three top-level pages are served by the existing loopback Python app:

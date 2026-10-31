@@ -1,4 +1,4 @@
-"""Loopback-only claim demo: immutable real replay and explicitly enabled live v2."""
+"""Loopback-only claim demo: immutable real replay and explicitly enabled v2/v3 live."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from time import monotonic
 
+from . import active_auditor
 from .agent import AgentConfig
 from .audit import canonical
 from .claim_evaluation import checked_protocol
@@ -29,7 +30,15 @@ from .scope_auditor import (
 )
 
 
-def freeze_live(capture, out, max_cost=2):
+def freeze_live(
+    capture,
+    out,
+    max_cost=2,
+    *,
+    active_sensors=False,
+    dataset=None,
+    science_protocol=None,
+):
     if type(max_cost) not in (int, float) or not 0 < max_cost <= 2:
         raise ValueError("Live estimated cap must be positive and no greater than $2")
     p, _ = load_capture(capture)
@@ -39,29 +48,53 @@ def freeze_live(capture, out, max_cost=2):
     config = AgentConfig(
         max_turns=6, max_tool_calls=8, max_output_tokens=4096, variant="sensor_only"
     )
+    contract = active_auditor if active_sensors else None
     protocol = {
-        "study": VERSION,
+        "study": contract.VERSION if contract else VERSION,
+        "active_sensors": bool(active_sensors),
         "parent_protocol_id": p["protocol_id"],
         "source_digest": source_digest(),
         "runtime": runtime_versions(),
-        "prompt_digest": digest(INSTRUCTIONS),
-        "tools_digest": digest(scope_tools()),
+        "prompt_digest": digest(contract.INSTRUCTIONS if contract else INSTRUCTIONS),
+        "tools_digest": digest(contract.active_tools() if contract else scope_tools()),
         "documents_digest": digest(DOCUMENTS),
         "agent_config": asdict(config),
         "prices": DEFAULT_PRICES,
         "limits": {
             "pilot": {"requests": 12, "output_tokens": 49152, "estimated_usd": max_cost}
         },
-        "note": "Explicit interactive executions only. New v2 has no paid evaluation or engineering certification.",
+        "note": "Explicit interactive executions only. Fresh v2/v3 has no new paid evaluation or engineering certification.",
     }
+    if active_sensors:
+        protocol["active_windows_digest"] = active_windows(
+            capture, dataset, science_protocol
+        )[1]
     protocol["protocol_id"] = digest(protocol)
     out.mkdir(parents=True)
     (out / "protocol.json").write_text(canonical(protocol) + "\n")
     return {
         "protocol_id": protocol["protocol_id"],
         "api_requests": 0,
-        "contract_version": VERSION,
+        "contract_version": protocol["study"],
     }
+
+
+def active_windows(capture, dataset, science_protocol):
+    """Resolve frozen server-only windows, never browser replay as agent input."""
+    from .incident_replay import raw_payload, resolve_window
+
+    if dataset is None or not Path(dataset).is_dir() or science_protocol is None:
+        raise ValueError(
+            "Active queries require the actual dataset and private source protocol"
+        )
+    protocol, _ = load_capture(capture)
+    windows, fingerprints = {}, {}
+    for case in demo_cases(capture):
+        window = resolve_window(case, protocol, dataset, science_protocol)
+        projection = raw_payload(window, case)  # cadence + captured summary match
+        fingerprints[case["id"]] = digest(projection)
+        windows[case["id"]] = window
+    return windows, digest(fingerprints)
 
 
 class DemoApp:
@@ -117,6 +150,17 @@ class DemoApp:
         self.client_factory = client_factory
         self.lock = threading.Lock()
         self.token = secrets.token_urlsafe(32)
+        self.active_sensors = False
+        self._active_windows = {}
+        self._active_windows_digest = None
+        if self.live_directory:
+            preview = json.loads((self.live_directory / "protocol.json").read_text())
+            if preview.get("active_sensors"):
+                self._active_windows, self._active_windows_digest = active_windows(
+                    capture, dataset, science_protocol
+                )
+                self.active_sensors = True
+        self.live_version = active_auditor.VERSION if self.active_sensors else VERSION
         self.live_limits = (
             self.validate_live()["limits"]["pilot"] if self.live_directory else None
         )
@@ -124,16 +168,24 @@ class DemoApp:
     def validate_live(self):
         p = json.loads((self.live_directory / "protocol.json").read_text())
         checked_protocol(p)
+        contract = active_auditor if self.active_sensors else None
         if (
-            p["study"] != VERSION
+            p["study"] != self.live_version
+            or bool(p.get("active_sensors")) != self.active_sensors
+            or (
+                self.active_sensors
+                and p.get("active_windows_digest") != self._active_windows_digest
+            )
             or p["parent_protocol_id"] != self.protocol["protocol_id"]
             or p["source_digest"] != source_digest()
             or p["runtime"] != runtime_versions()
-            or p["prompt_digest"] != digest(INSTRUCTIONS)
-            or p["tools_digest"] != digest(scope_tools())
+            or p["prompt_digest"]
+            != digest(contract.INSTRUCTIONS if contract else INSTRUCTIONS)
+            or p["tools_digest"]
+            != digest(contract.active_tools() if contract else scope_tools())
             or p["documents_digest"] != digest(DOCUMENTS)
         ):
-            raise ValueError("Fresh scope-v2 live protocol required")
+            raise ValueError("Fresh matching live protocol required")
         return p
 
     def live(self, case_id, request_id, *, on_public_event=None):
@@ -184,7 +236,13 @@ class DemoApp:
                     t for t in self.protocol["tasks"] if t["task_id"] == case_id
                 )
                 history = self.protocol["histories"].get(task["source_case_id"], ())
-                session = ScopeAuditSession(case["packet"], history=history)
+                session = (
+                    active_auditor.ActiveAuditSession(
+                        case["packet"], self._active_windows[case_id], history=history
+                    )
+                    if self.active_sensors
+                    else ScopeAuditSession(case["packet"], history=history)
+                )
                 ledger = SpendingLedger(
                     self.live_directory / "reservations.jsonl", p, "pilot"
                 )
@@ -207,7 +265,12 @@ class DemoApp:
 
                 start = monotonic()
                 try:
-                    result = run_scope_auditor(
+                    runner = (
+                        active_auditor.run_active_auditor
+                        if self.active_sensors
+                        else run_scope_auditor
+                    )
+                    result = runner(
                         session,
                         client,
                         AgentConfig(**p["agent_config"]),
@@ -219,7 +282,7 @@ class DemoApp:
                     "request_id": request_id,
                     "case_id": case_id,
                     "protocol_id": p["protocol_id"],
-                    "contract_version": VERSION,
+                    "contract_version": self.live_version,
                     "status": result.status,
                     "reason": result.reason,
                     "output": session.result,
@@ -228,7 +291,11 @@ class DemoApp:
                     ),
                     "latency_seconds": monotonic() - start,
                     "requests": result.requests,
-                    "new_sensor_queries": 0,
+                    "new_sensor_queries": session.new_sensor_queries
+                    if self.active_sensors
+                    else 0,
+                    "remaining_budget": session.remaining_budget,
+                    "observed_sensors": list(session.packet["observations"]),
                     "inherited_sensor_queries": len(case["observations"]),
                     "audit": [asdict(a) for a in session.audit_trail],
                     "physical_correctness_verified": False,
@@ -287,15 +354,17 @@ def make_server(app, port=8765):
                     {
                         "live_enabled": app.live_directory is not None,
                         "token": app.token,
-                        "live_version": VERSION,
+                        "live_version": app.live_version,
                         "live_limits": app.live_limits,
                         "capabilities": {
-                            "tools": [
+                            "tools": (["request_sensor"] if app.active_sensors else [])
+                            + [
                                 "lookup_knowledge",
                                 "search_history",
                                 "submit_audit",
                             ],
-                            "new_sensor_queries": False,
+                            "new_sensor_queries": app.active_sensors,
+                            "history_scope": "Frozen training-only snapshot from initial sensors; additional queries do not rerank.",
                             "well_topology_traversal": False,
                             "knowledge_graph": "Source-scoped facts by public topic; not per-well topology",
                             "inherited_sensor_summaries": 3,
