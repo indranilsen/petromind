@@ -253,7 +253,9 @@ def test_end_to_end_http_replay_assets_privacy_and_no_live_by_default(server):
     app, url = server
     with httpx.Client(trust_env=False) as client:
         page = client.get(url + "/")
-        assert page.status_code == 200 and "A well has dozens of sensors." in page.text
+        assert (
+            page.status_code == 200 and "Industrial sensor measurements." in page.text
+        )
         for asset in ("app.js", "style.css"):
             assert client.get(url + "/" + asset).status_code == 200
         result = client.get(url + "/api/cases").json()
@@ -411,6 +413,7 @@ def test_live_stream_uses_real_mocked_events_before_completion_and_no_viewer_inp
 
     def callback(request):
         body = json.loads(request.content)
+        assert "demo_investigation_checkpoint" not in canonical(body)
         assert "viewer_series" not in canonical(body) and "true_event" not in canonical(
             body
         )
@@ -485,3 +488,223 @@ def test_live_stream_uses_real_mocked_events_before_completion_and_no_viewer_inp
         server.shutdown()
         server.server_close()
         thread.join()
+
+
+def test_active_protocol_requires_raw_data_and_does_not_enable_by_accident(
+    capture, tmp_path
+):
+    out = tmp_path / "no-raw"
+    with pytest.raises(ValueError, match="actual dataset"):
+        freeze_live(capture, out, active_sensors=True)
+    assert not out.exists()
+    freeze_live(capture, out)
+    assert DemoApp(capture, out).active_sensors is False
+
+
+def test_active_app_versions_protocol_streams_queries_and_rejects_wrong_window(
+    capture, tmp_path, monkeypatch
+):
+    """Constructed capture/window; real HTTP transport mocked, not a 3W result."""
+    import numpy as np
+    import pandas as pd
+
+    from petromind.active_auditor import VERSION as ACTIVE_VERSION
+    from petromind.incident_replay import raw_payload
+
+    p = json.loads((capture / "protocol.json").read_text())
+    rows = [json.loads(l) for l in (capture / "results.jsonl").read_text().splitlines()]
+    window = pd.DataFrame(
+        {s: np.linspace(1, 3, 600) for s in ["P-PDG", "P-TPT", "ABER-CKGL"]},
+        index=pd.date_range("2020", periods=600, freq="s"),
+    )
+    window["T-TPT"] = 55.0
+    for task in p["tasks"]:
+        task["packet"]["observations"] = {
+            s: summarize(window[s]).to_dict() for s in ["P-PDG", "P-TPT", "ABER-CKGL"]
+        }
+    p.pop("protocol_id")
+    p["protocol_id"] = digest(p)
+    for r in rows:
+        r["protocol_id"] = p["protocol_id"]
+    (capture / "protocol.json").write_text(canonical(p))
+    (capture / "results.jsonl").write_text("".join(canonical(r) + "\n" for r in rows))
+    monkeypatch.setattr("petromind.claim_review.CAPTURE_PROTOCOL", p["protocol_id"])
+    monkeypatch.setattr("petromind.claim_review.CAPTURE_ROWS_DIGEST", digest(rows))
+
+    # Only the private resolver is substituted; actual app/session/runner/events execute.
+    def windows(*args):
+        return {t: window for t in TASKS}, "fixture-windows-digest"
+
+    monkeypatch.setattr("petromind.claim_demo.active_windows", windows)
+    out = tmp_path / "active"
+    frozen = freeze_live(capture, out, active_sensors=True, max_cost=0.5)
+    assert frozen["contract_version"] == ACTIVE_VERSION and frozen["api_requests"] == 0
+    monkeypatch.setenv("MODEL_API_KEY", "mock-only")
+    actions = [
+        ("lookup_knowledge", {"topic": "T-TPT"}),
+        (
+            "request_sensor",
+            {
+                "sensor_name": "T-TPT",
+                "source_id": "knowledge:location:T-TPT",
+                "purpose": "Read the documented tree temperature.",
+            },
+        ),
+        ("submit_audit", submit()),
+    ]
+    calls, events = [], []
+
+    def callback(request):
+        body = json.loads(request.content)
+        assert "viewer_series" not in canonical(
+            body
+        ) and "present_in_incident" not in canonical(body)
+        name, args = actions[len(calls)]
+        calls.append(body)
+        return httpx.Response(
+            200,
+            json={
+                "status": "completed",
+                "error": None,
+                "output": [
+                    {
+                        "type": "function_call",
+                        "name": name,
+                        "call_id": str(len(calls)),
+                        "arguments": canonical(args),
+                    }
+                ],
+                "usage": {"input_tokens": 10, "output_tokens": 10},
+            },
+        )
+
+    def factory(**kw):
+        return MetaResponsesClient(**kw, transport=httpx.MockTransport(callback))
+
+    app = DemoApp(capture, out, client_factory=factory)
+    assert app.active_sensors and app.live_version == ACTIVE_VERSION
+    # This test's viewer also contains a 55 degree sample, but the packet does not.
+    assert "T-TPT" not in app.cases[0]["packet"]["observations"]
+    app.cases[0]["replay"] = raw_payload(window, app.cases[0])
+    before = (capture / "results.jsonl").read_bytes()
+    row = app.live(
+        TASKS[0], "e" * 32, on_public_event=lambda e: events.append((len(calls), e))
+    )
+    assert row["new_sensor_queries"] == 1 and row["remaining_budget"] == 1
+    assert row["observed_sensors"] == ["ABER-CKGL", "P-PDG", "P-TPT", "T-TPT"]
+    assert row["output"]["contract_version"] == ACTIVE_VERSION
+    queried = next((n, e) for n, e in events if e.get("tool") == "request_sensor")
+    assert "T-TPT" not in events[0][1]["observations"]
+    assert queried[0] == 2 and queried[1]["summary"]["median"] == 55
+    assert app.live(TASKS[0], "e" * 32) == row and len(calls) == 3
+    assert (capture / "results.jsonl").read_bytes() == before
+    assert "T-TPT" not in app.cases[0]["packet"]["observations"]
+    monkeypatch.setattr(
+        "petromind.claim_demo.active_windows",
+        lambda *args: ({t: window for t in TASKS}, "changed"),
+    )
+    with pytest.raises(ValueError, match="Fresh matching"):
+        DemoApp(capture, out, client_factory=factory)
+
+
+def test_smoke_command_requires_explicit_paid_authorization(
+    capture, tmp_path, monkeypatch
+):
+    import runpy
+    import sys
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "smoke_claim_live.py",
+            "--capture",
+            str(capture),
+            "--live",
+            str(tmp_path / "unused"),
+        ],
+    )
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Must not construct a live app before authorization")
+
+    monkeypatch.setattr("petromind.claim_demo.DemoApp", forbidden)
+    with pytest.raises(SystemExit) as error:
+        runpy.run_path("scripts/smoke_claim_live.py", run_name="__main__")
+    assert error.value.code == 2
+    assert not (tmp_path / "unused").exists()
+
+
+def test_smoke_command_uses_single_streamed_mock_run_and_refuses_reuse(
+    capture, tmp_path, monkeypatch, capsys
+):
+    import runpy
+    import sys
+
+    out = tmp_path / "smoke"
+    freeze_live(capture, out, max_cost=0.5)
+    monkeypatch.setenv("MODEL_API_KEY", "mock-only")
+    calls = []
+
+    def callback(request):
+        calls.append(request)
+        return httpx.Response(
+            200,
+            json={
+                "status": "completed",
+                "error": None,
+                "output": [
+                    {
+                        "type": "function_call",
+                        "name": "submit_audit",
+                        "call_id": "1",
+                        "arguments": canonical(submit()),
+                    }
+                ],
+                "usage": {"input_tokens": 10, "output_tokens": 10},
+            },
+        )
+
+    def factory(**kw):
+        return MetaResponsesClient(**kw, transport=httpx.MockTransport(callback))
+
+    original = DemoApp
+    monkeypatch.setattr(
+        "petromind.claim_demo.DemoApp",
+        lambda *args, **kwargs: original(*args, client_factory=factory, **kwargs),
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "smoke_claim_live.py",
+            "--capture",
+            str(capture),
+            "--live",
+            str(out),
+            "--authorize-paid-meta",
+        ],
+    )
+    with pytest.raises(SystemExit) as first:
+        runpy.run_path("scripts/smoke_claim_live.py", run_name="__main__")
+    assert first.value.code == 0 and len(calls) == 1
+    report = [json.loads(l) for l in capsys.readouterr().out.splitlines()][-1]
+    assert report["status"] == "completed" and report["requests"] == 1
+    with pytest.raises(SystemExit) as second:
+        runpy.run_path("scripts/smoke_claim_live.py", run_name="__main__")
+    assert second.value.code == 2 and len(calls) == 1
+
+
+def test_checkpoint_metadata_is_viewer_only_and_not_a_historical_alarm(server):
+    _app, url = server
+    with httpx.Client(trust_env=False) as client:
+        cases = client.get(url + "/api/cases").json()["cases"]
+    for case in cases:
+        workflow = case["replay"]["workflow"]
+        assert workflow["checkpoint"]["kind"] == "demo_investigation_checkpoint"
+        assert workflow["checkpoint"]["historical_operational_alarm"] is False
+        assert (
+            workflow["positions"] == 2 and workflow["checkpoint"]["timestamp"] is None
+        )
+        assert "workflow" not in case["packet"] and "replay" not in case["packet"]
+        assert "true_event" not in canonical(workflow)

@@ -2853,3 +2853,102 @@ select {
     padding: 17px 0;
   }
 }
+
+/* Compact operator explanation uses only actual received events/findings. */
+.operator-brief {
+  font-size: 0.87rem;
+  line-height: 1.5;
+  margin: 1rem 0;
+}
+.operator-brief dt {
+  color: var(--muted, #98a7b8);
+  font-weight: 600;
+  margin-top: 0.7rem;
+}
+.operator-brief dd {
+  margin: 0.15rem 0 0;
+}
+
+/* Retrospective workflow checkpoint; no operational danger threshold implied. */
+.workflow-status {
+  color: var(--accent, #a2e8d5);
+  font-size: 12px;
+  margin: 0 0 18px;
+  min-height: 1.5em;
+}
+.checkpoint-caption {
+  font-size: 10px;
+  color: #9eb5bc;
+  margin: 15px 0 5px;
+}
+.timeline-track {
+  position: relative;
+  min-width: 70px;
+  flex: 1;
+}
+.timeline-track input {
+  width: 100%;
+  margin: 0;
+}
+.checkpoint-marker {
+  position: absolute;
+  right: 1px;
+  top: -17px;
+  height: 38px;
+  border-right: 2px dashed #8899a4;
+  color: #8899a4;
+  padding-right: 4px;
+  font-size: 12px;
+  pointer-events: none;
+}
+.checkpoint-marker.active {
+  color: #e7bd78;
+  border-color: #e7bd78;
+  border-right-style: solid;
+}
+#sampleCounter,
+#clock {
+  font-size: 11px;
+  white-space: nowrap;
+  color: #b2c9ce;
+  font-variant-numeric: tabular-nums;
+}
+.checkpoint-alert {
+  scroll-margin-top: 105px;
+  border-left: 2px solid #e7bd78;
+  padding-left: 13px;
+  margin-bottom: 20px;
+}
+.checkpoint-alert h3 {
+  font-size: 17px;
+  margin: 6px 0;
+}
+.checkpoint-focus {
+  outline: 1px solid #e7bd7866;
+  outline-offset: 3px;
+}
+#preDiagnosis h2 {
+  font-size: 25px;
+}
+@media (max-width: 740px) {
+  .transport {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .timeline-track {
+    flex-basis: calc(100% - 55px);
+  }
+  #sampleCounter {
+    margin-left: 0;
+  }
+  #clock {
+    margin-left: auto;
+  }
+}
+@media (min-width: 1100px) and (max-height: 950px) {
+  #experience .stage,
+  #experience .well-panel {
+    height: 400px;
+    min-height: 0;
+  }
+}

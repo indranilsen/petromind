@@ -267,3 +267,26 @@ def test_viewer_channels_are_whitelisted_real_samples_and_never_change_audit(
     assert "hidden event metadata" not in canonical(raw)
     assert "secret_filename" not in canonical(raw)
     assert canonical(case) == before
+
+
+def test_complete_raw_verifier_checks_every_channel_and_timestamp(replay_fixture):
+    from petromind.replay_verification import verify_case
+
+    root, _, _, science, claim, original = replay_fixture
+    case = {**original, "packet": {"observations": original["observations"]}}
+    report = verify_case(case, claim, root, science)
+    assert report["samples"] == 600 and report["channels_in_catalog"] == 27
+    assert report["sample_quality_counts"]["valid"] > 0
+    assert report["sample_quality_counts"]["missing"] > 0
+    assert report["sample_quality_counts"]["invalid"] == 1
+    assert report["agent_packet_unchanged"]
+
+
+def test_resolved_private_window_strips_labels_and_metadata(replay_fixture):
+    from petromind.incident_replay import resolve_window
+
+    root, _, frame, science, claim, case = replay_fixture
+    resolved = resolve_window(case, claim, root, science)
+    assert list(resolved.columns) == ["ABER-CKGL", "P-PDG", "P-TPT", "T-TPT"]
+    assert len(resolved) == 600 and resolved.index.equals(frame.iloc[20:].index)
+    assert "class" not in resolved and "state" not in resolved

@@ -1,6 +1,7 @@
 """Public UI projection of actual audit entries; never vendor/private reasoning."""
 
 import json
+from copy import deepcopy
 
 
 def received_event(packet, mode):
@@ -13,7 +14,7 @@ def received_event(packet, mode):
         else "Captured evidence packet supplied to Muse",
         "hypothesis": packet["baseline"]["prediction"],
         "claim": packet["claim"],
-        "observations": packet["observations"],
+        "observations": deepcopy(packet["observations"]),
         "note": "Already charged summaries, not raw playback or extra viewer channels.",
     }
 
@@ -31,6 +32,7 @@ def tool_event(entry, mode):
         "title": {
             "lookup_knowledge": "Muse retrieves source-backed graph facts",
             "search_history": "Muse compares restricted training history",
+            "request_sensor": "Muse requests a documented sensor summary",
             "submit_audit": "Muse submits its public claim assessment",
         }.get(tool, "Tool response"),
     }
@@ -38,7 +40,9 @@ def tool_event(entry, mode):
         # Rejected submission text/arguments never enter the public event stream.
         error = result["error"]
         event.update(
-            title="Python rejects a submission; bounded repair may follow",
+            title="Python rejects a submission; bounded repair may follow"
+            if tool == "submit_audit"
+            else "Python rejects a tool request",
             validation={
                 k: error[k]
                 for k in ("code", "field", "instruction", "correction")
@@ -50,7 +54,25 @@ def tool_event(entry, mode):
     elif tool == "search_history":
         event.update(
             matches=result.get("matches", []),
+            observed_sensors=result.get("observed_sensors", []),
+            history_scope=result.get("limitation"),
             note="Similarity is empirical; compare actual shared-sensor overlap, not causal proof.",
+        )
+    elif tool == "request_sensor":
+        event.update(
+            {
+                k: result[k]
+                for k in (
+                    "sensor",
+                    "summary",
+                    "cached",
+                    "remaining_budget",
+                    "citation_id",
+                    "source_id",
+                    "purpose",
+                    "scope",
+                )
+            }
         )
     elif tool == "submit_audit":
         event["assessment"] = result

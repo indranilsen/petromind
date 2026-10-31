@@ -18,7 +18,7 @@ let cases = [],
   status = {},
   current = 0,
   scene = 0,
-  index = 1,
+  index = 0,
   selected = "P-TPT",
   condition = "grounded",
   timer = null,
@@ -73,6 +73,21 @@ const sensorPositions = { "P-TPT": "tree", "P-PDG": "down" };
 const streamFor = (s) => c().replay.series[s] || c().replay.viewer_series?.[s];
 const inventoryFor = (s) =>
   c().replay.inventory.find((row) => row.sensor === s);
+function newlyInspected(s) {
+  return (
+    execution === "live" &&
+    visibleEvents().some(
+      (e) => e.tool === "request_sensor" && e.sensor === s && e.summary,
+    )
+  );
+}
+function observationStatus(s) {
+  return inventoryFor(s)?.observed_by_muse
+    ? "Received captured summary"
+    : newlyInspected(s)
+      ? "Requested in this live audit"
+      : "Viewer only · not observed by Muse";
+}
 function state(s) {
   const stream = streamFor(s);
   if (!stream)
@@ -135,8 +150,9 @@ function render() {
   renderPlatform();
 }
 function renderTelemetry() {
-  const r = c().replay;
-  $("slider").max = String(r.mode === "raw" ? 599 : 1);
+  const r = c().replay,
+    w = r.workflow;
+  $("slider").max = String(w.positions - 1);
   $("slider").value = String(index);
   $("play").disabled = !r.can_play;
   $("play").textContent = timer ? "Ⅱ" : "▶";
@@ -144,16 +160,22 @@ function renderTelemetry() {
     "aria-label",
     timer ? "Pause real telemetry" : "Play real telemetry",
   );
-  $("clock").textContent =
+  $("sampleCounter").textContent =
     r.mode === "raw"
-      ? `${Math.floor(index / 60)}:${String(index % 60).padStart(2, "0")} / 9:59`
-      : index === 0
-        ? "Start"
-        : "End";
+      ? `Sample ${index + 1} of ${w.positions}`
+      : `Captured endpoint ${index + 1} of ${w.positions}`;
+  $("clock").textContent = w.elapsed_seconds
+    ? `${elapsedLabel(w.elapsed_seconds[index])} / ${elapsedLabel(w.elapsed_seconds.at(-1))}`
+    : "Timestamps unavailable";
   $("replayLabel").textContent =
     r.mode === "raw"
-      ? "Recorded data · 10×"
-      : "Captured endpoints · raw replay unavailable";
+      ? "Recorded data · 10× playback"
+      : "Captured endpoints · no continuous replay";
+  $("checkpointMarker").classList.toggle("active", checkpointReached());
+  $("checkpointMarker").setAttribute(
+    "aria-label",
+    `${checkpointReached() ? "Reached" : "Upcoming"} demo investigation checkpoint · ${r.mode === "raw" ? "last recorded sample" : "endpoint comparison complete"} · not a historical alarm`,
+  );
   const makeSensor = (s, primary = false) => {
     const st = state(s);
     const b = el(
@@ -162,6 +184,11 @@ function renderTelemetry() {
       `sensor-hit ${sensorPositions[s] || ""} ${primary ? "claim-sensor" : "secondary-sensor"} ${st.trend}`,
     );
     b.dataset.sensor = s;
+    b.dataset.value = st.value === null ? "" : String(st.value);
+    b.dataset.quality = st.quality;
+    b.dataset.trend = st.trend;
+    b.dataset.index = String(index);
+    if (checkpointReached() && primary) b.classList.add("checkpoint-focus");
     b.setAttribute(
       "aria-label",
       `${names[s]}: ${value(s, st.value)}, ${st.label}. Show details`,
@@ -173,9 +200,12 @@ function renderTelemetry() {
       !primary &&
       inventoryFor(s) &&
       !inventoryFor(s).observed_by_muse &&
+      !newlyInspected(s) &&
       streamFor(s)
     )
       b.append(el("small", "Viewer only", "viewer-tag"));
+    if (newlyInspected(s))
+      b.append(el("small", "Muse requested summary", "viewer-tag"));
     if (st.quality === "valid")
       b.append(el("strong", value(s, st.value), "sensor-reading"));
     b.append(el("span", st.label, "sensor-direction"));
@@ -253,7 +283,7 @@ function renderSensor() {
     link,
     el(
       "p",
-      `Generic associations are documented; exact placement and piping are illustrative. ${inventoryFor(selected).observed_by_muse ? "Raw samples are viewer-only. Muse received this sensor’s fixed summary, not these individual samples." : "This sensor was NOT observed by Muse. Any raw samples here are viewer-only and never added to the captured or live audit."}`,
+      `Generic associations are documented; exact placement and piping are illustrative. ${inventoryFor(selected).observed_by_muse || newlyInspected(selected) ? "Raw samples are viewer-only. Muse received this sensor’s fixed summary, not these individual samples." : "This sensor was NOT observed by Muse. Any raw samples here are viewer-only and never added to the captured or live audit."}`,
     ),
   );
 }
@@ -261,7 +291,7 @@ function renderInventory() {
   const r = c().replay;
   $("inventoryScope").textContent =
     r.mode === "raw"
-      ? "27 documented channels. Presence and quality are checked in this incident’s verified window. Extra raw channels are viewer-only; Muse received only its three captured summaries."
+      ? "27 documented channels. Presence and quality are checked in this incident’s verified window. Raw channels remain viewer-only. Inventory marks original summaries and any new explicitly requested live summary."
       : "27 documented channels. Raw data is unavailable: column presence and availability are unknown unless established by captured measurements. Not observed by Muse does not mean missing from the incident.";
   $("inventoryGroups").replaceChildren(
     ...[
@@ -288,10 +318,7 @@ function renderInventory() {
         item.append(
           title,
           el("p", `In incident: ${presence}`),
-          el(
-            "p",
-            `Muse: ${row.observed_by_muse ? "received captured summary" : "not observed in audit"}`,
-          ),
+          el("p", `Muse: ${observationStatus(row.sensor)}`),
           el(
             "p",
             `Window availability: ${row.availability.replaceAll("_", " ")}`,
@@ -342,6 +369,9 @@ function chart(s) {
   );
   d.append(head);
   const v = svg("svg", {
+    "data-index": index,
+    "data-sensor": s,
+    "data-timestamp": r.timestamps?.[index] || "",
     viewBox: "0 0 560 88",
     class: "chart-svg",
     role: "img",
@@ -360,7 +390,10 @@ function chart(s) {
     lo -= 1;
     hi += 1;
   }
-  const x = (i) => 48 + (i / (data.length - 1)) * 493,
+  const elapsed = r.workflow.elapsed_seconds;
+  const x = (i) =>
+      48 +
+      (elapsed ? elapsed[i] / elapsed.at(-1) : i / (data.length - 1)) * 493,
     y = (p) => 57 - ((p - lo) / (hi - lo)) * 44;
   v.append(
     svg("text", { x: 0, y: 14, class: "chart-axis" }, `${fmt(hi, 2)}`),
@@ -408,12 +441,12 @@ function chart(s) {
     svg(
       "text",
       { x: 48, y: 78, class: "chart-axis" },
-      r.mode === "raw" ? "0:00" : "First valid",
+      r.mode === "raw" ? elapsedLabel(elapsed[0]) : "First valid",
     ),
     svg(
       "text",
       { x: 490, y: 78, class: "chart-axis" },
-      r.mode === "raw" ? "9:59" : "Last valid",
+      r.mode === "raw" ? elapsedLabel(elapsed.at(-1)) : "Last valid",
     ),
   );
   d.append(v);
@@ -504,7 +537,7 @@ function renderDetails() {
   $("liveRun").textContent = liveBusy
     ? "Muse is auditing…"
     : status.live_enabled
-      ? "Run live v2 · uses API · separate protocol"
+      ? "Run live · uses API · separate protocol"
       : "Live disabled · captured replay active";
   const saved = liveResults.get(c().id);
   $("liveRaw").hidden = !saved;
@@ -538,8 +571,8 @@ $("allSensors").onclick = () => {
 };
 $("closeInventory").onclick = () => $("inventoryDialog").close();
 $("slider").oninput = () => {
-  index = Number($("slider").value);
-  renderTelemetry();
+  resetPlayback();
+  setReplayPosition(Number($("slider").value));
 };
 $("play").onclick = () => {
   if (!c().replay.can_play) return;
@@ -548,11 +581,20 @@ $("play").onclick = () => {
     renderTelemetry();
     return;
   }
-  if (index >= 599) index = 0;
+  if (checkpointReached()) setReplayPosition(0);
+  // Advance through existing samples only, selecting by actual elapsed timestamps.
+  const elapsed = c().replay.workflow.elapsed_seconds;
+  let playbackElapsed = elapsed[index];
   timer = setInterval(() => {
-    index = Math.min(599, index + 10);
-    if (index === 599) resetPlayback();
-    renderTelemetry();
+    playbackElapsed += 10;
+    const target = playbackElapsed;
+    let next = index;
+    while (next + 1 < elapsed.length && elapsed[next + 1] <= target) next++;
+    setReplayPosition(next);
+    if (checkpointReached()) {
+      resetPlayback();
+      renderTelemetry();
+    }
   }, 1000);
   renderTelemetry();
 };
@@ -574,8 +616,75 @@ let workspaceView = "operator",
   execution = "captured",
   synthetic = false,
   focusSensor = null;
-const investigations = new Map(),
-  playbackPositions = new Map();
+const investigations = new Map();
+const workflowStates = new Map();
+function elapsedLabel(seconds) {
+  const whole = Math.floor(seconds);
+  const suffix =
+    seconds % 1 ? (seconds % 1).toFixed(3).slice(1).replace(/0+$/, "") : "";
+  return `${String(Math.floor(whole / 60)).padStart(2, "0")}:${String(whole % 60).padStart(2, "0")}${suffix}`;
+}
+function checkpointReached() {
+  return index >= c().replay.workflow.checkpoint.index;
+}
+function transitionWorkflow(stage) {
+  const previous = workflowStates.get(c().id) || {
+    stage: "monitoring",
+    transitions: ["monitoring"],
+  };
+  if (previous.stage !== stage) {
+    previous.stage = stage;
+    previous.transitions.push(stage);
+    previous.transitions = previous.transitions.slice(-12);
+  }
+  workflowStates.set(c().id, previous);
+}
+function syncWorkflow() {
+  if (!checkpointReached()) transitionWorkflow("monitoring");
+  else {
+    if ((workflowStates.get(c().id)?.stage || "monitoring") === "monitoring")
+      transitionWorkflow("checkpoint");
+    transitionWorkflow(
+      investigation().phase === 2 ? "investigation" : "diagnosis",
+    );
+  }
+  const state = workflowStates.get(c().id);
+  $("historicalWorkspace").dataset.workflowStage = state.stage;
+  $("historicalWorkspace").dataset.uiTransitions = JSON.stringify(
+    state.transitions,
+  );
+  $("workflowStatus").textContent = {
+    monitoring: "Monitoring · recorded measurements",
+    diagnosis: "Checkpoint reached → Statistical fault diagnosis",
+    investigation:
+      "Checkpoint reached → Statistical diagnosis → Muse investigation",
+  }[state.stage];
+}
+function setReplayPosition(position) {
+  const wasReady = checkpointReached();
+  index = Math.max(0, Math.min(c().replay.workflow.positions - 1, position));
+  if (!checkpointReached()) {
+    for (const id of ["details", "nodeDialog"]) if ($(id).open) $(id).close();
+  }
+  renderPlatform();
+  if (
+    !wasReady &&
+    checkpointReached() &&
+    pageName === "demo" &&
+    workspaceView === "operator" &&
+    !document.querySelector("dialog[open]")
+  ) {
+    requestAnimationFrame(() => {
+      if (checkpointReached())
+        $("checkpointAlert").scrollIntoView({
+          block: window.matchMedia("(max-width: 740px)").matches
+            ? "start"
+            : "nearest",
+        });
+    });
+  }
+}
+
 function investigation() {
   const key = `${c().id}:${execution}`;
   if (!investigations.has(key))
@@ -589,10 +698,12 @@ function investigation() {
   return investigations.get(key);
 }
 function visibleEvents() {
+  if (!checkpointReached()) return [];
   const r = investigation();
   return execution === "captured" ? r.events.slice(0, r.cursor) : r.events;
 }
 function navigate(page, push = true) {
+  if (page !== "demo") resetPlayback();
   pageName = page;
   if (push) history.pushState({}, "", page === "home" ? "/" : "/" + page);
   renderPlatform();
@@ -629,17 +740,43 @@ function renderPlatform() {
     c().replay.mode === "raw"
       ? "Verified real window · viewer only"
       : "Captured endpoints · raw replay unavailable";
-  const r = investigation();
-  $("diagnosisCard").hidden = r.phase !== 1;
-  $("investigationHypothesis").hidden = r.phase !== 2;
+  const r = investigation(),
+    ready = checkpointReached();
+  syncWorkflow();
+  $("checkpointAlert").hidden = !ready;
+  $("checkpointTitle").textContent =
+    c().replay.mode === "raw"
+      ? "Diagnostic window complete"
+      : "Captured comparison complete";
+  $("checkpointExplanation").textContent =
+    "Retrospective review of complete-window summaries. This is a demo checkpoint, not a historical alarm or early prediction.";
+  $("executionControl").hidden = !ready;
+  $("capabilityDetails").hidden = !ready;
+  $("runBadge").hidden = !ready;
+  $("runInstruction").hidden = !ready;
+  $("inspectDetails").hidden = !ready;
+  $("executionNote").hidden = !ready;
+  $("executionNote").textContent =
+    execution === "captured"
+      ? "Captured investigation · no new API call"
+      : "Live Meta API · clicking Investigate spends against the prepared cap";
+  $("insidePending").hidden = ready && r.phase === 2;
+  $("insidePending").textContent = ready
+    ? "The statistical diagnosis is available. Start the investigation from the Operator Console."
+    : "Review recorded measurements to the checkpoint. The diagnosis and investigation remain unavailable before that point.";
+  $("graphLegend").hidden = !ready || r.phase !== 2;
+  $("graphNodeList").hidden = !ready || r.phase !== 2;
+  $("evidenceGraph").parentElement.hidden = !ready || r.phase !== 2;
+  $("diagnosisCard").hidden = !ready || r.phase === 2;
+  $("investigationHypothesis").hidden = !ready || r.phase !== 2;
   $("activeHypothesis").textContent =
     current === 0 ? "Service-line hydrate" : "Safety-valve closure";
-  $("preDiagnosis").hidden = r.phase !== 0;
+  $("preDiagnosis").hidden = ready;
   $("cause").textContent =
     current === 0 ? "Service-line hydrate" : "Unexpected safety-valve closure";
   $("definition").textContent =
     current === 0
-      ? "Ice-like material can form in production equipment and restrict flow."
+      ? "Hydrate is ice-like material that can accumulate in production equipment and restrict flow."
       : "A valve deep in the well can shut off production flow.";
   $("diagnosisObservations").replaceChildren(
     el("li", "Downhole pressure increased."),
@@ -649,45 +786,56 @@ function renderPlatform() {
     ),
   );
   $("plausibility").textContent =
-    "This statistical prediction is a hypothesis. Its uncalibrated score is not a proven physical cause.";
+    "The model compared these full-window summaries with fitting-well patterns. Similar measurements can have different causes. This is an uncalibrated retrospective prediction, not confirmed root cause.";
   $("claimSummary").textContent = c().packet.claim;
   $("runBadge").textContent =
     execution === "captured"
       ? `Captured v1 · ${r.cursor}/${r.events.length} records revealed`
       : liveBusy
-        ? "Live v2 · actual tool events arriving"
-        : "Live v2 · explicit API execution";
+        ? `${status.capabilities?.new_sensor_queries ? "Live v3" : "Live v2"} · actual tool events arriving`
+        : `${status.capabilities?.new_sensor_queries ? "Live v3" : "Live v2"} · explicit API execution`;
   $("runInstruction").textContent =
     execution === "captured"
       ? "This replays genuine captured activity, not a new API call. Advance records to inspect what happened."
       : status.live_enabled
         ? `Explicit action uses the Meta API. Fresh protocol limits: ${status.live_limits?.estimated_usd ?? 2} USD estimated, ${status.live_limits?.requests ?? 12} requests and ${status.live_limits?.output_tokens ?? 49152} output tokens globally; Python enforces remaining reservations.`
         : "Live is disabled. Prepare a fresh live protocol and restart with --enable-live; no API calls occur in replay.";
-  $("capabilityText").textContent =
-    "This claim-auditor mode exposes lookup_knowledge, search_history and submit_audit. It receives three already charged sensor summaries within the shared five-sensor ceiling. It cannot request extra sensors or traverse well-specific topology. Knowledge lookup returns source-scoped graph facts; history uses the restricted prepared training incidents and those fixed observations only.";
+  $("capabilityText").textContent = status.capabilities?.new_sensor_queries
+    ? "Live v3 adds request_sensor: at most two additional summaries, after lookup of their documented generic location. Initial and new sensors share five queries; missing queries count and cached repeats are free. No raw playback enters Muse. History remains the initial training-only snapshot; no exact well topology is available. Captured runs remain unchanged."
+    : "Live evidence auditing exposes lookup_knowledge, search_history and submit_audit. Three inherited summaries count toward five queries. Extra sensors require a fresh active-sensor protocol and verified raw dataset. No exact well topology is available. History uses initial evidence only.";
+  $("nextScene").hidden = !ready;
   $("nextScene").disabled =
-    liveBusy || (execution === "live" && !status.live_enabled && r.phase > 0);
+    liveBusy || (execution === "live" && !status.live_enabled && r.phase !== 2);
   $("nextScene").textContent =
-    r.phase === 0
-      ? "Reveal statistical diagnosis →"
-      : r.phase === 1
-        ? execution === "live"
-          ? "Investigate with Muse Spark · live API"
-          : "Investigate with Muse · captured replay"
-        : liveBusy
-          ? "Muse is running…"
-          : "Start a new investigation";
-  $("back").hidden = r.phase === 0 || liveBusy;
-  $("back").textContent = "Reset this view";
-  $("activityPanel").hidden = r.phase < 2;
+    r.phase === 2
+      ? liveBusy
+        ? "Muse investigation in progress"
+        : "Review Muse investigation"
+      : "Investigate with Muse Spark";
+  $("back").hidden = !ready || liveBusy;
+  $("back").textContent = "Restart replay";
+  $("activityPanel").hidden = !ready || r.phase !== 2;
   $("nextRecord").hidden =
-    execution !== "captured" || r.cursor >= r.events.length;
+    !ready ||
+    r.phase !== 2 ||
+    execution !== "captured" ||
+    r.cursor >= r.events.length;
   $("graphAdvance").hidden =
-    execution !== "captured" || r.cursor >= r.events.length;
+    !ready ||
+    r.phase !== 2 ||
+    execution !== "captured" ||
+    r.cursor >= r.events.length;
   $("eventFeed").replaceChildren(
     ...visibleEvents().map((e) => {
       const li = el("li");
       li.append(el("strong", e.title || e.kind));
+      if (e.sensor)
+        li.append(
+          el(
+            "span",
+            `${names[e.sensor] || e.sensor}: ${e.summary.available ? "summary available" : "no valid readings"} · ${e.cached ? "cached" : "charged"} · ${e.remaining_budget} queries left. Purpose: ${e.purpose}`,
+          ),
+        );
       if (e.topic) li.append(el("span", `Topic: ${e.topic}`));
       if (e.matches)
         li.append(
@@ -721,8 +869,22 @@ function renderPlatform() {
     r.row?.output || visibleEvents().findLast((e) => e.assessment)?.assessment;
   const box = $("operatorResult");
   box.replaceChildren();
-  if (r.error) box.append(el("h3", "No completed audit"), el("p", r.error));
-  if (result) {
+  if (ready && r.error)
+    box.append(
+      el("h3", "Investigation stopped · no completed audit"),
+      el(
+        "p",
+        {
+          model_output_token_limit:
+            "Muse reached its response limit before submitting. No conclusion is substituted.",
+          sensor_budget_exhausted: "The five-sensor budget is exhausted.",
+          live_precondition_failed:
+            "Check the fresh protocol, exported key, verified dataset and remaining cost cap.",
+        }[r.error] ||
+          `Stopped: ${r.error}. No captured result was substituted.`,
+      ),
+    );
+  if (ready && result) {
     box.append(
       el(
         "div",
@@ -745,6 +907,94 @@ function renderPlatform() {
           "key-finding",
         ),
       );
+    if (keyFinding?.missing_premise)
+      box.append(
+        el("h4", "The missing link"),
+        el("p", keyFinding.missing_premise),
+      );
+    if (keyFinding?.next_evidence) {
+      const n = keyFinding.next_evidence;
+      box.append(
+        el("h4", "What to verify next"),
+        el(
+          "p",
+          typeof n === "string"
+            ? n
+            : `${n.target ? n.target + ": " : ""}${n.purpose || "No additional evidence requested for this scope."}`,
+        ),
+      );
+    }
+    if (execution === "captured" && keyFinding?.next_evidence)
+      box.append(
+        el(
+          "p",
+          "Editorial scope: this is a captured recommendation, not a supplied procedure. No verified fault-discriminating test is available in this package.",
+          "fine-print",
+        ),
+      );
+    const events = visibleEvents(),
+      received = events.find((e) => e.kind === "evidence_received");
+    const requested = events.filter(
+      (e) => e.tool === "request_sensor" && e.summary,
+    );
+    const facts = events.flatMap((e) => e.facts || []),
+      matches = events.flatMap((e) => e.matches || []);
+    const brief = el("dl", undefined, "operator-brief");
+    brief.append(
+      el("dt", "Classifier hypothesis"),
+      el(
+        "dd",
+        current === 0
+          ? "Service-line hydrate · statistical prediction, not proven cause"
+          : "Unexpected safety-valve closure · statistical prediction, not proven cause",
+      ),
+      el("dt", "Evidence Muse inspected"),
+      el(
+        "dd",
+        Object.keys(received?.observations || {})
+          .map(
+            (s) =>
+              `${names[s] || s}${received.observations[s].available ? "" : " (unavailable)"}`,
+          )
+          .join(", "),
+      ),
+      el("dt", "Additional measurements"),
+      el(
+        "dd",
+        requested.length
+          ? requested
+              .map(
+                (e) =>
+                  `${names[e.sensor] || e.sensor}${e.cached ? " (cached)" : " (charged)"}${e.summary.available ? "" : " · unavailable"}`,
+              )
+              .join(", ")
+          : "None requested. Viewer playback did not add evidence.",
+      ),
+      el("dt", "Retrieved context"),
+      el(
+        "dd",
+        `${facts.length} returned documented facts; ${matches.length} training analogues${matches.length ? " (overlap: " + matches.map((m) => m.shared_sensors).join(", ") + " sensors)" : ""}. Similarity does not prove cause.`,
+      ),
+    );
+    const locators = [...new Set(facts.map((f) => f.locator).filter(Boolean))];
+    if (locators.length)
+      brief.append(
+        el("dt", "Document sections actually returned"),
+        el("dd", locators.join("; ")),
+      );
+    const supported = result.findings.filter((f) => f.verdict === "SUPPORTED");
+    if (supported.length)
+      brief.append(
+        el("dt", "Supported at the stated scope"),
+        el(
+          "dd",
+          supported
+            .slice(0, 2)
+            .map((f) => f.statement)
+            .join(" "),
+        ),
+      );
+    box.append(brief);
     for (const f of result.findings) {
       const d = el("details");
       d.append(
@@ -787,24 +1037,16 @@ function renderPlatform() {
   }
   renderTelemetry();
   renderEvidenceGraph();
-  if (focusSensor)
+  if (focusSensor && ready)
     document
       .querySelector(`[data-sensor="${focusSensor}"]`)
       ?.classList.add("evidence-focus");
 }
 function beginInvestigation() {
+  if (!checkpointReached() || synthetic || liveBusy) return;
   const r = investigation();
-  if (r.phase === 0) {
-    r.phase = 1;
-    renderPlatform();
-    return;
-  }
-  if (r.phase === 2 && !liveBusy) {
-    r.phase = 1;
-    r.events = [];
-    r.cursor = 0;
-    r.row = null;
-    r.error = null;
+  if (r.phase === 2) {
+    workspaceView = "inside";
     renderPlatform();
     return;
   }
@@ -816,7 +1058,14 @@ function beginInvestigation() {
   } else startLive();
 }
 async function startLive() {
-  if (liveBusy || !status.live_enabled || synthetic) return;
+  if (
+    liveBusy ||
+    !status.live_enabled ||
+    synthetic ||
+    !checkpointReached() ||
+    investigation().phase === 2
+  )
+    return;
   resetPlayback();
   const r = investigation();
   const runCaseId = c().id;
@@ -848,6 +1097,8 @@ async function startLive() {
       if (!line.trim()) return;
       const event = JSON.parse(line);
       r.events.push(event);
+      if (event.tool === "request_sensor" && event.summary)
+        focusSensor = event.sensor;
       if (event.kind === "completion") {
         terminal = true;
         r.row = event.row;
@@ -884,6 +1135,7 @@ async function startLive() {
   }
 }
 function advanceRecord() {
+  if (!checkpointReached()) return;
   const r = investigation();
   r.cursor = Math.min(r.events.length, r.cursor + 1);
   renderPlatform();
@@ -968,6 +1220,20 @@ function renderEvidenceGraph() {
         1,
       );
       link("claim", request, "observable request");
+      if (e.sensor && e.summary) {
+        const id = e.citation_id;
+        add(
+          id,
+          names[e.sensor] || e.sensor,
+          "Additional charged summary",
+          { sensor: e.sensor, ...e.summary, scope: e.scope },
+          1,
+          e.sensor,
+        );
+        link(request, id, e.cached ? "cached summary" : "charged measurement");
+        if (nodes.has(e.source_id))
+          link(e.source_id, request, "cited generic sensor location");
+      }
       for (const f of e.facts || []) {
         const id = f.citation_id || f.id;
         add(
@@ -1096,7 +1362,7 @@ const architectureData = [
   [
     "Muse Spark",
     "Substantive claim investigation",
-    "The live Meta Responses client uses muse-spark-1.3 and actual tool calls: lookup_knowledge, search_history, submit_audit. Muse decomposes public claims, cites received evidence and identifies gaps. No private reasoning is exported.",
+    "The live Meta Responses client uses muse-spark-1.3 and actual tool calls: lookup_knowledge, search_history, submit_audit; optional v3 adds documented request_sensor. Muse decomposes public claims, cites received evidence and identifies gaps. No private reasoning is exported.",
   ],
   [
     "Knowledge / history",
@@ -1106,7 +1372,7 @@ const architectureData = [
   [
     "Python safeguards",
     "Deterministic enforcement",
-    "DiagnosticSession enforces the shared five-sensor budget. This auditor inherits three summaries, cannot query extras, validates exact numbers/citations, bounds repairs and reserves API spend. A fresh protocol pins source/runtime/prompt/schema hashes.",
+    "DiagnosticSession enforces the shared five-sensor budget. This auditor inherits three summaries. Optional v3 charges up to two additional unique sensors; cached requests are free and missing queries count. It validates exact numbers/citations, bounds repairs and reserves API spend. A fresh protocol pins source/runtime/prompt/schema hashes.",
   ],
   [
     "Audit / replay",
@@ -1144,13 +1410,14 @@ document.querySelectorAll(".page-link").forEach(
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       e.preventDefault();
       if (a.dataset.case !== undefined && !liveBusy) {
-        playbackPositions.set(c().id, index);
+        const changed = current !== Number(a.dataset.case);
         current = Number(a.dataset.case);
         synthetic = false;
         $("scenarioSelect").value = "historical";
-        index =
-          playbackPositions.get(c().id) ??
-          (c().replay.mode === "raw" ? 599 : 1);
+        if (changed) {
+          index = 0;
+          workspaceView = "operator";
+        }
       }
       navigate(
         a.getAttribute("href") === "/"
@@ -1170,10 +1437,9 @@ window.onpopstate = () =>
   );
 $("caseSelect").onchange = () => {
   resetPlayback();
-  playbackPositions.set(c().id, index);
   current = Number($("caseSelect").value);
-  index =
-    playbackPositions.get(c().id) ?? (c().replay.mode === "raw" ? 599 : 1);
+  index = 0;
+  workspaceView = "operator";
   condition = "grounded";
   focusSensor = null;
   renderPlatform();
@@ -1205,16 +1471,12 @@ $("nextRecord").onclick = advanceRecord;
 $("graphAdvance").onclick = advanceRecord;
 $("back").onclick = () => {
   if (liveBusy) return;
-  const r = investigation();
-  r.phase = 0;
-  r.events = [];
-  r.cursor = 0;
-  r.row = null;
-  r.error = null;
-  renderPlatform();
+  resetPlayback();
+  workspaceView = "operator";
+  setReplayPosition(0);
 };
 $("liveRun").onclick = () => {
-  if (!status.live_enabled || liveBusy) return;
+  if (!status.live_enabled || liveBusy || !checkpointReached()) return;
   $("details").close();
   execution = "live";
   startLive();
@@ -1229,7 +1491,7 @@ $("closeNode").onclick = () => $("nodeDialog").close();
     if (!cr.ok || !sr.ok) throw Error("Reviewed capture could not be loaded");
     cases = (await cr.json()).cases;
     status = await sr.json();
-    index = c().replay.mode === "raw" ? 599 : 1;
+    index = 0;
     const art = $("well").cloneNode(true);
     art.removeAttribute("id");
     art.setAttribute(
