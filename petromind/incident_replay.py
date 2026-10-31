@@ -271,8 +271,8 @@ def attach_replay(case, claim_protocol, *, dataset=None, science_protocol=None):
     return raw_payload(resolve_window(case, claim_protocol, dataset, science_protocol), case)
 
 
-def resolve_window(case, claim_protocol, dataset, science_protocol):
-    """Trusted server-only frozen development locator; never an agent tool."""
+def _resolve_verified_path(case, claim_protocol, dataset, science_protocol):
+    """Private trusted locator, shared by replay and offline full-history audit."""
     checked_protocol(science_protocol)
     parent = science_protocol["parent"]
     checked_protocol(parent)
@@ -312,6 +312,12 @@ def resolve_window(case, claim_protocol, dataset, science_protocol):
         raise ValueError("Private locator well mismatch")
     if hashlib.sha256(path.read_bytes()).hexdigest() != record["file_hash"]:
         raise ValueError("Frozen incident changed")
+    return path
+
+
+def resolve_window(case, claim_protocol, dataset, science_protocol):
+    """Trusted server-only frozen development locator; never an agent tool."""
+    path = _resolve_verified_path(case, claim_protocol, dataset, science_protocol)
     # Existing trusted loader validates onset/labels/cadence. Labels stay private.
     read_incident(path, 600)
     raw = pd.read_parquet(path)
