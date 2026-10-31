@@ -1,26 +1,26 @@
-# Three-minute demo: a fact is not yet a cause
+# Three-minute platform demo
 
-Open case **01 · Two pressures rise**. This is a replay of a genuine captured Muse
-audit, not a new API execution. The main story takes two clicks. The illustration shows 12 indicators; optional
-**All 27 sensors** distinguishes incident presence from evidence Muse received. Do not begin in
-the evidence drawer or narrate every implementation detail.
+Use captured replay for a reliable recording. It contains real past Muse executions,
+not a live simulation. If using live, configure a fresh capped protocol first and
+explicitly select live mode. Do not claim a new live call while showing replay.
 
-| Time | Scene and action | Suggested narration |
+| Time | Page / action | Narration |
 |---|---|---|
-| 0:00–0:30 | **What happened?** Show the well and its two sensor indicators. Optionally scrub. | “Two pressure sensors in a production well ended higher than they started. One is deep down; the ‘tree’ is equipment near the top. These changes are real. Notice the numbers and orange markers change as we scrub; orange means higher than the first reading, not dangerous.” If raw loading is verified, Play runs real samples at 10×. Otherwise say: “These are captured start/end values; raw replay isn’t loaded.” |
-| 0:30–0:55 | Click **See the diagnosis**. | “Pressure rose near the top of the well and deeper down. The statistical engine suggests service-line hydrate: ice-like material that can restrict flow. We constructed a plausible claim to test: both pressures rose, so that establishes this cause. Does it?” |
-| 0:55–1:30 | Click **Ask Muse to investigate**. Pause on the verdict. | “Here is the model suggestion. Muse checks what the sensors measured, what engineering documents establish, and whether the cause follows. The pressures really rose. But that doesn’t prove the cause. Muse accepted the measurements, consulted the documented context, and found no supplied verified rule establishing that these pressure increases are necessary or specific to hydrate.” The large story is editorial explanation; the quoted finding is exact captured Muse output. Do not imply a new live call or staged tool chronology. |
-| 1:30–1:55 | Read the missing-evidence sentence; optionally open **Explore evidence**. | “The missing piece is the causal rule—not another decimal place. We would request the applicable well documentation and a validated way to distinguish causes. We don’t invent a discriminating test that our sources don’t supply.” The drawer contains original claims, measured values, documents and exact model findings. |
-| 1:55–2:25 | Close the drawer. Select **02 · A pattern matches**; use the same two actions. | “The auditor can also accept a narrow supported claim. One pressure rose, the other fell, matching a published valve-closure example. Muse supports the comparison, without treating it as proof of valve closure.” |
-| 2:25–2:45 | Optional: **Explore evidence**, actual grounded/ungrounded output. | “These are genuine captured outputs, with citations and historical overlap preserved. Raw replay is for the viewer; Muse received fixed sensor summaries. Moving a slider never changes its verdict.” |
-| 2:45–3:00 | Return attention to the verdict. | “PetroMind catches the moment when a convincing diagnosis says more than its evidence establishes. It supports engineering judgment; it does not certify root cause or control equipment.” |
+| 0:00–0:25 | Home hero and problem explanation | “A production well has dozens of signals. Some are missing, some are constant, and different physical causes can look similar. A classifier can suggest a fault without proving its cause.” |
+| 0:25–0:50 | Explore a real investigation → Operator Console | “These are real 3W development measurements. Two pressures are prominent; the broader catalog is inspectable. Here we have captured endpoints. If verified raw data is loaded locally, Play uses the actual 600-sample window; no values are invented.” |
+| 0:50–1:10 | Reveal statistical diagnosis | “The statistical classifier suggests service-line hydrate: ice-like material that can restrict flow. We constructed a claim to audit: the two pressure increases establish that cause. The prediction is not itself proof.” |
+| 1:10–1:45 | Investigate with Muse → advance genuine captured records | “Muse receives a fixed evidence packet, retrieves source-backed facts and compares training analogues. These are the actual recorded tool responses, including a Python rejection and repair if present. No private reasoning or fictitious calls are staged.” |
+| 1:45–2:15 | Inside Muse → click knowledge, history and a finding | “The graph shows what evidence was actually received and cited. This source describes hydrate obstruction, not a necessary or specific joint-pressure rule. These analogues have different sensor overlap. Muse accepts the readings but identifies the unsupported causal leap.” |
+| 2:15–2:35 | Operator Console result / optional second captured case | “Not established does not mean disproven. The next step is applicable well documentation and validated discriminating evidence, not an invented test. In the other case, Muse supports a narrow published-example comparison without proving valve closure.” |
+| 2:35–3:00 | Technology → select Muse / safeguards | “Muse decomposes and audits the claim; Python checks numbers, citations, budgets and spending. Conventional adaptive diagnosis beat direct Muse classification in our frozen benchmark. This is evidence-based decision support, not certified root-cause verification.” |
 
-Before recording, verify the dataset and private protocol locally if you intend
-to show Play. Do not replace missing raw data with generated samples. Only open a
-sensor chart if asked; the story should be understandable without it. Exact well
-geometry is illustrative. Independent engineering review is pending. Live Muse
-integration is separate, opt-in and cost-bounded; do not run it during this replay
-without an explicitly authorized fresh execution.
+For a live demonstration, the explicit action invokes Meta and streams genuine
+observable events. The selected live claim-auditor mode supports source-topic
+knowledge lookup, restricted history and claim submission—not new sensor queries
+or general topology traversal. Do not narrate unsupported capabilities. Live
+results may differ or fail; replay is separately selected and never silently
+substituted. Synthetic Challenge remains visibly deferred. Full commands:
+[platform-demo.md](platform-demo.md).
 
 # Submission description
 

@@ -253,7 +253,7 @@ def test_end_to_end_http_replay_assets_privacy_and_no_live_by_default(server):
     app, url = server
     with httpx.Client(trust_env=False) as client:
         page = client.get(url + "/")
-        assert page.status_code == 200 and "Two pressures rose." in page.text
+        assert page.status_code == 200 and "A well has dozens of sensors." in page.text
         for asset in ("app.js", "style.css"):
             assert client.get(url + "/" + asset).status_code == 200
         result = client.get(url + "/api/cases").json()
@@ -363,3 +363,125 @@ def test_mock_live_v2_execution_is_separate_idempotent_and_budgeted(
     assert (capture / "results.jsonl").read_bytes() == old
     with pytest.raises(ValueError):
         app.live(TASKS[1], "a" * 32)
+
+
+def test_three_pages_and_tool_scope_are_explicit(server):
+    _, url = server
+    with httpx.Client(trust_env=False) as client:
+        for path in ("/", "/demo", "/technology"):
+            response = client.get(url + path)
+            assert response.status_code == 200
+            assert "Main navigation" in response.text
+        status = client.get(url + "/api/status").json()
+        assert status["capabilities"]["new_sensor_queries"] is False
+        assert status["capabilities"]["well_topology_traversal"] is False
+        assert status["capabilities"]["tools"] == [
+            "lookup_knowledge",
+            "search_history",
+            "submit_audit",
+        ]
+        assert client.get(url + "/simulation").status_code == 404
+        assert client.post(url + "/api/live/stream", json={}).status_code == 403
+
+
+def test_public_projection_omits_rejected_text_and_preserves_real_facts():
+    from petromind.investigation_events import received_event, tool_event
+
+    s = ScopeAuditSession(packet())
+    s.dispatch("lookup_knowledge", {"topic": "fault:9"})
+    event = tool_event(asdict(s.audit_trail[-1]), "live")
+    assert event["facts"] and all(f["provenance"] for f in event["facts"])
+    assert event["topic"] == "fault:9"
+    s.dispatch("submit_audit", {"secret-rejected-text": "do not export"})
+    rejected = tool_event(asdict(s.audit_trail[-1]), "live")
+    assert "do not export" not in canonical(rejected)
+    assert rejected["validation"]["code"]
+    assert received_event(s.packet, "live")["observations"] == packet()["observations"]
+
+
+def test_live_stream_uses_real_mocked_events_before_completion_and_no_viewer_inputs(
+    capture, tmp_path, monkeypatch
+):
+    from petromind.investigation_events import captured_events
+
+    out = tmp_path / "live-stream"
+    freeze_live(capture, out, max_cost=0.5)
+    monkeypatch.setenv("MODEL_API_KEY", "unit-test-not-real")
+    calls = []
+
+    def callback(request):
+        body = json.loads(request.content)
+        assert "viewer_series" not in canonical(body) and "true_event" not in canonical(
+            body
+        )
+        calls.append(body)
+        name, args = (
+            ("lookup_knowledge", {"topic": "fault:9"})
+            if len(calls) == 1
+            else ("submit_audit", submit())
+        )
+        return httpx.Response(
+            200,
+            json={
+                "status": "completed",
+                "error": None,
+                "output": [
+                    {
+                        "type": "function_call",
+                        "name": name,
+                        "call_id": "call" + str(len(calls)),
+                        "arguments": canonical(args),
+                    }
+                ],
+                "usage": {
+                    "input_tokens": 10,
+                    "output_tokens": 10,
+                    "input_tokens_details": {"cached_tokens": 0},
+                },
+            },
+        )
+
+    def factory(**kw):
+        return MetaResponsesClient(**kw, transport=httpx.MockTransport(callback))
+
+    app = DemoApp(capture, out, client_factory=factory)
+    # A real runner invokes the observer synchronously while each tool completes.
+    observed = []
+    row = app.live(
+        TASKS[0], "d" * 32, on_public_event=lambda e: observed.append((len(calls), e))
+    )
+    assert [e["kind"] for _, e in observed] == [
+        "evidence_received",
+        "tool_result",
+        "tool_result",
+    ]
+    assert observed[1][0] == 1 and observed[2][0] == 2
+    assert observed[1][1]["facts"] and observed[2][1]["assessment"] == row["output"]
+    assert row["new_sensor_queries"] == 0 and len(calls) == 2
+    assert captured_events(packet(), row)[-1]["status"] == "completed"
+    # Streaming cached request is idempotent: it returns completion, no new calls.
+    server = make_server(app, 0)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    url = f"http://127.0.0.1:{server.server_port}"
+    try:
+        with httpx.Client(trust_env=False) as client:
+            with client.stream(
+                "POST",
+                url + "/api/live/stream",
+                headers={"Origin": url, "X-PetroMind-Token": app.token},
+                json={"case_id": TASKS[0], "request_id": "d" * 32},
+            ) as response:
+                assert response.headers["content-type"].startswith(
+                    "application/x-ndjson"
+                )
+                events = [json.loads(l) for l in response.iter_lines() if l]
+            assert events[-1]["row"]["output"] == row["output"] and len(calls) == 2
+            assert (
+                client.get(url + "/api/status").json()["live_limits"]["estimated_usd"]
+                == 0.5
+            )
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join()

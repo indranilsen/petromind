@@ -1,5 +1,9 @@
 # Instrument landscape and explicit Muse result
 
+Current three-page product and replay/live commands: [platform-demo.md](platform-demo.md).
+The material below records the prior guided-interface iteration and scientific boundaries.
+
+
 The guided experience still has three scenes and two main-action clicks to the
 verdict. This refinement adds instrument context and a concrete investigation
 result, without changing model instructions or any frozen experiment.

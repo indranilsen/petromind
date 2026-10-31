@@ -1,5 +1,9 @@
 # PetroMind: follow the evidence
 
+Current three-page product and replay/live commands: [platform-demo.md](platform-demo.md).
+The material below records the prior guided-interface iteration and scientific boundaries.
+
+
 The frontend has been redesigned into a three-scene guided investigation.
 Use the current [guided experience and replay setup](guided-investigation.md).
 The sections below retain the original captured-audit and live-v2 boundaries.

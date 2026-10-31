@@ -16,6 +16,7 @@ from .claim_evaluation import checked_protocol
 from .claim_review import demo_cases, load_capture, review_capture
 from .eval_protocol import DEFAULT_PRICES, digest, runtime_versions, source_digest
 from .eval_runner import append_json, read_jsonl, usage_and_cost
+from .investigation_events import captured_events, received_event, tool_event
 from .meta_api import MetaAPIError, MetaResponsesClient
 from .science_evaluation import CostedClient, SpendingLedger
 from .scope_auditor import (
@@ -84,11 +85,15 @@ class DemoApp:
                 case, self.protocol, dataset=dataset, science_protocol=science_protocol
             )
             case["captured_activity"] = {}
+            case["investigation_events"] = {}
             for method in ("grounded", "ungrounded"):
                 row = next(
                     r
                     for r in captured_rows
                     if r["task_id"] == case["id"] and r["method"] == method
+                )
+                case["investigation_events"][method] = captured_events(
+                    case["packet"], row
                 )
                 activities = []
                 for entry in row["audit"]:
@@ -112,8 +117,9 @@ class DemoApp:
         self.client_factory = client_factory
         self.lock = threading.Lock()
         self.token = secrets.token_urlsafe(32)
-        if self.live_directory:
-            self.validate_live()
+        self.live_limits = (
+            self.validate_live()["limits"]["pilot"] if self.live_directory else None
+        )
 
     def validate_live(self):
         p = json.loads((self.live_directory / "protocol.json").read_text())
@@ -130,7 +136,7 @@ class DemoApp:
             raise ValueError("Fresh scope-v2 live protocol required")
         return p
 
-    def live(self, case_id, request_id):
+    def live(self, case_id, request_id, *, on_public_event=None):
         if self.live_directory is None:
             raise ValueError("Live execution is disabled")
         if (
@@ -187,16 +193,25 @@ class DemoApp:
                     ledger,
                     {"request_id": request_id, "case_id": case_id},
                 )
+                if on_public_event:
+                    on_public_event(received_event(session.packet, "live"))
+
+                def record_event(e):
+                    append_json(
+                        trace, {"kind": e.kind, "details": json.loads(e.details_json)}
+                    )
+                    if on_public_event and e.kind == "tool_result":
+                        on_public_event(
+                            tool_event(asdict(session.audit_trail[-1]), "live")
+                        )
+
                 start = monotonic()
                 try:
                     result = run_scope_auditor(
                         session,
                         client,
                         AgentConfig(**p["agent_config"]),
-                        on_event=lambda e: append_json(
-                            trace,
-                            {"kind": e.kind, "details": json.loads(e.details_json)},
-                        ),
+                        on_event=record_event,
                     )
                 finally:
                     client.close()
@@ -273,10 +288,25 @@ def make_server(app, port=8765):
                         "live_enabled": app.live_directory is not None,
                         "token": app.token,
                         "live_version": VERSION,
+                        "live_limits": app.live_limits,
+                        "capabilities": {
+                            "tools": [
+                                "lookup_knowledge",
+                                "search_history",
+                                "submit_audit",
+                            ],
+                            "new_sensor_queries": False,
+                            "well_topology_traversal": False,
+                            "knowledge_graph": "Source-scoped facts by public topic; not per-well topology",
+                            "inherited_sensor_summaries": 3,
+                            "shared_budget": 5,
+                        },
                     },
                 )
             files = {
                 "/": ("index.html", "text/html"),
+                "/demo": ("index.html", "text/html"),
+                "/technology": ("index.html", "text/html"),
                 "/app.js": ("app.js", "text/javascript"),
                 "/style.css": ("style.css", "text/css"),
             }
@@ -296,7 +326,7 @@ def make_server(app, port=8765):
                 or self.headers.get("X-PetroMind-Token") != app.token
             ):
                 return self.send(403, {"error": "origin_or_token_rejected"})
-            if self.path != "/api/live":
+            if self.path not in {"/api/live", "/api/live/stream"}:
                 return self.send(404, {"error": "not_found"})
             try:
                 length = int(self.headers.get("Content-Length", "0"))
@@ -308,6 +338,59 @@ def make_server(app, port=8765):
                 body = json.loads(self.rfile.read(length))
                 if not isinstance(body, dict) or set(body) != {"case_id", "request_id"}:
                     raise ValueError()
+                if self.path == "/api/live/stream":
+                    if app.live_directory is None:
+                        raise ValueError("Live disabled")
+                    app.validate_live()
+                    self.send_response(200)
+                    self.send_header(
+                        "Content-Type", "application/x-ndjson; charset=utf-8"
+                    )
+                    self.send_header("Cache-Control", "no-store")
+                    self.send_header("X-Content-Type-Options", "nosniff")
+                    self.send_header("Connection", "close")
+                    self.send_header(
+                        "Content-Security-Policy",
+                        "default-src 'none'; frame-ancestors 'none'",
+                    )
+                    self.end_headers()
+                    connected = True
+
+                    def emit(event):
+                        nonlocal connected
+                        if connected:
+                            try:
+                                self.wfile.write((canonical(event) + "\n").encode())
+                                self.wfile.flush()
+                            except OSError:
+                                connected = False
+
+                    try:
+                        row = app.live(
+                            body["case_id"], body["request_id"], on_public_event=emit
+                        )
+                        emit(
+                            {
+                                "kind": "completion",
+                                "mode": "live",
+                                "status": row["status"],
+                                "reason": row["reason"],
+                                "title": "Live investigation finished",
+                                "row": row,
+                            }
+                        )
+                    except MetaAPIError as e:
+                        emit({"kind": "failure", "mode": "live", "code": e.code})
+                    except (ValueError, KeyError, TypeError, OSError):
+                        emit(
+                            {
+                                "kind": "failure",
+                                "mode": "live",
+                                "code": "live_precondition_failed",
+                            }
+                        )
+                    self.close_connection = True
+                    return
                 row = app.live(body["case_id"], body["request_id"])
                 return self.send(200, row)
             except MetaAPIError as e:

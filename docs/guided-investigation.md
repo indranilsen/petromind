@@ -1,5 +1,9 @@
 # PetroMind: a guided physical investigation
 
+Current three-page product and replay/live commands: [platform-demo.md](platform-demo.md).
+The material below records the prior guided-interface iteration and scientific boundaries.
+
+
 The defining sequence is: **two pressures rose → a diagnosis sounds plausible
 → Muse finds the unsupported causal leap**. The frontend is a three-scene science
 exhibit, not an industrial monitoring dashboard. Two main-action clicks reach the

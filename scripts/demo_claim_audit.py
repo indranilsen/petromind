@@ -30,6 +30,8 @@ def main():
             )
         else:
             q.add_argument("--out", type=Path, required=True)
+            if name == "prepare-live":
+                q.add_argument("--max-cost-usd", type=float, default=2)
     a = p.parse_args()
     try:
         if a.command == "review":
@@ -48,7 +50,7 @@ def main():
                 )
             )
         elif a.command == "prepare-live":
-            print(json.dumps(freeze_live(a.capture, a.out)))
+            print(json.dumps(freeze_live(a.capture, a.out, max_cost=a.max_cost_usd)))
         else:
             source = (
                 json.loads(a.science_protocol.read_text())
