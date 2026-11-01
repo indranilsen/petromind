@@ -4,10 +4,13 @@
 
 Home / Demo / Technology present real recorded Petrobras 3W measurements, a
 prefix-only anomaly monitor, a saved statistical diagnosis and an inspectable
-Muse claim audit. Captured replay and explicitly authorized live v3 are visibly
+Muse claim audit. Original captured replay, verified saved v5 replay and explicitly authorized live runs are visibly
 separate. No private chain of thought or invented tool activity is displayed.
 
 ## Run the hackathon demo
+
+For the preferred judge replay, [verify and import the completed saved v5 run](docs/saved-v5-replay.md).
+This uses no API calls and keeps the original frozen recording available.
 
 Use Python 3.12 and the original authorized local claim capture and monitoring
 bundle. These artifacts and the 3W dataset are **not bundled in the public repo**.

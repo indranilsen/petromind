@@ -3327,3 +3327,59 @@ select {
     padding: 14px;
   }
 }
+
+.assessment-takeaway {
+  border-left: 4px solid #9ee4cf;
+  background: #15342f;
+  padding: 14px 18px;
+  margin: 18px 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.assessment-takeaway p {
+  margin: 7px 0;
+}
+.assessment-takeaway [data-kind="causal"] {
+  color: #eed09a;
+}
+.assessment-takeaway [data-kind="contradicted"] {
+  color: #ffb5a6;
+}
+.scope-explanation {
+  color: #d5e4e7;
+  max-width: 65ch;
+}
+.scoped-finding > details {
+  margin: 10px 0;
+}
+#graphToggle {
+  margin-top: 12px;
+}
+#graphFocusNote {
+  max-width: 65ch;
+}
+.evidence-node text {
+  font-size: 12px;
+}
+.evidence-node .node-kind {
+  font-size: 9px;
+}
+.graph-scroll {
+  max-width: 100%;
+  overflow: auto;
+}
+
+.scoped-finding[data-verdict="NOT_ESTABLISHED"] .scope-verdict {
+  color: #eed09a;
+}
+.scoped-finding[data-verdict="CONTRADICTED"] .scope-verdict {
+  color: #ffb5a6;
+}
+.evidence-node.verdict-NOT_ESTABLISHED rect {
+  fill: #352f22;
+  stroke: #d7b97a;
+}
+.evidence-node.verdict-CONTRADICTED rect {
+  fill: #3d2428;
+  stroke: #e6a7a1;
+}

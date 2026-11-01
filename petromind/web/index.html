@@ -155,7 +155,12 @@
         </div>
         <label id="executionControl" hidden
           >EXECUTION<select id="executionSelect">
-            <option value="captured">Captured real Muse run · v1</option>
+            <option value="captured">
+              Original captured investigation · v1
+            </option>
+            <option value="saved" id="savedExecution" disabled>
+              Saved verified v5 investigation
+            </option>
             <option value="live">Live Muse API · paid</option>
           </select></label
         ><span id="runBadge" class="badge"
@@ -489,6 +494,8 @@
                 ><span>□ Model assessment / gap</span
                 ><span>! Python validation</span>
               </div>
+              <button id="graphToggle" class="quiet">Show all evidence</button>
+              <p id="graphFocusNote" class="fine-print"></p>
               <div class="graph-scroll">
                 <svg
                   id="evidenceGraph"
