@@ -1905,7 +1905,7 @@ const architectureData = [
   [
     "Muse Spark",
     "Substantive claim investigation",
-    "The live Meta Responses client uses muse-spark-1.3 and actual tool calls: lookup_knowledge, search_history, submit_audit; optional v3 adds documented request_sensor. Muse decomposes public claims, cites received evidence and identifies gaps. No private reasoning is exported.",
+    "The live Meta Responses client uses muse-spark-1.3 and actual tool calls: lookup_knowledge, search_history, submit_audit; supported active modes add documented request_sensor. Muse decomposes public claims, cites received evidence and identifies gaps. No private reasoning is exported.",
   ],
   [
     "Knowledge / history",
@@ -1915,7 +1915,7 @@ const architectureData = [
   [
     "Python safeguards",
     "Deterministic enforcement",
-    "DiagnosticSession enforces the shared five-sensor budget. This auditor inherits three summaries. Optional v3 charges up to two additional unique sensors; cached requests are free and missing queries count. It validates exact numbers/citations, bounds repairs and reserves API spend. A fresh protocol pins source/runtime/prompt/schema hashes.",
+    "DiagnosticSession enforces the shared five-sensor budget. This auditor inherits three summaries. Supported active modes charge up to two additional unique sensors; cached requests are free and missing queries count. It validates exact numbers/citations, bounds repairs and reserves API spend. A fresh protocol pins source/runtime/prompt/schema hashes.",
   ],
   [
     "Audit / replay",
@@ -1923,30 +1923,674 @@ const architectureData = [
     "The same public event projection renders immutable captured runs and new live tool events. Hash-linked audit entries, actual source IDs, validation failures and completed public assessments remain inspectable. Physical judgments require independent engineering review.",
   ],
 ];
+const techComponentIO = [
+  {
+    input: "Recorded 3W channels",
+    output: "Timestamped viewer replay + restricted summaries",
+    api: "Verified replay adapter",
+    boundary: "Viewer-only channels are not added to Muse's evidence packet.",
+    responsibility:
+      "Replay pressure, temperature, flow and equipment-state measurements without inventing samples.",
+  },
+  {
+    input: "Past/current measurements; original diagnostic window",
+    output: "Anomaly alert → suspected fault",
+    api: "Prefix monitor · statistical feature model",
+    boundary:
+      "The alert is not fault identification. Diagnosis waits for its complete original evidence window.",
+    responsibility:
+      "Detect measured deviation, then compute median, variability and change features for the statistical hypothesis.",
+  },
+  {
+    input: "Candidate fault + supplied sensor summaries",
+    output: "Scoped findings, citations and missing premises",
+    api: "lookup_knowledge · search_history · request_sensor* · submit_audit",
+    boundary:
+      "Additional summaries are optional in supported active modes. No hidden labels or unqueried viewer telemetry.",
+    responsibility:
+      "Investigate whether the physical explanation follows from the supplied measurements and documented context.",
+  },
+  {
+    input: "Public topic or already observed sensor evidence",
+    output: "Documented facts or training-only analogues",
+    api: "lookup_knowledge · search_history",
+    boundary:
+      "Predefined source-scoped facts, not installed-well multi-hop traversal. Analogues use the initial observed evidence; new queries do not rerank them.",
+    responsibility:
+      "Return provenance-tagged sensor, equipment and fault descriptions, with actual sensor overlap for historical matches.",
+  },
+  {
+    input: "Sensor requests and proposed public assessments",
+    output: "Validated structure or actionable rejection",
+    api: "DiagnosticSession · v5 atomic validation",
+    boundary:
+      "Five unique sensors in total; cache hits are free, missing requests count. Numeric and citation checks do not certify physical interpretation.",
+    responsibility:
+      "Enforce the shared budget, evidence isolation, citation integrity, bounded repairs and verdict aggregation.",
+  },
+  {
+    input: "Actual public requests, returned evidence and assessment",
+    output: "Hash-linked audit + clearly labeled replay",
+    api: "Public event projection · saved-run verification",
+    boundary:
+      "No private reasoning, invented tool activity or silent fallback. Hash integrity is not vendor authenticity or physical certification.",
+    responsibility:
+      "Preserve the recorded investigation and let an operator inspect what is observed, inferred and still unknown.",
+  },
+];
+function techIcon(kind) {
+  const icon = svg("svg", {
+    viewBox: "0 0 40 40",
+    width: 40,
+    height: 40,
+    "aria-hidden": "true",
+    class: "tech-icon",
+  });
+  const paths = {
+    telemetry: "M3 22h5l4-12 6 23 5-18 5 7h10",
+    monitor: "M5 6h30v23H5z M13 35h14 M20 29v6 M9 20h5l4-7 6 11 4-5h4",
+    classifier: "M8 31V17h5v14 M18 31V9h5v22 M28 31V21h5v10",
+    muse: "M20 3 36 20 20 37 4 20z M12 20h16 M20 12v16",
+    assessment: "M10 5h22v30H10z M5 11h10 M5 20h10 M5 29h10 M20 19l4 4 7-9",
+    operator: "M20 19a7 7 0 1 0 0-14 7 7 0 0 0 0 14 M7 35v-5c0-10 26-10 26 0v5",
+    knowledge:
+      "M8 8h8v8H8z M27 5h8v8h-8z M25 27h8v8h-8z M12 16l17 11 M16 12l11-3",
+    guard: "M20 3 34 9v11c0 8-14 17-14 17S6 28 6 20V9z M13 19l5 5 10-12",
+    audit: "M9 5h22v30H9z M14 12h12 M14 20h12 M14 28h8",
+  };
+  icon.append(
+    svg("path", {
+      d: paths[kind] || paths.muse,
+      fill: "none",
+      stroke: "currentColor",
+      "stroke-width": 1.7,
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round",
+    }),
+  );
+  return icon;
+}
+function techArrow(label, dashed = false) {
+  const edge = el(
+    "div",
+    undefined,
+    "tech-arrow" + (dashed ? " is-dashed" : ""),
+  );
+  edge.append(
+    el("small", label),
+    svg("svg", { viewBox: "0 0 90 12", "aria-hidden": "true" }),
+  );
+  edge.lastChild.append(
+    svg("path", {
+      d: "M2 6H85 M79 2l6 4-6 4",
+      fill: "none",
+      stroke: "currentColor",
+      "stroke-width": 1.5,
+    }),
+  );
+  return edge;
+}
 function buildArchitecture() {
+  const stages = [
+    [
+      "telemetry",
+      "Well telemetry",
+      "27 documented channels",
+      "Real recorded measurements",
+      0,
+    ],
+    [
+      "monitor",
+      "Anomaly detection",
+      "Past + current only",
+      "An alert, not a fault",
+      1,
+    ],
+    [
+      "classifier",
+      "Statistical classifier",
+      "Original diagnostic window",
+      "A suspected failure",
+      1,
+    ],
+    [
+      "muse",
+      "Meta Muse Spark",
+      "Measurements + source context",
+      "Investigates the explanation",
+      2,
+    ],
+    [
+      "assessment",
+      "Evidence assessment",
+      "Atomic, scoped findings",
+      "Supported / unestablished",
+      4,
+    ],
+    [
+      "operator",
+      "Operator conclusion",
+      "Auditable evidence + gaps",
+      "Human decision support",
+      5,
+    ],
+  ];
   const show = (i) => {
-    $("architectureDetail").replaceChildren(
-      el("span", architectureData[i][1], "eyebrow"),
+    const info = techComponentIO[i];
+    for (const b of document.querySelectorAll(
+      "#technologyPage [data-component]",
+    )) {
+      const active = Number(b.dataset.component) === i;
+      b.classList.toggle("active", active);
+      b.setAttribute("aria-pressed", String(active));
+    }
+    const activeStages = stages
+      .map((s, j) => (s[4] === i ? j : -1))
+      .filter((j) => j >= 0);
+    document
+      .querySelectorAll(".tech-stage")
+      .forEach((b, j) =>
+        b.classList.toggle(
+          "tech-adjacent",
+          activeStages.some((k) => Math.abs(k - j) === 1) &&
+            !activeStages.includes(j),
+        ),
+      );
+    const panel = $("architectureDetail");
+    panel.replaceChildren();
+    const heading = el("div", undefined, "tech-inspector-heading");
+    heading.append(
+      el("span", String(i + 1).padStart(2, "0"), "tech-detail-number"),
       el("h3", architectureData[i][0]),
+      el("span", architectureData[i][1], "tech-inspector-tag"),
+    );
+    panel.append(heading, el("p", info.responsibility));
+    const grid = el("div", undefined, "tech-io-grid");
+    for (const [title, text] of [
+      ["INPUT", info.input],
+      ["OUTPUT", info.output],
+      ["INTERFACE", info.api],
+      ["BOUNDARY", info.boundary],
+    ]) {
+      const box = el("div");
+      box.append(el("small", title), el("p", text));
+      grid.append(box);
+    }
+    panel.append(grid);
+    const more = el("details");
+    more.append(
+      el("summary", "Implementation scope"),
       el("p", architectureData[i][2]),
     );
-    $("architectureNodes")
-      .querySelectorAll("button")
-      .forEach((b, j) => b.classList.toggle("active", j === i));
+    panel.append(more);
   };
-  $("architectureNodes").replaceChildren(
-    ...architectureData.map((a, i) => {
+  $("techPipeline").replaceChildren(
+    ...stages.map((s, i) => {
       const b = el(
         "button",
-        `${i + 1} · ${a[0]} ${i < 5 ? "→" : ""}`,
-        "architecture-node",
+        undefined,
+        "tech-stage" + (s[0] === "muse" ? " tech-muse-stage" : ""),
       );
+      b.type = "button";
+      b.dataset.component = s[4];
+      b.setAttribute("aria-controls", "architectureDetail");
+      b.append(
+        el("span", `0${i + 1}`, "tech-stage-number"),
+        techIcon(s[0]),
+        el("strong", s[1]),
+        el("span", s[2], "tech-stage-input"),
+        el("small", s[3]),
+      );
+      b.onclick = () => show(s[4]);
+      return b;
+    }),
+  );
+  $("techResources").replaceChildren(
+    ...[
+      [3, "knowledge", "Knowledge & history"],
+      [4, "guard", "Python safeguards"],
+      [5, "audit", "Audit & replay"],
+    ].map(([i, icon, label]) => {
+      const b = el("button", undefined, "tech-resource");
+      b.type = "button";
+      b.dataset.component = i;
+      b.append(techIcon(icon), el("span", label));
       b.onclick = () => show(i);
       return b;
     }),
   );
+  $("architectureNodes").replaceChildren(
+    ...architectureData.map((a, i) => {
+      const b = el("button", a[0], "architecture-node tech-component");
+      b.type = "button";
+      b.dataset.component = i;
+      b.setAttribute("aria-controls", "architectureDetail");
+      b.onclick = () => show(i);
+      b.onkeydown = (e) => {
+        let next = i;
+        if (e.key === "ArrowRight") next = (i + 1) % 6;
+        else if (e.key === "ArrowLeft") next = (i + 5) % 6;
+        else if (e.key === "Home") next = 0;
+        else if (e.key === "End") next = 5;
+        else return;
+        e.preventDefault();
+        show(next);
+        $("architectureNodes").children[next].focus();
+      };
+      return b;
+    }),
+  );
+  show(2);
+  buildTechWorkflow();
+  buildTechKnowledge();
+  buildTechSignals();
+  buildTechScores();
+}
+function buildTechWorkflow() {
+  const steps = [
+    [
+      "Candidate fault",
+      "A statistical hypothesis arrives with the already charged summaries.",
+      "Classifier output",
+      "Hypothesis + supplied measurements",
+      "No physical cause has been established.",
+    ],
+    [
+      "Inspect measurements",
+      "Read actual values and quality metadata; separate observations from interpretations.",
+      "Supplied summaries",
+      "Observed changes + quality",
+      "A correctly cited number does not prove its physical explanation.",
+    ],
+    [
+      "Retrieve engineering context",
+      "Look up public sensor, equipment and fault topics with provenance.",
+      "lookup_knowledge",
+      "Documented facts + explicit scope",
+      "Generic locations and published examples are not verified per-well topology or universal fault rules.",
+    ],
+    [
+      "Compare historical evidence",
+      "Compare the initially observed sensors with the prepared training-only snapshot.",
+      "search_history",
+      "Analogues + shared-sensor overlap",
+      "Different overlap counts are not equivalent corroboration. Similarity is not causal proof.",
+    ],
+    [
+      "Request a measurement",
+      "In supported active live modes, request a source-motivated additional summary when useful.",
+      "request_sensor · optional",
+      "One additional sensor summary",
+      "Shared five-sensor limit. A new missing reading costs a query; cache hits are free. Not every investigation needs another sensor.",
+    ],
+    [
+      "Evaluate individual claims",
+      "Separate supported observations, documented comparisons and causal conclusions.",
+      "Muse public assessment",
+      "Atomic findings + missing premises",
+      "A compatible example does not uniquely identify a fault. No verified fault-discriminating test is supplied here.",
+    ],
+    [
+      "Return an auditable assessment",
+      "Submit the findings and their evidence for Python's deterministic checks.",
+      "submit_audit",
+      "Structured verdict + citations + next evidence",
+      "Validation checks structure, numbers and citations; independent physical interpretation remains a human review task.",
+    ],
+  ];
+  const show = (i) => {
+    const s = steps[i];
+    document.querySelectorAll(".tech-work-step").forEach((b, j) => {
+      b.setAttribute("aria-selected", String(i === j));
+      b.tabIndex = i === j ? 0 : -1;
+    });
+    const panel = $("techWorkflowDetail");
+    panel.setAttribute("aria-labelledby", `tech-work-${i}`);
+    panel.replaceChildren(
+      el("span", `CAPABILITY ${i + 1} / 7`, "tech-index"),
+      el("h3", s[0]),
+      el("p", s[1]),
+    );
+    const capsule = el("div", undefined, "tech-tool-capsule");
+    capsule.append(
+      el("small", "ACTUAL INTERFACE / RESPONSIBILITY"),
+      el("code", s[2]),
+    );
+    panel.append(capsule);
+    const transfer = el("div", undefined, "tech-transfer");
+    transfer.append(
+      el("span", "SUPPLIED EVIDENCE"),
+      techArrow("inspect / return"),
+      el("span", s[3]),
+    );
+    panel.append(transfer);
+    if (i === 4) {
+      const budget = el("div", undefined, "tech-budget");
+      budget.setAttribute(
+        "aria-label",
+        "Five unique sensors maximum, including inherited evidence",
+      );
+      for (let j = 0; j < 5; j++)
+        budget.append(
+          el("span", String(j + 1), j < 3 ? "inherited" : "remaining"),
+        );
+      panel.append(
+        budget,
+        el(
+          "small",
+          "Current demo: 3 inherited queries; at most 2 new unique queries.",
+        ),
+      );
+    }
+    panel.append(el("p", s[4], "tech-work-boundary"));
+  };
+  $("techWorkflow").setAttribute("role", "tablist");
+  $("techWorkflow").setAttribute("aria-orientation", "vertical");
+  $("techWorkflow").replaceChildren(
+    ...steps.map((s, i) => {
+      const li = el("li"),
+        b = el("button", undefined, "tech-work-step");
+      b.type = "button";
+      b.id = `tech-work-${i}`;
+      b.setAttribute("role", "tab");
+      b.setAttribute("aria-controls", "techWorkflowDetail");
+      b.append(
+        el("span", String(i + 1).padStart(2, "0")),
+        el("strong", s[0]),
+        el("small", i === 4 ? "OPTIONAL" : ""),
+      );
+      b.onclick = () => show(i);
+      b.onkeydown = (e) => {
+        let next = i;
+        if (["ArrowDown", "ArrowRight"].includes(e.key)) next = (i + 1) % 7;
+        else if (["ArrowUp", "ArrowLeft"].includes(e.key)) next = (i + 6) % 7;
+        else if (e.key === "Home") next = 0;
+        else if (e.key === "End") next = 6;
+        else return;
+        e.preventDefault();
+        show(next);
+        document.getElementById(`tech-work-${next}`).focus();
+      };
+      li.append(b);
+      return li;
+    }),
+  );
+  $("techWorkflowDetail").setAttribute("role", "tabpanel");
   show(2);
 }
+function buildTechKnowledge() {
+  const definition = cases[0].sensor_definitions;
+  const inspect = (title, fact, explanation) => {
+    const panel = $("techSourceDetail");
+    panel.replaceChildren(
+      el("span", "PROVENANCE / SCOPE", "tech-index"),
+      el("h3", title),
+      el("p", explanation),
+    );
+    if (fact) {
+      panel.append(
+        el("code", fact.caption_summary || `${fact.subject} → ${fact.relation} → ${fact.object}`),
+        el("p", fact.scope.replaceAll("_", " "), "tech-caption"),
+        el("p", fact.locator, "tech-caption"),
+      );
+      const a = el("a", "Open documented source ↗");
+      a.href = fact.provenance.immutable_url || fact.provenance.url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      panel.append(a);
+    }
+  };
+  const node = (title, type, handler) => {
+    const b = el("button", undefined, "tech-knowledge-node tech-node-" + type);
+    b.type = "button";
+    b.append(el("small", type.toUpperCase()), el("strong", title));
+    b.onclick = () => {
+      document
+        .querySelectorAll(".tech-knowledge-node")
+        .forEach((x) => x.classList.toggle("active", x === b));
+      handler();
+    };
+    return b;
+  };
+  const locations = () => {
+    $("techLocations").setAttribute("aria-pressed", "true");
+    $("techClaims").setAttribute("aria-pressed", "false");
+    const graph = $("techEvidenceDiagram");
+    graph.className = "tech-evidence-diagram tech-location-graph";
+    graph.replaceChildren();
+    for (const [sensor, title, equipment] of [
+      ["P-PDG", "Downhole pressure", "Downhole gauge"],
+      ["P-TPT", "Tree pressure", "Subsea tree transducer"],
+    ]) {
+      const fact = definition[sensor].location_fact;
+      const handler = () =>
+        inspect(
+          sensor,
+          fact,
+          `Documented ${definition[sensor].quantity_relation.replaceAll("_", " ")} association; pressure is recorded in ${definition[sensor].unit}. This is not an exact installed-well location.`,
+        );
+      graph.append(
+        node(sensor + " · " + title, "sensor", handler),
+        techArrow("pressure at"),
+        node(equipment, "equipment", handler),
+      );
+    }
+    const doc = node("dataset.ini · version 2.0.0", "source", () =>
+      inspect(
+        "Generic sensor definitions",
+        definition["P-PDG"].location_fact,
+        "The same public configuration documents both generic associations. Geometry here illustrates records, not well piping.",
+      ),
+    );
+    doc.classList.add("tech-source-node");
+    graph.append(doc);
+    $("techGraphScope").textContent =
+      "Solid arrows reproduce documented pressure_at associations. The source node supplies their provenance. Diagram positions are illustrative, never installed-well topology.";
+    inspect(
+      "P-PDG",
+      definition["P-PDG"].location_fact,
+      "Pressure at a downhole gauge is a documented generic association, not verified placement for this particular well.",
+    );
+  };
+  const claims = () => {
+    $("techLocations").setAttribute("aria-pressed", "false");
+    $("techClaims").setAttribute("aria-pressed", "true");
+    const graph = $("techEvidenceDiagram");
+    graph.className = "tech-evidence-diagram tech-claim-graph";
+    graph.replaceChildren();
+    const illustration = (title, text) => () =>
+      inspect(
+        title,
+        null,
+        text +
+          " This is an explanatory illustration, not a new tool response or saved model finding.",
+      );
+    const example = {
+      caption_summary: "Figure 5: P-PDG increase · P-TPT increase",
+      scope: "published_example_not_fault_rule",
+      locator: "Figure 5 caption",
+      provenance: { url: "https://arxiv.org/html/2507.01048v1" },
+    };
+    graph.append(
+      node(
+        "Two measured pressure increases",
+        "observation",
+        illustration(
+          "Observed directions",
+          "The original first captured incident summaries have positive endpoint changes in P-PDG and P-TPT. This does not mean a monotonic rise.",
+        ),
+      ),
+      techArrow("compare", true),
+      node("Published fault-8 example", "source", () =>
+        inspect(
+          "Published comparison",
+          example,
+          "Figure 5 also includes a downstream pressure decrease. A two-direction comparison does not establish that the whole signature was observed, or that fault 9 caused this incident.",
+        ),
+      ),
+      node(
+        "Limited comparison",
+        "finding",
+        illustration(
+          "Comparison scope",
+          "A comparison may be supported without proving the example generalizes to this well.",
+        ),
+      ),
+      techArrow("does not prove", true),
+      node(
+        "Fault 9 as the cause?",
+        "hypothesis",
+        illustration(
+          "Causal scope",
+          "The supplied registry has no verified fault-discriminating causal rule that turns this pressure pattern into proof of service-line hydrate.",
+        ),
+      ),
+      node(
+        "Missing discriminating premise",
+        "gap",
+        illustration(
+          "Missing premise",
+          "Applicable documentation or a validated discriminating test would be needed. No such verified test is supplied here.",
+        ),
+      ),
+    );
+    $("techGraphScope").textContent =
+      "Explanatory propositions and dotted assessment links, not captured calls or physical propagation paths. Only the published source comparison is documented; no causal edge to fault 9 is asserted.";
+    inspect(
+      "Comparison is not causation",
+      example,
+      "A published fault-8 production-line hydrate example shares two pressure directions. That narrow comparison cannot prove or disprove fault-9 service-line hydrate.",
+    );
+  };
+  $("techLocations").onclick = locations;
+  $("techClaims").onclick = claims;
+  locations();
+}
+function buildTechSignals() {
+  const replay = cases[0].replay,
+    candidates = ["P-PDG", "P-TPT", "T-TPT", "QGL", "ABER-CKGL"];
+  const available = candidates
+    .map((s) => [s, replay.series[s] || replay.viewer_series?.[s]])
+    .filter(([, v]) => v)
+    .slice(0, 4);
+  const drawing = svg("svg", {
+    viewBox: `0 0 420 ${available.length * 32 + 15}`,
+    role: "img",
+    "aria-label":
+      "Actual available captured measurements, per-channel normalized dots; no interpolation",
+  });
+  available.forEach(([s, stream], row) => {
+    const values = stream.samples
+        .filter((v) => v.quality === "valid")
+        .map((v) => v.value),
+      lo = Math.min(...values),
+      hi = Math.max(...values),
+      n = stream.samples.length;
+    drawing.append(
+      svg("text", { x: 0, y: row * 32 + 22, class: "tech-signal-label" }, s),
+    );
+    const selected = [
+      ...new Set(
+        Array.from({ length: Math.min(20, n) }, (_, i) =>
+          Math.round((i * (n - 1)) / Math.max(1, Math.min(20, n) - 1)),
+        ),
+      ),
+    ];
+    for (const i of selected) {
+      const sample = stream.samples[i];
+      if (sample.quality !== "valid") continue;
+      const x = 85 + (320 * i) / Math.max(1, n - 1),
+        y =
+          row * 32 +
+          26 -
+          (hi === lo ? 8 : (16 * (sample.value - lo)) / (hi - lo));
+      drawing.append(
+        svg("circle", {
+          cx: x,
+          cy: y,
+          r: 2.8,
+          class: "tech-signal-dot",
+          "data-tech-sensor": s,
+          "data-sample-index": i,
+          "data-recorded-value": sample.value,
+        }),
+      );
+    }
+  });
+  $("techSignalPreview").replaceChildren(drawing);
+  $("techSignalScope").textContent =
+    replay.mode === "endpoints"
+      ? "Actual captured endpoints only; timestamps unavailable and endpoints need not be simultaneous across channels. Dots use independent channel scales. No continuous trace is invented."
+      : "Viewer-only preview: up to 20 actual recorded samples per channel, on independent min–max scales. Dots only, no interpolation. This does not add agent evidence.";
+  const missing = cases[1]?.observations["ABER-CKGL"];
+  $("techMissingScope").textContent =
+    missing && !missing.available
+      ? `Recorded second-case example: ABER-CKGL has ${missing.invalid_count}/${missing.total} unusable readings. No observed valve opening is inferred.`
+      : "Unavailable measurements are kept unavailable; this notation is explanatory.";
+}
+function buildTechScores() {
+  const rows = Array.from(document.querySelectorAll("#frozenResults tbody tr"));
+  $("techScoreChart").replaceChildren(
+    ...rows.map((row, i) => {
+      const [name, count, accuracy] = Array.from(row.cells).map((c) =>
+          c.textContent.trim(),
+        ),
+        [correct, total] = count.split("/").map(Number);
+      const b = el(
+        "button",
+        undefined,
+        "tech-score-row " + (i < 2 ? "tech-stat-score" : "tech-muse-score"),
+      );
+      b.type = "button";
+      b.dataset.correct = correct;
+      b.dataset.total = total;
+      b.dataset.accuracy = accuracy;
+      b.setAttribute(
+        "aria-label",
+        `${name}: ${correct} of ${total} correct, ${accuracy} accuracy. Scale 0 to 100 percent.`,
+      );
+      const label = el("span", undefined, "tech-score-name");
+      label.append(
+        el("strong", name),
+        el("small", `${correct} / ${total} correct`),
+      );
+      const chart = svg("svg", {
+        viewBox: "0 0 100 10",
+        "aria-hidden": "true",
+        preserveAspectRatio: "none",
+      });
+      chart.append(
+        svg("rect", {
+          x: 0,
+          y: 1,
+          width: 100,
+          height: 8,
+          rx: 1,
+          class: "tech-bar-track",
+        }),
+        svg("rect", {
+          x: 0,
+          y: 1,
+          width: (100 * correct) / total,
+          height: 8,
+          rx: 1,
+          class: "tech-bar-value",
+        }),
+      );
+      b.append(label, chart, el("strong", accuracy, "tech-score-value"));
+      b.onclick = () => {
+        document
+          .querySelectorAll(".tech-score-row")
+          .forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+        $("techScoreDetail").textContent =
+          `${name}: ${correct}/${total} correct (${accuracy}). Frozen classification benchmark; not claim-auditor accuracy.`;
+      };
+      return b;
+    }),
+  );
+  $("techScoreChart").firstElementChild.click();
+}
+
 document.querySelectorAll(".page-link").forEach(
   (a) =>
     (a.onclick = (e) => {

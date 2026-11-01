@@ -519,127 +519,506 @@
       </div>
     </section>
     <section id="technologyPage" class="site-page" hidden>
-      <div class="technology-hero">
-        <p class="eyebrow">TECHNOLOGY / SYSTEM DESIGN</p>
+      <header class="tech-hero">
+        <div class="tech-kicker">
+          <span class="tech-status-dot" aria-hidden="true"></span> SYSTEM DESIGN
+          / PETROMIND
+        </div>
         <h1>
-          Statistical fault diagnosis.<br /><em>Muse evidence assessment.</em>
+          A prediction starts the investigation.<br /><em
+            >Evidence determines what follows.</em
+          >
         </h1>
-        <p>
-          The statistical engine proposes a fault. Muse examines its
-          measurements, documented sources, and unsupported premises.
+        <p class="tech-lead">
+          Real industrial measurements. A statistical hypothesis. Meta Muse
+          Spark checks whether the explanation holds up.
         </p>
+        <div class="tech-reading-guide">
+          <span>01 / Follow the system</span
+          ><span>02 / Inspect the evidence</span
+          ><span>03 / Understand the limits</span>
+        </div>
+      </header>
+
+      <section class="tech-system" aria-labelledby="techArchitectureTitle">
+        <div class="tech-section-heading">
+          <div>
+            <p class="eyebrow">01 / THE ARCHITECTURE</p>
+            <h2 id="techArchitectureTitle">
+              From signal to a defensible conclusion.
+            </h2>
+          </div>
+          <span class="tech-label">Interactive system diagram</span>
+        </div>
+        <div class="tech-system-canvas">
+          <div class="tech-pipeline-caption">
+            <span>OBSERVATIONS ENTER</span><span>REASONING IS CHECKED</span>
+          </div>
+          <div
+            id="techPipeline"
+            class="tech-pipeline"
+            aria-label="PetroMind software data flow"
+          ></div>
+          <div class="tech-support-rail">
+            <span>INVESTIGATION SUPPORT</span>
+            <div id="techResources"></div>
+          </div>
+          <p class="tech-diagram-scope">
+            Software data flow, not a production-well piping diagram. Select a
+            stage to inspect its inputs, outputs and boundaries.
+          </p>
+        </div>
+        <div
+          id="architectureNodes"
+          class="tech-component-nav"
+          role="group"
+          aria-label="Architecture explorer components"
+        ></div>
+        <div
+          id="architectureDetail"
+          class="tech-inspector"
+          aria-live="polite"
+          aria-atomic="true"
+        ></div>
+      </section>
+
+      <section class="tech-section" aria-labelledby="techWorkflowTitle">
+        <div class="tech-section-heading">
+          <div>
+            <p class="eyebrow">02 / THE MUSE SPARK INVESTIGATION</p>
+            <h2 id="techWorkflowTitle">An agent that inspects the argument.</h2>
+          </div>
+          <span class="tech-label">Explanatory workflow · order varies</span>
+        </div>
+        <div class="tech-workflow-layout">
+          <ol
+            id="techWorkflow"
+            class="tech-workflow"
+            aria-label="Explore investigation capabilities"
+          ></ol>
+          <div
+            id="techWorkflowDetail"
+            class="tech-workflow-detail"
+            aria-live="polite"
+          ></div>
+        </div>
+        <p class="tech-caption">
+          This is a capability walkthrough, not a replay or live model activity.
+          A real run may skip tools or call them in a different order. No
+          private chain of thought is displayed.
+        </p>
+      </section>
+
+      <section class="tech-section" aria-labelledby="techGraphTitle">
+        <div class="tech-section-heading">
+          <div>
+            <p class="eyebrow">03 / KNOWLEDGE WITH PROVENANCE</p>
+            <h2 id="techGraphTitle">Connected facts. Explicit boundaries.</h2>
+          </div>
+          <span class="tech-label">Curated explanatory graph</span>
+        </div>
+        <div class="tech-graph-layout">
+          <div>
+            <div
+              class="tech-graph-tabs"
+              role="group"
+              aria-label="Evidence diagram view"
+            >
+              <button type="button" id="techLocations" aria-pressed="true">
+                Documented locations</button
+              ><button type="button" id="techClaims" aria-pressed="false">
+                Comparison → claim → gap
+              </button>
+            </div>
+            <div
+              id="techEvidenceDiagram"
+              class="tech-evidence-diagram"
+              aria-label="Curated source relationships"
+            ></div>
+            <p id="techGraphScope" class="tech-caption"></p>
+          </div>
+          <aside
+            id="techSourceDetail"
+            class="tech-source-detail"
+            aria-live="polite"
+          ></aside>
+        </div>
+        <p class="tech-boundary">
+          <strong>Source-scoped lookup.</strong>
+          <code>lookup_knowledge</code> returns predefined documented facts. It
+          is not general multi-hop traversal of verified installed-well
+          topology. Historical similarity is empirical evidence, not causal
+          proof.
+        </p>
+      </section>
+
+      <section class="tech-section" aria-labelledby="techChallengesTitle">
+        <div class="tech-section-heading">
+          <div>
+            <p class="eyebrow">04 / THE INDUSTRIAL REALITY</p>
+            <h2 id="techChallengesTitle">
+              The data is real. The answer is rarely obvious.
+            </h2>
+          </div>
+        </div>
+        <div class="tech-challenges">
+          <article class="tech-challenge tech-challenge-wide">
+            <span class="tech-index">A / SIGNALS</span>
+            <h3>Many channels. One incident.</h3>
+            <div id="techSignalPreview" class="tech-mini-data"></div>
+            <p id="techSignalScope" class="tech-caption"></p>
+          </article>
+          <article class="tech-challenge">
+            <span class="tech-index">B / QUALITY</span>
+            <h3>Missing isn't zero.</h3>
+            <div
+              class="tech-quality-picture"
+              aria-label="Conceptual notation: a recorded zero is a value; a dash is unavailable"
+            >
+              <span><b>0</b>Measured zero</span
+              ><span><b class="tech-missing-mark">—</b>Unavailable</span>
+            </div>
+            <p>
+              Constant and zero measurements can be legitimate. Availability
+              alone does not make a sensor informative.
+            </p>
+            <p id="techMissingScope" class="tech-caption"></p>
+          </article>
+          <article class="tech-challenge">
+            <span class="tech-index">C / AMBIGUITY</span>
+            <h3>Similar symptoms.<br />Different hypotheses.</h3>
+            <div
+              class="tech-ambiguity"
+              aria-label="Conceptual illustration: one observation can be considered under different hypotheses"
+            >
+              <span>Observation</span><i aria-hidden="true">↙ &nbsp; ↘</i>
+              <div><span>Hypothesis A</span><span>Hypothesis B</span></div>
+            </div>
+            <p class="tech-caption">
+              Conceptual ambiguity, not fabricated fault signatures.
+            </p>
+          </article>
+          <article class="tech-challenge">
+            <span class="tech-index">D / HISTORY</span>
+            <h3>Not every analogue is equal.</h3>
+            <div
+              class="tech-overlap"
+              aria-label="Illustration comparing three shared measurements with one"
+            >
+              <div><span>3 shared</span><b>● ● ●</b></div>
+              <div>
+                <span>1 shared</span><b>● <em>○ ○</em></b>
+              </div>
+            </div>
+            <p>
+              Compare actual sensor overlap. A near match on one measurement
+              does not establish the same cause.
+            </p>
+            <p class="tech-caption">
+              Overlap illustration; not a new historical retrieval.
+            </p>
+          </article>
+        </div>
+        <div class="tech-equation">
+          <span>Statistical hypothesis</span
+          ><b aria-label="is not equivalent to">≠</b
+          ><span>Verified physical cause</span>
+        </div>
+      </section>
+
+      <section class="tech-section" aria-labelledby="techValueTitle">
+        <div class="tech-section-heading">
+          <div>
+            <p class="eyebrow">05 / THE META-POWERED CONTRIBUTION</p>
+            <h2 id="techValueTitle">
+              Inspect the explanation behind the prediction.
+            </h2>
+          </div>
+        </div>
+        <div class="tech-comparison">
+          <article>
+            <p class="tech-index">STATISTICAL CLASSIFIER</p>
+            <h3>“A fault is suspected.”</h3>
+            <div class="tech-prediction-object">
+              <span class="tech-diamond" aria-hidden="true">◇</span>
+              <div>
+                <strong>Candidate failure</strong
+                ><small>Features → statistical prediction</small>
+              </div>
+            </div>
+            <ul>
+              <li>Median, variability and change features</li>
+              <li>Original diagnostic evidence window</li>
+              <li>A predicted category; uncalibrated score</li>
+            </ul>
+            <p class="tech-caption">
+              Prediction does not independently verify the physical explanation.
+            </p>
+          </article>
+          <article class="tech-muse-comparison">
+            <p class="tech-index">CLASSIFIER + MUSE SPARK</p>
+            <h3>“Does the evidence establish it?”</h3>
+            <div class="tech-evidence-stack">
+              <span>MEASUREMENTS</span><span>SOURCE CONTEXT</span
+              ><span>CLAIMS & GAPS</span>
+            </div>
+            <ul>
+              <li>Checks individual claims against supplied evidence</li>
+              <li>Retrieves documentation and permitted analogues</li>
+              <li>Identifies unsupported assumptions and next evidence</li>
+            </ul>
+            <p class="tech-caption">
+              Evidence auditing and transparency. No classification-accuracy
+              improvement is claimed.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="tech-section" aria-labelledby="techVerdictTitle">
+        <div class="tech-section-heading">
+          <div>
+            <p class="eyebrow">06 / THE EVIDENCE ASSESSMENT</p>
+            <h2 id="techVerdictTitle">
+              Support the facts. Keep the cause open.
+            </h2>
+          </div>
+          <span class="tech-label"
+            >Explanatory v5 illustration · not a new run</span
+          >
+        </div>
+        <div class="tech-verdict-layout">
+          <div class="tech-atomic-findings">
+            <div>
+              <span class="tech-verdict supported">SUPPORTED</span>
+              <p>P-PDG pressure increased.</p>
+              <p>P-TPT pressure increased.</p>
+              <small>Measured observations within the diagnostic window.</small>
+            </div>
+            <div>
+              <span class="tech-verdict supported"
+                >SUPPORTED AT THIS SCOPE</span
+              >
+              <p>
+                A published fault-8 production-line example shares the two
+                observed pressure directions.
+              </p>
+              <small
+                >A limited comparison, not a complete fault signature or proof
+                of fault 9.</small
+              >
+            </div>
+            <div>
+              <span class="tech-verdict unestablished">NOT ESTABLISHED</span>
+              <p>
+                The pressure increases establish fault-9 service-line hydrate.
+              </p>
+              <p>Fault 9 must always produce those increases.</p>
+              <small
+                >These are separate causal propositions under audit, not
+                endorsed conclusions.</small
+              >
+            </div>
+          </div>
+          <aside class="tech-composite">
+            <span class="tech-index">OVERALL COMPOSITE</span>
+            <h3>PARTIALLY<br />SUPPORTED</h3>
+            <p>
+              Some propositions are supported.<br />The claimed physical cause
+              remains unestablished.
+            </p>
+            <div class="tech-gap">
+              <span>MISSING PREMISE</span>
+              <p>
+                Applicable, verified evidence that distinguishes this cause from
+                alternatives.
+              </p>
+            </div>
+            <p class="tech-caption">
+              It does not mean the cause is partially proven. No verified
+              fault-discriminating test is supplied in the current registry.
+            </p>
+            <details>
+              <summary>Scope and source of this illustration</summary>
+              <p>
+                This illustrates the existing v5 atomic contract; it is not a
+                captured Muse response. The pressure directions are consistent
+                with the original captured first incident summaries. Figure 5
+                documents a fault-8 example, not a universal fault rule. Only
+                supplied evidence can be assessed. No saved result is altered.
+              </p>
+              <a
+                href="https://arxiv.org/html/2507.01048v1"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Published reference · Figure 5 ↗</a
+              >
+            </details>
+          </aside>
+        </div>
+        <div class="tech-verdict-key" aria-label="Finding status key, not additional findings">
+          <span class="tech-verdict supported">SUPPORTED</span>
+          <span class="tech-verdict unestablished">NOT ESTABLISHED</span>
+          <span class="tech-verdict contradicted">CONTRADICTED</span>
+        </div>
+        <p class="tech-caption">Status key: contradiction requires contrary evidence. Missing support alone is not a contradiction.</p>
+        <div class="tech-logic">
+          <article>
+            <span class="tech-index">SUFFICIENCY</span>
+            <h3>Pattern <i aria-hidden="true">→</i> proposed fault?</h3>
+            <p>Does seeing the pattern establish this cause?</p>
+            <span class="tech-verdict unestablished"
+              >Not established by the supplied evidence</span
+            >
+          </article>
+          <article>
+            <span class="tech-index">NECESSITY</span>
+            <h3>Proposed fault <i aria-hidden="true">→</i> pattern?</h3>
+            <p>Must this fault always produce that pattern?</p>
+            <span class="tech-verdict unestablished"
+              >Not established by the supplied evidence</span
+            >
+          </article>
+        </div>
+        <p class="tech-caption">
+          Editorial explanation: a pressure pattern can be compatible with a
+          fault without uniquely identifying it. The fault-8 example does not
+          prove or disprove fault 9.
+        </p>
+      </section>
+
+      <section class="tech-section" aria-labelledby="techResultsTitle">
+        <div class="tech-section-heading">
+          <div>
+            <p class="eyebrow">07 / WHAT WE ACTUALLY MEASURED</p>
+            <h2 id="techResultsTitle">The benchmark changed our direction.</h2>
+          </div>
+          <span class="tech-label"
+            >Frozen evaluation · 33 held-out incidents</span
+          >
+        </div>
+        <div class="tech-results-key">
+          <span><i class="tech-key-stat"></i>Statistical baselines</span
+          ><span
+            ><i class="tech-key-muse"></i>Muse classification variants</span
+          >
+        </div>
+        <div class="tech-score-axis" aria-hidden="true">
+          <span>Correct classification</span><span>0% <b>100%</b></span
+          ><span></span>
+        </div>
+        <div
+          id="techScoreChart"
+          class="tech-score-chart"
+          aria-label="Classification accuracy on 33 incidents, scale zero to one hundred percent"
+        ></div>
+        <p
+          id="techScoreDetail"
+          class="tech-score-detail"
+          aria-live="polite"
+        ></p>
+        <p class="tech-results-conclusion">
+          Graph-grounded approaches were investigated, but the frozen evaluation
+          did not demonstrate a classification-accuracy advantage over the
+          adaptive statistical baseline. PetroMind therefore uses Muse primarily
+          for evidence assessment.
+        </p>
+        <details class="tech-reference">
+          <summary>Exact results and interpretation limits</summary>
+          <table id="frozenResults" class="results-table">
+            <caption>
+              Unchanged frozen 33-incident classification results
+            </caption>
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Correct</th>
+                <th>Accuracy</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Conventional adaptive</td>
+                <td>20 / 33</td>
+                <td>60.6%</td>
+              </tr>
+              <tr>
+                <td>Conventional fixed</td>
+                <td>13 / 33</td>
+                <td>39.4%</td>
+              </tr>
+              <tr>
+                <td>Muse sensor-only</td>
+                <td>4 / 33</td>
+                <td>12.1%</td>
+              </tr>
+              <tr>
+                <td>Muse + equipment graph</td>
+                <td>1 / 33</td>
+                <td>3.0%</td>
+              </tr>
+              <tr>
+                <td>Muse + GraphRAG</td>
+                <td>5 / 33</td>
+                <td>15.2%</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            These are fault-classification results, not an accuracy evaluation
+            of the claim auditor. Claim-auditing pilots used small, constructed
+            and correlated tasks. Independent engineering validation remains
+            pending. A single stochastic comparison does not establish causal
+            graph benefit.
+          </p>
+        </details>
+      </section>
+      <section
+        class="tech-limits"
+        aria-label="Scientific and security boundaries"
+      >
+        <div>
+          <span>01</span>
+          <h3>Source scope</h3>
+          <p>
+            Generic documented locations, not verified per-well topology.
+            Examples are not universal laws.
+          </p>
+        </div>
+        <div>
+          <span>02</span>
+          <h3>Evidence isolation</h3>
+          <p>
+            Viewer telemetry stays separate. No hidden target labels. The shared
+            five-sensor budget is enforced in Python.
+          </p>
+        </div>
+        <div>
+          <span>03</span>
+          <h3>Honest replay</h3>
+          <p>
+            Original capture, verified saved replay and new paid live execution
+            are distinct. No fabricated tool activity.
+          </p>
+        </div>
+        <div>
+          <span>04</span>
+          <h3>Human decision</h3>
+          <p>
+            Decision support, not root-cause certification, a safety-certified
+            procedure or autonomous control.
+          </p>
+        </div>
+      </section>
+      <div class="tech-ending">
+        <p>
+          See the difference between a plausible explanation<br />and an
+          established conclusion.
+        </p>
+        <a class="page-link tech-demo-link" href="/demo"
+          >Explore the investigation <span aria-hidden="true">↗</span></a
+        >
       </div>
-      <section class="architecture">
-        <h2>Inspect the architecture</h2>
-        <div id="architectureNodes" class="architecture-nodes"></div>
-        <div id="architectureDetail" class="architecture-detail"></div>
-      </section>
-      <section class="home-section">
-        <h2>What the live demo actually exposes</h2>
-        <div class="explanation-grid">
-          <article>
-            <h3>Available to Muse</h3>
-            <p>
-              Initial sensor summaries, source-scoped knowledge graph lookups,
-              restricted training-only historical analogues and structured claim
-              submission.
-            </p>
-          </article>
-          <article>
-            <h3>Not exposed in this mode</h3>
-            <p>
-              Exact well topology and unqueried viewer telemetry. Optional live
-              v3 can request up to two additional summaries from a verified raw
-              window; audit-only v2 cannot acquire measurements.
-            </p>
-          </article>
-          <article>
-            <h3>Enforced by Python</h3>
-            <p>
-              Five-sensor accounting, caching and audit trails in the
-              investigation framework; inherited summaries, exact
-              numeric/citation checks, bounded repairs and spend reservations in
-              this auditor. Validation is not physical certification.
-            </p>
-          </article>
-        </div>
-      </section>
-      <section class="home-section">
-        <h2>Frozen classification evaluation</h2>
-        <table class="results-table">
-          <thead>
-            <tr>
-              <th>Frozen 33-incident method</th>
-              <th>Correct</th>
-              <th>Accuracy</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Conventional adaptive</td>
-              <td>20 / 33</td>
-              <td>60.6%</td>
-            </tr>
-            <tr>
-              <td>Conventional fixed</td>
-              <td>13 / 33</td>
-              <td>39.4%</td>
-            </tr>
-            <tr>
-              <td>Muse sensor-only</td>
-              <td>4 / 33</td>
-              <td>12.1%</td>
-            </tr>
-            <tr>
-              <td>Muse + equipment graph</td>
-              <td>1 / 33</td>
-              <td>3.0%</td>
-            </tr>
-            <tr>
-              <td>Muse + GraphRAG</td>
-              <td>5 / 33</td>
-              <td>15.2%</td>
-            </tr>
-          </tbody>
-        </table>
-        <p>
-          Direct Muse classification did not outperform the adaptive baseline.
-          GraphRAG did not demonstrate a classification accuracy advantage.
-          Claim-auditing pilots were small, constructed and correlated;
-          independent engineering validation remains pending.
-        </p>
-      </section>
-      <section class="home-section">
-        <h2>Scope and limitations</h2>
-        <div class="explanation-grid">
-          <article>
-            <h3>Source scope</h3>
-            <p>
-              Documented generic sensor associations are not exact well
-              topology. Published failure examples are comparisons, not
-              universal or discriminating laws.
-            </p>
-          </article>
-          <article>
-            <h3>Replay versus live</h3>
-            <p>
-              Replay displays unchanged captured v1 events. Live v2/v3 invokes
-              Muse only after explicit action, with fresh protocol hashes,
-              request/token limits and a global estimated spending cap. No
-              hidden chain of thought is displayed.
-            </p>
-          </article>
-          <article>
-            <h3>Decision support</h3>
-            <p>
-              No root-cause certification, autonomous equipment control,
-              safety-certified recommendation, fine-tuning or simulated success.
-              Synthetic mode is deferred; synthetic fixtures are software tests,
-              not generalization evidence.
-            </p>
-          </article>
-        </div>
-      </section>
     </section>
     <footer class="site-footer">
       <span>PetroMind · Meta Muse Spark · Petrobras 3W</span
