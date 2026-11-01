@@ -107,18 +107,29 @@ class DemoApp:
         *,
         dataset=None,
         science_protocol=None,
+        monitoring_directory=None,
     ):
         self.cases = demo_cases(capture)
         self.review = review_capture(capture)
         self.protocol, captured_rows = load_capture(capture)
         from .incident_replay import attach_replay, definitions
 
+        monitoring = None
+        if monitoring_directory is not None:
+            from .monitoring_replay import load_monitoring
+
+            monitoring = load_monitoring(monitoring_directory, self.cases)
+
         for case in self.cases:
             case["sensor_definitions"] = definitions()
             case["replay"] = attach_replay(
                 case, self.protocol, dataset=dataset, science_protocol=science_protocol
             )
-            case["replay"]["workflow"] = replay_workflow(case["replay"])
+            if monitoring is None:
+                case["replay"]["workflow"] = replay_workflow(case["replay"])
+            else:
+                case["replay"] = monitoring["cases"][case["id"]]["replay"]
+                case["replay"]["attribution"] = monitoring["attribution"]
             case["captured_activity"] = {}
             case["investigation_events"] = {}
             for method in ("grounded", "ungrounded"):

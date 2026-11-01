@@ -1,0 +1,17 @@
+{
+  "version": "causal-pressure-deviation-v1",
+  "frozen_before_ordered_clip_scoring": true,
+  "sensors": ["P-PDG", "P-TPT"],
+  "warmup_seconds": 300,
+  "minimum_reference_samples": 240,
+  "robust_scale": "1.4826 * median(abs(x - median(x)))",
+  "absolute_robust_z_min": 6,
+  "both_sensors_required": true,
+  "persistence_seconds": 30,
+  "maximum_gap_seconds": 1.5,
+  "zero_scale_policy": "reference_unavailable; never substitute epsilon",
+  "missing_policy": "do not score; reset pending persistence",
+  "adaptation": "none; reference frozen after warmup",
+  "purpose": "Predeclared software-feasibility heuristic, not a physical safety limit, fault classifier or historical alarm.",
+  "selection_limit": "Two annotation-centered clips already inspected in aggregate. Not a blinded prospective evaluation; no parameter selection on clip outcomes."
+}

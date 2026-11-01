@@ -161,20 +161,33 @@ function renderTelemetry() {
     timer ? "Pause real telemetry" : "Play real telemetry",
   );
   $("sampleCounter").textContent =
-    r.mode === "raw"
+    r.mode !== "endpoints"
       ? `Sample ${index + 1} of ${w.positions}`
       : `Captured endpoint ${index + 1} of ${w.positions}`;
   $("clock").textContent = w.elapsed_seconds
     ? `${elapsedLabel(w.elapsed_seconds[index])} / ${elapsedLabel(w.elapsed_seconds.at(-1))}`
     : "Timestamps unavailable";
   $("replayLabel").textContent =
-    r.mode === "raw"
+    r.mode !== "endpoints"
       ? "Recorded data · 10× playback"
       : "Captured endpoints · no continuous replay";
-  $("checkpointMarker").classList.toggle("active", checkpointReached());
+  const history = r.mode === "history", alerted = anomalyReached();
+  const marker = $("checkpointMarker");
+  marker.hidden = history && !alerted;
+  marker.style.left = "";
+  marker.style.right = history ? "auto" : "";
+  if (history && alerted) {
+    const first = w.monitor.trace.slice(0, index + 1).findIndex((row) => row.new_alert);
+    marker.style.left = `${(w.elapsed_seconds[first] / w.elapsed_seconds.at(-1)) * 100}%`;
+  }
+  $("checkpointCaption").textContent = history
+    ? "Prefix-only deviation monitor · first 5 minutes form an observed reference, not verified normal operation."
+    : "Demo investigation checkpoint at the end of the evidence · not a historical alarm";
+  marker.classList.toggle("active", history ? alerted : checkpointReached());
   $("checkpointMarker").setAttribute(
     "aria-label",
-    `${checkpointReached() ? "Reached" : "Upcoming"} demo investigation checkpoint · ${r.mode === "raw" ? "last recorded sample" : "endpoint comparison complete"} · not a historical alarm`,
+    history ? "Anomaly alert computed from observed prefix; not a historical operational alarm or fault identification"
+      : `${checkpointReached() ? "Reached" : "Upcoming"} demo investigation checkpoint · ${r.mode !== "endpoints" ? "last recorded sample" : "endpoint comparison complete"} · not a historical alarm`,
   );
   const makeSensor = (s, primary = false) => {
     const st = state(s);
@@ -188,7 +201,7 @@ function renderTelemetry() {
     b.dataset.quality = st.quality;
     b.dataset.trend = st.trend;
     b.dataset.index = String(index);
-    if (checkpointReached() && primary) b.classList.add("checkpoint-focus");
+    if ((history ? alerted : checkpointReached()) && primary) b.classList.add("checkpoint-focus");
     b.setAttribute(
       "aria-label",
       `${names[s]}: ${value(s, st.value)}, ${st.label}. Show details`,
@@ -290,8 +303,8 @@ function renderSensor() {
 function renderInventory() {
   const r = c().replay;
   $("inventoryScope").textContent =
-    r.mode === "raw"
-      ? "27 documented channels. Presence and quality are checked in this incident’s verified window. Raw channels remain viewer-only. Inventory marks original summaries and any new explicitly requested live summary."
+    r.mode === "history" ? "27 documented channels in the recorded viewer clip. Only the original 600-sample summaries were given to Muse. Earlier and later readings are viewer-only."
+      : r.mode !== "endpoints" ? "27 documented channels. Presence and quality are checked in this incident’s verified window. Raw channels remain viewer-only. Inventory marks original summaries and any new explicitly requested live summary."
       : "27 documented channels. Raw data is unavailable: column presence and availability are unknown unless established by captured measurements. Not observed by Muse does not mean missing from the incident.";
   $("inventoryGroups").replaceChildren(
     ...[
@@ -375,7 +388,7 @@ function chart(s) {
     viewBox: "0 0 560 88",
     class: "chart-svg",
     role: "img",
-    "aria-label": `${s} ${r.mode === "raw" ? "real samples, gaps preserved" : "two endpoints only, no continuous trace"}`,
+    "aria-label": `${s} ${r.mode !== "endpoints" ? "real samples, gaps preserved" : "two endpoints only, no continuous trace"}`,
   });
   if (!valid.length) {
     v.append(
@@ -400,7 +413,7 @@ function chart(s) {
     svg("text", { x: 0, y: 57, class: "chart-axis" }, `${fmt(lo, 2)}`),
     svg("text", { x: 3, y: 78, class: "chart-axis" }, unitDisplay(s)),
   );
-  if (r.mode === "raw") {
+  if (r.mode !== "endpoints") {
     let path = "",
       connected = false;
     for (let i = 0; i < data.length; i++) {
@@ -408,6 +421,7 @@ function chart(s) {
         connected = false;
         continue;
       }
+      if (i > 0 && elapsed[i] - elapsed[i - 1] > 1.5) connected = false;
       path += (connected ? "L" : "M") + x(i) + " " + y(data[i]) + " ";
       connected = true;
     }
@@ -441,12 +455,12 @@ function chart(s) {
     svg(
       "text",
       { x: 48, y: 78, class: "chart-axis" },
-      r.mode === "raw" ? elapsedLabel(elapsed[0]) : "First valid",
+      r.mode !== "endpoints" ? elapsedLabel(elapsed[0]) : "First valid",
     ),
     svg(
       "text",
       { x: 490, y: 78, class: "chart-axis" },
-      r.mode === "raw" ? elapsedLabel(elapsed.at(-1)) : "Last valid",
+      r.mode !== "endpoints" ? elapsedLabel(elapsed.at(-1)) : "Last valid",
     ),
   );
   d.append(v);
@@ -581,7 +595,7 @@ $("play").onclick = () => {
     renderTelemetry();
     return;
   }
-  if (checkpointReached()) setReplayPosition(0);
+  if (index === c().replay.workflow.positions - 1) setReplayPosition(0);
   // Advance through existing samples only, selecting by actual elapsed timestamps.
   const elapsed = c().replay.workflow.elapsed_seconds;
   let playbackElapsed = elapsed[index];
@@ -591,7 +605,7 @@ $("play").onclick = () => {
     let next = index;
     while (next + 1 < elapsed.length && elapsed[next + 1] <= target) next++;
     setReplayPosition(next);
-    if (checkpointReached()) {
+    if (index === elapsed.length - 1) {
       resetPlayback();
       renderTelemetry();
     }
@@ -624,8 +638,17 @@ function elapsedLabel(seconds) {
     seconds % 1 ? (seconds % 1).toFixed(3).slice(1).replace(/0+$/, "") : "";
   return `${String(Math.floor(whole / 60)).padStart(2, "0")}:${String(whole % 60).padStart(2, "0")}${suffix}`;
 }
-function checkpointReached() {
+function monitoringPoint() {
+  return c().replay.workflow.monitor?.trace[index] || null;
+}
+function anomalyReached() {
+  return monitoringPoint()?.alerted === true;
+}
+function evidenceComplete() {
   return index >= c().replay.workflow.checkpoint.index;
+}
+function checkpointReached() {
+  return evidenceComplete() && (c().replay.mode !== "history" || anomalyReached());
 }
 function transitionWorkflow(stage) {
   const previous = workflowStates.get(c().id) || {
@@ -640,10 +663,12 @@ function transitionWorkflow(stage) {
   workflowStates.set(c().id, previous);
 }
 function syncWorkflow() {
-  if (!checkpointReached()) transitionWorkflow("monitoring");
+  if (!checkpointReached()) transitionWorkflow(
+    anomalyReached() ? (monitoringPoint().new_alert ? "alert" : "accumulating") : "monitoring",
+  );
   else {
     if ((workflowStates.get(c().id)?.stage || "monitoring") === "monitoring")
-      transitionWorkflow("checkpoint");
+      transitionWorkflow(c().replay.mode === "history" ? "alert" : "checkpoint");
     transitionWorkflow(
       investigation().phase === 2 ? "investigation" : "diagnosis",
     );
@@ -655,27 +680,28 @@ function syncWorkflow() {
   );
   $("workflowStatus").textContent = {
     monitoring: "Monitoring · recorded measurements",
-    diagnosis: "Checkpoint reached → Statistical fault diagnosis",
+    alert: "Anomaly alert · sustained pressure deviation",
+    accumulating: "Anomaly alert → Accumulating diagnostic evidence",
+    diagnosis: c().replay.mode === "history" ? "Anomaly alert → Statistical fault diagnosis" : "Checkpoint reached → Statistical fault diagnosis",
     investigation:
-      "Checkpoint reached → Statistical diagnosis → Muse investigation",
+      c().replay.mode === "history" ? "Anomaly alert → Statistical diagnosis → Muse investigation" : "Checkpoint reached → Statistical diagnosis → Muse investigation",
   }[state.stage];
 }
 function setReplayPosition(position) {
-  const wasReady = checkpointReached();
+  const wasReady = checkpointReached(), wasAlerted = anomalyReached();
   index = Math.max(0, Math.min(c().replay.workflow.positions - 1, position));
   if (!checkpointReached()) {
     for (const id of ["details", "nodeDialog"]) if ($(id).open) $(id).close();
   }
   renderPlatform();
   if (
-    !wasReady &&
-    checkpointReached() &&
+    ((!wasReady && checkpointReached()) || (!wasAlerted && anomalyReached())) &&
     pageName === "demo" &&
     workspaceView === "operator" &&
     !document.querySelector("dialog[open]")
   ) {
     requestAnimationFrame(() => {
-      if (checkpointReached())
+      if (checkpointReached() || anomalyReached())
         $("checkpointAlert").scrollIntoView({
           block: window.matchMedia("(max-width: 740px)").matches
             ? "start"
@@ -737,19 +763,38 @@ function renderPlatform() {
   $("insideView").classList.toggle("active", workspaceView === "inside");
   $("experience").dataset.scene = "0";
   $("dataBadge").textContent =
-    c().replay.mode === "raw"
-      ? "Verified real window · viewer only"
+    c().replay.mode === "history" ? "Recorded history · viewer only · retrospective clip selection"
+      : c().replay.mode !== "endpoints" ? "Verified real window · viewer only"
       : "Captured endpoints · raw replay unavailable";
   const r = investigation(),
     ready = checkpointReached();
   syncWorkflow();
-  $("checkpointAlert").hidden = !ready;
-  $("checkpointTitle").textContent =
-    c().replay.mode === "raw"
+  const history = c().replay.mode === "history", point = monitoringPoint();
+  $("checkpointAlert").hidden = history ? !anomalyReached() : !ready;
+  $("alertEyebrow").textContent = history ? "▲ PREFIX-ONLY ANOMALY ALERT" : "▲ DEMO INVESTIGATION CHECKPOINT";
+  $("checkpointTitle").textContent = history ? "Diagnostic alert triggered" :
+    c().replay.mode !== "endpoints"
       ? "Diagnostic window complete"
       : "Captured comparison complete";
-  $("checkpointExplanation").textContent =
-    "Retrospective review of complete-window summaries. This is a demo checkpoint, not a historical alarm or early prediction.";
+  $("checkpointExplanation").textContent = history
+    ? "Both pressures deviated by at least 6 robust reference scales for 30 seconds. This heuristic detects change, not a fault or confirmed cause. The reference is not certified normal."
+    : "Retrospective review of complete-window summaries. This is a demo checkpoint, not a historical alarm or early prediction.";
+  const diagnosticCount = Math.max(0, Math.min(600, index - (c().replay.workflow.checkpoint.index - 599) + 1));
+  $("monitoringHeading").textContent = !history ? "Monitoring sensor measurements" : anomalyReached()
+    ? "Accumulating diagnostic evidence" : point.state === "warmup" ? "Observing a reference prefix" : "Monitoring sensor measurements";
+  $("monitoringExplanation").textContent = !history
+    ? "Play or scrub the recorded measurements. The saved diagnosis becomes available only at the end-of-evidence checkpoint."
+    : anomalyReached()
+      ? `Alert recorded. Original diagnostic observations: ${diagnosticCount} of 600. The saved classifier and Muse summaries remain unavailable until this original window is complete; they are not recomputed at the alert.`
+      : point.state === "warmup"
+        ? "The first five recorded minutes form a measured reference. Earlier operation is not automatically normal or safe. No fault prediction is shown."
+        : point.state === "reference_unavailable"
+          ? "The reference lacks enough variable valid pressure measurements. A constant or zero signal is valid, but cannot supply this detector’s MAD scale. No alert is fabricated."
+          : point.state === "measurement_unavailable"
+            ? "A required pressure measurement is unavailable. Persistence resets; no reading is invented."
+            : index === c().replay.workflow.positions - 1
+              ? "No sustained two-pressure deviation alert was detected in this replay. No fault diagnosis was triggered."
+              : "Monitoring recorded pressures against the earlier measured reference. Sustained deviation can trigger an anomaly alert; it does not identify the cause.";
   $("executionControl").hidden = !ready;
   $("capabilityDetails").hidden = !ready;
   $("runBadge").hidden = !ready;
@@ -763,7 +808,9 @@ function renderPlatform() {
   $("insidePending").hidden = ready && r.phase === 2;
   $("insidePending").textContent = ready
     ? "The statistical diagnosis is available. Start the investigation from the Operator Console."
-    : "Review recorded measurements to the checkpoint. The diagnosis and investigation remain unavailable before that point.";
+    : history
+      ? "Monitor recorded changes, then complete the original diagnostic evidence. Muse investigation is available only after an alert and that evidence boundary."
+      : "Review recorded measurements to the checkpoint. The diagnosis and investigation remain unavailable before that point.";
   $("graphLegend").hidden = !ready || r.phase !== 2;
   $("graphNodeList").hidden = !ready || r.phase !== 2;
   $("evidenceGraph").parentElement.hidden = !ready || r.phase !== 2;

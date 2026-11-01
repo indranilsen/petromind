@@ -1,3 +1,5 @@
+> This document describes the unchanged **default checkpoint mode**. For the new optional prefix-only anomaly monitor with broader recorded history, use [run instructions](monitoring/run.md) and read the [actual two-clip findings](monitoring/feasibility-v1.md). The checkpoint remains the fallback when monitoring is not explicitly enabled; it is not relabeled as an alarm.
+
 # Monitoring → checkpoint → statistical diagnosis → Muse investigation
 
 The three pages remain **HOME | DEMO | TECHNOLOGY**. The Console now has an
