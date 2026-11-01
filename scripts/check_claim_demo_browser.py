@@ -129,7 +129,7 @@ def mock_live_browser(browser, capture, *, fail=False):
             page.locator("#executionSelect").select_option("live")
             page.locator("#nextScene").click()
             page.get_by_text(
-                "Muse retrieves source-backed graph facts", exact=True
+                "Retrieving documented engineering context", exact=True
             ).wait_for()
             # The real tool response is visible while the next request is blocked.
             assert (
@@ -140,12 +140,13 @@ def mock_live_browser(browser, capture, *, fail=False):
             page.locator(".home-hero .primary").click()
             assert page.locator("#caseSelect").input_value() == "1"
             page.locator("#insideView").click()
-            assert page.locator(".evidence-node.layer-2").count() > 0
+            assert page.locator(".evidence-node.type-fact").count() > 0
+            assert page.locator(".evidence-node.type-request").count() == 0
             assert page.locator("#caseSelect").is_disabled()
             gate.set()
             page.locator("#operatorView").click()
             if fail:
-                page.get_by_text(
+                page.locator("#operatorResult").get_by_text(
                     "Investigation stopped · no completed audit", exact=True
                 ).wait_for()
                 assert "response limit" in page.locator("#operatorResult").inner_text()
@@ -154,7 +155,7 @@ def mock_live_browser(browser, capture, *, fail=False):
                     not in page.locator("#operatorResult").inner_text()
                 )
             else:
-                page.get_by_text("NEW LIVE ASSESSMENT", exact=True).wait_for()
+                page.locator("#operatorResult").get_by_text("NEW LIVE ASSESSMENT", exact=True).wait_for()
                 assert (
                     "Software-test measurement assertion."
                     in page.locator("#operatorResult").inner_text()
@@ -312,13 +313,13 @@ def mock_active_browser(browser, capture):
             page.locator("#executionSelect").select_option("live")
             page.locator("#nextScene").click()
             page.get_by_text(
-                "Muse requests a documented sensor summary", exact=True
+                "Requesting an additional measurement", exact=True
             ).wait_for()
             assert (
                 "Muse requested summary"
                 in page.locator('[data-sensor="T-TPT"]').inner_text()
             )
-            assert "1 queries left" in page.locator("#eventFeed").inner_text()
+            assert "1 sensor queries remaining" in page.locator("#eventFeed").inner_text()
             page.locator("#insideView").click()
             assert (
                 page.get_by_role("button", name="Tree temperature", exact=True).count()
@@ -330,7 +331,7 @@ def mock_active_browser(browser, capture):
             )
             gate.set()
             page.locator("#operatorView").click()
-            page.get_by_text("NEW LIVE ASSESSMENT", exact=True).wait_for()
+            page.locator("#operatorResult").get_by_text("NEW LIVE ASSESSMENT", exact=True).wait_for()
             assert (
                 "Tree temperature (charged)"
                 in page.locator("#operatorResult").inner_text()
@@ -498,6 +499,7 @@ def irregular_progress_browser(browser, url, payload):
         assert page.locator("#clock").inner_text() == "01:15 / 01:15"
         page.locator("#nextScene").click()
         assert page.locator("#eventFeed li").count() == 1
+        page.locator("#operatorView").click()
         page.locator("#slider").fill("0")
         assert_monitoring(page)
         reach_checkpoint(page)
@@ -611,13 +613,15 @@ def main():
                 assert page.locator(".inventory-row").count() == 27
                 page.keyboard.press("Escape")
                 page.locator("#nextScene").click()
+                page.locator("#capturePause").click()
                 assert page.locator("#eventFeed li").count() == 1
                 page.locator("#insideView").click()
                 assert page.locator(".evidence-node").count() == 5
-                for _ in case["investigation_events"]["grounded"][1:]:
-                    page.locator("#graphAdvance").click()
+                page.locator("#captureSkip").click()
                 assert page.locator(".evidence-node").count() > 5
-                page.locator(".evidence-node.layer-2").first.click()
+                if not page.locator("#graphPanel").evaluate("e=>e.open"):
+                    page.locator("#graphPanel>summary").click()
+                page.locator(".evidence-node.type-fact").first.click()
                 assert page.locator("#nodeData").inner_text()
                 page.keyboard.press("Escape")
                 if i == 0:

@@ -3,6 +3,8 @@
 import json
 from copy import deepcopy
 
+VERSION = "public-investigation-v2"
+
 
 def received_event(packet, mode):
     return {
@@ -98,3 +100,28 @@ def captured_events(packet, row):
             }
         ]
     )
+
+
+def request_event(details):
+    """Whitelist public request metadata. Never forward submission text/reasoning."""
+    from .knowledge import PhysicalKnowledge
+
+    known = {"lookup_knowledge", "search_history", "request_sensor", "submit_audit"}
+    tool = details.get("tool")
+    event = {
+        "kind": "tool_request",
+        "mode": "live",
+        "tool": tool if tool in known else "unrecognized_tool",
+        "sequence": details["audit_sequence"],
+        "title": "Actual tool request; awaiting Python result",
+    }
+    if tool == "lookup_knowledge":
+        arguments = details.get("arguments")
+        topic = arguments.get("topic") if isinstance(arguments, dict) else None
+        facts = PhysicalKnowledge().facts
+        topics = (
+            {f.subject for f in facts} | {f.object for f in facts} | {"valve_codes"}
+        )
+        if isinstance(topic, str) and topic in topics:
+            event["topic"] = topic
+    return event

@@ -184,7 +184,7 @@ class ScopeAuditSession(ClaimAuditSession):
         return super()._record(tool, args, result)
 
 
-def run_scope_auditor(session, client, config=None, on_event=None):
+def run_scope_auditor(session, client, config=None, on_event=None, on_tool_request=None):
     config = config or AgentConfig(
         max_turns=6, max_tool_calls=8, max_output_tokens=4096, variant="sensor_only"
     )
@@ -222,6 +222,7 @@ def run_scope_auditor(session, client, config=None, on_event=None):
         ],
         prompt_version=VERSION,
         on_event=on_event,
+        on_tool_request=on_tool_request,
         submission_reason="claim_audit_submitted",
         is_complete=lambda: session.result is not None,
         stop_reason=lambda: session.stop,

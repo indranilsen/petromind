@@ -168,7 +168,7 @@ class ActiveAuditSession(ScopeAuditSession):
             )
 
 
-def run_active_auditor(session, client, config=None, on_event=None):
+def run_active_auditor(session, client, config=None, on_event=None, on_tool_request=None):
     context = {
         **session.packet,
         "sensor_budget": 5,
@@ -206,6 +206,7 @@ def run_active_auditor(session, client, config=None, on_event=None):
         ],
         prompt_version=VERSION,
         on_event=on_event,
+        on_tool_request=on_tool_request,
         submission_reason="claim_audit_submitted",
         is_complete=lambda: session.result is not None,
         stop_reason=lambda: session.stop,

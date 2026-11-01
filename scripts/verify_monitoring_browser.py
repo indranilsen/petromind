@@ -102,8 +102,8 @@ def verify(browser, app, url, screenshots=None):
             page.locator("#closeInventory").click()
             if rows[ready]["alerted"]:
                 page.locator("#nextScene").click()
-                while page.locator("#nextRecord").is_visible():
-                    page.locator("#nextRecord").click()
+                page.locator("#captureSkip").click()
+                page.locator("#operatorView").click()
                 assert page.locator("#operatorResult").inner_text()
                 if screenshots:
                     page.locator("#operatorResult").scroll_into_view_if_needed()

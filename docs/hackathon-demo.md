@@ -1,3 +1,5 @@
+> Inside Muse now opens automatically and unfolds the genuine captured records. Use Pause/Resume or Show completed assessment instead of manual Next clicks. [Exact local setup and controls](guided-muse-investigation.md). Graph triples are actual returned source facts; citations and empirical analogues are not causal proof.
+
 > Optional recorded-history version: [setup](monitoring/run.md), [actual monitoring limitations](monitoring/feasibility-v1.md). Keep this distinction in the narration: **anomaly ≠ fault prediction ≠ root cause**.
 
 ## Three-minute recorded-history variant
@@ -8,7 +10,7 @@
 | 0:25–0:50 | Play briefly, then scrub through the first actual alert | “This fixed prefix-only rule detects sustained pressure deviation. It does not identify a fault. In this first clip it fires well before the expert annotation; we do not call that verified early detection.” |
 | 0:50–1:10 | Continue to 39:59 | “The original 600-sample diagnostic evidence must finish accumulating. We have not moved the classifier window to make the alert look successful.” |
 | 1:10–1:35 | Read saved statistical prediction, click Investigate with Muse Spark | “The statistical model proposed service-line hydrate. We are now replaying a genuine captured Muse audit, not making a new API call.” |
-| 1:35–2:15 | Advance actual captured events; show operator assessment / Inside Muse | “Muse checked the pressure summaries, retrieved source-scoped knowledge and compared the inference with what those sources actually establish. Broader replay samples were never added to its evidence.” |
+| 1:35–2:15 | Watch automatic conversation and synchronized retrieved facts | “Muse checked the pressure summaries, retrieved source-scoped knowledge and compared the inference with what those sources actually establish. Broader replay samples were never added to its evidence.” |
 | 2:15–2:40 | Highlight supported observations versus missing specificity premise | “The pressure increases are real. The supplied evidence does not establish that hydrate specifically caused them. A plausible diagnosis is not a demonstrated cause.” |
 | 2:40–3:00 | Brief second captured example or next-evidence action | “A published pressure-pattern example supports a narrow comparison, not root cause. Next steps need applicable engineering documentation or validated discriminating criteria; we do not invent them.” |
 

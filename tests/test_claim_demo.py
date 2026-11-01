@@ -414,6 +414,8 @@ def test_live_stream_uses_real_mocked_events_before_completion_and_no_viewer_inp
     def callback(request):
         body = json.loads(request.content)
         assert "demo_investigation_checkpoint" not in canonical(body)
+        assert "classifier_context" not in canonical(body)
+        assert "public_events_version" not in canonical(body)
         assert "viewer_series" not in canonical(body) and "true_event" not in canonical(
             body
         )
@@ -454,12 +456,12 @@ def test_live_stream_uses_real_mocked_events_before_completion_and_no_viewer_inp
         TASKS[0], "d" * 32, on_public_event=lambda e: observed.append((len(calls), e))
     )
     assert [e["kind"] for _, e in observed] == [
-        "evidence_received",
-        "tool_result",
-        "tool_result",
+        "evidence_received", "tool_request", "tool_result", "tool_request", "tool_result",
     ]
-    assert observed[1][0] == 1 and observed[2][0] == 2
-    assert observed[1][1]["facts"] and observed[2][1]["assessment"] == row["output"]
+    assert observed[1][0] == observed[2][0] == 1 and observed[3][0] == observed[4][0] == 2
+    assert observed[2][1]["facts"] and observed[4][1]["assessment"] == row["output"]
+    assert observed[1][1]["sequence"] == observed[2][1]["sequence"]
+    assert observed[3][1]["sequence"] == observed[4][1]["sequence"]
     assert row["new_sensor_queries"] == 0 and len(calls) == 2
     assert captured_events(packet(), row)[-1]["status"] == "completed"
     # Streaming cached request is idempotent: it returns completion, no new calls.
@@ -593,7 +595,7 @@ def test_active_app_versions_protocol_streams_queries_and_rejects_wrong_window(
     assert row["new_sensor_queries"] == 1 and row["remaining_budget"] == 1
     assert row["observed_sensors"] == ["ABER-CKGL", "P-PDG", "P-TPT", "T-TPT"]
     assert row["output"]["contract_version"] == ACTIVE_VERSION
-    queried = next((n, e) for n, e in events if e.get("tool") == "request_sensor")
+    queried = next((n, e) for n, e in events if e.get("tool") == "request_sensor" and e["kind"] == "tool_result")
     assert "T-TPT" not in events[0][1]["observations"]
     assert queried[0] == 2 and queried[1]["summary"]["median"] == 55
     assert app.live(TASKS[0], "e" * 32) == row and len(calls) == 3
