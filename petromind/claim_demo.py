@@ -10,8 +10,20 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from time import monotonic
 
-from . import reliable_auditor as active_auditor
+from . import atomic_auditor as active_auditor
 from .agent import AgentConfig
+from .atomic_auditor import (
+    DOCUMENTS,
+    ScopeAuditSession,
+    run_scope_auditor,
+    scope_tools,
+)
+from .atomic_auditor import (
+    SCOPE_INSTRUCTIONS as INSTRUCTIONS,
+)
+from .atomic_auditor import (
+    SCOPE_VERSION as VERSION,
+)
 from .audit import canonical
 from .claim_evaluation import checked_protocol
 from .claim_review import demo_cases, load_capture, review_capture
@@ -25,18 +37,6 @@ from .investigation_events import (
     tool_event,
 )
 from .meta_api import MetaAPIError, MetaResponsesClient
-from .reliable_auditor import (
-    DOCUMENTS,
-    ScopeAuditSession,
-    run_scope_auditor,
-    scope_tools,
-)
-from .reliable_auditor import (
-    SCOPE_INSTRUCTIONS as INSTRUCTIONS,
-)
-from .reliable_auditor import (
-    SCOPE_VERSION as VERSION,
-)
 from .replay_workflow import replay_workflow
 from .science_evaluation import CostedClient, SpendingLedger
 
@@ -78,7 +78,7 @@ def freeze_live(
         "limits": {
             "pilot": {"requests": 12, "output_tokens": 49152, "estimated_usd": max_cost}
         },
-        "note": "Explicit interactive executions only. Fresh v4 has no new paid evaluation or engineering certification.",
+        "note": "Explicit interactive executions only. Fresh v5 has no new paid evaluation or engineering certification.",
     }
     if active_sensors:
         protocol["active_windows_digest"] = active_windows(

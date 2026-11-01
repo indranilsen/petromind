@@ -3287,3 +3287,43 @@ select {
     scroll-margin-top: 205px;
   }
 }
+
+/* Scope is explicit; recorded propositions are not displayed as endorsed causes. */
+.assessment-scope {
+  margin: 20px 0;
+  padding: 16px 18px;
+  border: 1px solid #355461;
+  border-left: 3px solid #8fdbc6;
+  border-radius: 12px;
+  background: #10242e;
+}
+.assessment-scope[data-scope="causal"] {
+  border-left-color: #e3c58e;
+}
+.assessment-scope h4 {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+}
+.assessment-scope p {
+  overflow-wrap: anywhere;
+  margin: 8px 0;
+}
+.scoped-finding + .scoped-finding {
+  border-top: 1px solid #355461;
+  margin-top: 16px;
+  padding-top: 14px;
+}
+.scope-verdict {
+  color: #a7e9d5;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.scope-gap {
+  color: #e3c58e;
+}
+@media (max-width: 740px) {
+  .assessment-scope {
+    padding: 14px;
+  }
+}

@@ -7,6 +7,7 @@ from dataclasses import asdict
 import httpx
 import pytest
 
+from petromind.atomic_auditor import SCOPE_VERSION as LIVE_VERSION
 from petromind.audit import canonical, verify_audit
 from petromind.claim_auditor import ClaimAuditSession
 from petromind.claim_demo import DemoApp, freeze_live, make_server
@@ -14,7 +15,6 @@ from petromind.claim_review import TASKS, demo_cases, review_capture
 from petromind.eval_protocol import digest
 from petromind.measurements import summarize
 from petromind.meta_api import MetaResponsesClient
-from petromind.reliable_auditor import SCOPE_VERSION as LIVE_VERSION
 from petromind.scope_auditor import (
     VERSION,
     ScopeAuditSession,
@@ -517,8 +517,8 @@ def test_active_app_versions_protocol_streams_queries_and_rejects_wrong_window(
     import numpy as np
     import pandas as pd
 
+    from petromind.atomic_auditor import VERSION as ACTIVE_VERSION
     from petromind.incident_replay import raw_payload
-    from petromind.reliable_auditor import VERSION as ACTIVE_VERSION
 
     p = json.loads((capture / "protocol.json").read_text())
     rows = [json.loads(l) for l in (capture / "results.jsonl").read_text().splitlines()]
@@ -915,14 +915,17 @@ def test_actual_live_route_projects_history_without_event_labels(
     assert row["remaining_budget"] == 2 and row["new_sensor_queries"] == 0
 
 
+@pytest.mark.parametrize(
+    "old_contract", ["claim-auditor-v2-scope", "claim-auditor-v4-scope-recommendations"]
+)
 def test_previous_live_contract_rejected_without_overwriting_protocol(
-    capture, tmp_path
+    capture, tmp_path, old_contract
 ):
     out = tmp_path / "old-live"
     freeze_live(capture, out)
     path = out / "protocol.json"
     p = json.loads(path.read_text())
-    p["study"] = VERSION  # original v2 scope contract, not v4
+    p["study"] = old_contract
     p.pop("protocol_id")
     p["protocol_id"] = digest(p)
     path.write_text(canonical(p))

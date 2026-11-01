@@ -241,8 +241,18 @@ def _run(session, client, config, on_event, on_tool_request, active):
         or AgentConfig(
             max_turns=6, max_tool_calls=8, max_output_tokens=4096, variant="sensor_only"
         ),
-        instructions=INSTRUCTIONS if active else SCOPE_INSTRUCTIONS,
-        tools=active_tools() if active else scope_tools(session.grounded),
+        instructions=getattr(
+            session,
+            "model_instructions",
+            INSTRUCTIONS if active else SCOPE_INSTRUCTIONS,
+        ),
+        tools=(
+            session.model_tools()
+            if hasattr(session, "model_tools")
+            else active_tools()
+            if active
+            else scope_tools(session.grounded)
+        ),
         initial_history=[
             {
                 "role": "user",
