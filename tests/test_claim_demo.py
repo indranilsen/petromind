@@ -3,6 +3,7 @@
 import json
 import threading
 from dataclasses import asdict
+from pathlib import Path
 
 import httpx
 import pytest
@@ -648,8 +649,38 @@ def test_smoke_command_requires_explicit_paid_authorization(
     assert not (tmp_path / "unused").exists()
 
 
+@pytest.fixture(params=[False, True], ids=["no-local-data", "unrelated-local-data"])
+def cli_inputs(tmp_path, monkeypatch, request):
+    """Exercise CLI fixtures independently of a developer's real local data."""
+    project = tmp_path / "project"
+    project.mkdir()
+    scripts = Path(__file__).resolve().parents[1] / "scripts"
+    (project / "scripts").symlink_to(scripts, target_is_directory=True)
+    if request.param:
+        (tmp_path / "3W" / "dataset").mkdir(parents=True)
+        protocol = project / ".petromind" / "science-m5-v1" / "protocol.json"
+        protocol.parent.mkdir(parents=True)
+        protocol.write_text('{"unrelated_local_protocol": true}')
+        read_text = Path.read_text
+
+        def guarded_read(path, *args, **kwargs):
+            assert path.resolve() != protocol, (
+                "CLI test read unrelated local source protocol"
+            )
+            return read_text(path, *args, **kwargs)
+
+        monkeypatch.setattr(Path, "read_text", guarded_read)
+    monkeypatch.chdir(project)
+    return [
+        "--dataset",
+        str(tmp_path / "absent-fixture-dataset"),
+        "--science-protocol",
+        str(tmp_path / "absent-fixture-science.json"),
+    ]
+
+
 def test_smoke_command_uses_single_streamed_mock_run_and_refuses_reuse(
-    capture, tmp_path, monkeypatch, capsys
+    capture, tmp_path, monkeypatch, capsys, cli_inputs
 ):
     import runpy
     import sys
@@ -696,6 +727,7 @@ def test_smoke_command_uses_single_streamed_mock_run_and_refuses_reuse(
             "--live",
             str(out),
             "--authorize-paid-meta",
+            *cli_inputs,
         ],
     )
     with pytest.raises(SystemExit) as first:
@@ -724,7 +756,7 @@ def test_checkpoint_metadata_is_viewer_only_and_not_a_historical_alarm(server):
 
 
 def test_demo_check_is_read_only_and_labels_endpoint_scope(
-    capture, monkeypatch, capsys
+    capture, monkeypatch, capsys, cli_inputs
 ):
     import runpy
     import sys
@@ -737,7 +769,9 @@ def test_demo_check_is_read_only_and_labels_endpoint_scope(
     monkeypatch.setattr("petromind.claim_demo.make_server", forbidden)
     monkeypatch.setenv("MODEL_API_KEY", "SECRET_SENTINEL_ONLY")
     monkeypatch.setattr(
-        sys, "argv", ["demo_claim_audit.py", "check", "--capture", str(capture)]
+        sys,
+        "argv",
+        ["demo_claim_audit.py", "check", "--capture", str(capture), *cli_inputs],
     )
     before = (capture / "results.jsonl").read_bytes()
     with pytest.raises(SystemExit) as end:
@@ -779,7 +813,7 @@ def test_missing_monitoring_bundle_has_actionable_safe_error(
 
 
 def test_missing_capture_and_busy_port_are_distinguished(
-    capture, tmp_path, monkeypatch, capsys
+    capture, tmp_path, monkeypatch, capsys, cli_inputs
 ):
     import errno
     import runpy
@@ -800,7 +834,9 @@ def test_missing_capture_and_busy_port_are_distinguished(
 
     monkeypatch.setattr("petromind.claim_demo.make_server", busy)
     monkeypatch.setattr(
-        sys, "argv", ["demo_claim_audit.py", "serve", "--capture", str(capture)]
+        sys,
+        "argv",
+        ["demo_claim_audit.py", "serve", "--capture", str(capture), *cli_inputs],
     )
     with pytest.raises(SystemExit) as end:
         runpy.run_path("scripts/demo_claim_audit.py", run_name="__main__")
