@@ -131,7 +131,7 @@ def run_agent(session, client, config: AgentConfig | None = None, *, on_event=No
 
 
 def run_tool_agent(session, client, config, *, instructions, tools, initial_history,
-                   prompt_version, on_event=None, clock=time.monotonic, submission_reason="diagnosis_submitted", is_complete=None, stop_reason=None, decode_arguments=None):
+                   prompt_version, on_event=None, clock=time.monotonic, submission_reason="diagnosis_submitted", is_complete=None, stop_reason=None, decode_arguments=None, on_tool_request=None):
     """Trusted composition hook; only the supplied dispatcher reaches model tools.
 
     Reuses bounded transport/replay/usage safeguards. Callers must construct a
@@ -231,6 +231,8 @@ def run_tool_agent(session, client, config, *, instructions, tools, initial_hist
             arguments = (decode_arguments(call["name"], call["arguments"]) if decode_arguments
                          else _arguments(call["arguments"]))
             # Invalid JSON is routed through the normal sanitized session audit too.
+            if on_tool_request:
+                on_tool_request({"tool": call["name"], "audit_sequence": len(session.audit_trail) + 1, "arguments": arguments})
             result = session.dispatch(call["name"], arguments)
             audit = session.audit_trail[-1]
             emit("tool_result", {"turn": turn, "tool": audit.tool,

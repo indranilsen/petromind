@@ -171,13 +171,16 @@ function renderTelemetry() {
     r.mode !== "endpoints"
       ? "Recorded data · 10× playback"
       : "Captured endpoints · no continuous replay";
-  const history = r.mode === "history", alerted = anomalyReached();
+  const history = r.mode === "history",
+    alerted = anomalyReached();
   const marker = $("checkpointMarker");
   marker.hidden = history && !alerted;
   marker.style.left = "";
   marker.style.right = history ? "auto" : "";
   if (history && alerted) {
-    const first = w.monitor.trace.slice(0, index + 1).findIndex((row) => row.new_alert);
+    const first = w.monitor.trace
+      .slice(0, index + 1)
+      .findIndex((row) => row.new_alert);
     marker.style.left = `${(w.elapsed_seconds[first] / w.elapsed_seconds.at(-1)) * 100}%`;
   }
   $("checkpointCaption").textContent = history
@@ -186,7 +189,8 @@ function renderTelemetry() {
   marker.classList.toggle("active", history ? alerted : checkpointReached());
   $("checkpointMarker").setAttribute(
     "aria-label",
-    history ? "Anomaly alert computed from observed prefix; not a historical operational alarm or fault identification"
+    history
+      ? "Anomaly alert computed from observed prefix; not a historical operational alarm or fault identification"
       : `${checkpointReached() ? "Reached" : "Upcoming"} demo investigation checkpoint · ${r.mode !== "endpoints" ? "last recorded sample" : "endpoint comparison complete"} · not a historical alarm`,
   );
   const makeSensor = (s, primary = false) => {
@@ -201,7 +205,8 @@ function renderTelemetry() {
     b.dataset.quality = st.quality;
     b.dataset.trend = st.trend;
     b.dataset.index = String(index);
-    if ((history ? alerted : checkpointReached()) && primary) b.classList.add("checkpoint-focus");
+    if ((history ? alerted : checkpointReached()) && primary)
+      b.classList.add("checkpoint-focus");
     b.setAttribute(
       "aria-label",
       `${names[s]}: ${value(s, st.value)}, ${st.label}. Show details`,
@@ -303,9 +308,11 @@ function renderSensor() {
 function renderInventory() {
   const r = c().replay;
   $("inventoryScope").textContent =
-    r.mode === "history" ? "27 documented channels in the recorded viewer clip. Only the original 600-sample summaries were given to Muse. Earlier and later readings are viewer-only."
-      : r.mode !== "endpoints" ? "27 documented channels. Presence and quality are checked in this incident’s verified window. Raw channels remain viewer-only. Inventory marks original summaries and any new explicitly requested live summary."
-      : "27 documented channels. Raw data is unavailable: column presence and availability are unknown unless established by captured measurements. Not observed by Muse does not mean missing from the incident.";
+    r.mode === "history"
+      ? "27 documented channels in the recorded viewer clip. Only the original 600-sample summaries were given to Muse. Earlier and later readings are viewer-only."
+      : r.mode !== "endpoints"
+        ? "27 documented channels. Presence and quality are checked in this incident’s verified window. Raw channels remain viewer-only. Inventory marks original summaries and any new explicitly requested live summary."
+        : "27 documented channels. Raw data is unavailable: column presence and availability are unknown unless established by captured measurements. Not observed by Muse does not mean missing from the incident.";
   $("inventoryGroups").replaceChildren(
     ...[
       "Pressure",
@@ -648,7 +655,9 @@ function evidenceComplete() {
   return index >= c().replay.workflow.checkpoint.index;
 }
 function checkpointReached() {
-  return evidenceComplete() && (c().replay.mode !== "history" || anomalyReached());
+  return (
+    evidenceComplete() && (c().replay.mode !== "history" || anomalyReached())
+  );
 }
 function transitionWorkflow(stage) {
   const previous = workflowStates.get(c().id) || {
@@ -663,12 +672,19 @@ function transitionWorkflow(stage) {
   workflowStates.set(c().id, previous);
 }
 function syncWorkflow() {
-  if (!checkpointReached()) transitionWorkflow(
-    anomalyReached() ? (monitoringPoint().new_alert ? "alert" : "accumulating") : "monitoring",
-  );
+  if (!checkpointReached())
+    transitionWorkflow(
+      anomalyReached()
+        ? monitoringPoint().new_alert
+          ? "alert"
+          : "accumulating"
+        : "monitoring",
+    );
   else {
     if ((workflowStates.get(c().id)?.stage || "monitoring") === "monitoring")
-      transitionWorkflow(c().replay.mode === "history" ? "alert" : "checkpoint");
+      transitionWorkflow(
+        c().replay.mode === "history" ? "alert" : "checkpoint",
+      );
     transitionWorkflow(
       investigation().phase === 2 ? "investigation" : "diagnosis",
     );
@@ -682,13 +698,19 @@ function syncWorkflow() {
     monitoring: "Monitoring · recorded measurements",
     alert: "Anomaly alert · sustained pressure deviation",
     accumulating: "Anomaly alert → Accumulating diagnostic evidence",
-    diagnosis: c().replay.mode === "history" ? "Anomaly alert → Statistical fault diagnosis" : "Checkpoint reached → Statistical fault diagnosis",
+    diagnosis:
+      c().replay.mode === "history"
+        ? "Anomaly alert → Statistical fault diagnosis"
+        : "Checkpoint reached → Statistical fault diagnosis",
     investigation:
-      c().replay.mode === "history" ? "Anomaly alert → Statistical diagnosis → Muse investigation" : "Checkpoint reached → Statistical diagnosis → Muse investigation",
+      c().replay.mode === "history"
+        ? "Anomaly alert → Statistical diagnosis → Muse investigation"
+        : "Checkpoint reached → Statistical diagnosis → Muse investigation",
   }[state.stage];
 }
 function setReplayPosition(position) {
-  const wasReady = checkpointReached(), wasAlerted = anomalyReached();
+  const wasReady = checkpointReached(),
+    wasAlerted = anomalyReached();
   index = Math.max(0, Math.min(c().replay.workflow.positions - 1, position));
   if (!checkpointReached()) {
     for (const id of ["details", "nodeDialog"]) if ($(id).open) $(id).close();
@@ -711,6 +733,313 @@ function setReplayPosition(position) {
   }
 }
 
+let capturedClock = null,
+  capturedOwner = null,
+  selectedEvidenceEvent = null;
+const CAPTURE_DELAY_MS = 1400; // Presentation pacing, never claimed as original API timing.
+function stopCapturedClock(pause = true) {
+  if (capturedClock) clearTimeout(capturedClock);
+  capturedClock = null;
+  if (pause && capturedOwner) capturedOwner.playing = false;
+  capturedOwner = null;
+}
+function syncCapturedClock() {
+  const r = investigation();
+  const active =
+    execution === "captured" &&
+    pageName === "demo" &&
+    checkpointReached() &&
+    !synthetic &&
+    r.phase === 2 &&
+    r.playing &&
+    r.cursor < r.events.length;
+  if (!active) {
+    stopCapturedClock();
+    return;
+  }
+  if (capturedClock && capturedOwner === r) return;
+  stopCapturedClock(false);
+  capturedOwner = r;
+  capturedClock = setTimeout(() => {
+    capturedClock = null;
+    if (investigation() !== r || !checkpointReached() || pageName !== "demo") {
+      r.playing = false;
+      return;
+    }
+    r.cursor++;
+    selectedEvidenceEvent = r.cursor - 1;
+    const e = r.events[r.cursor - 1];
+    if (e.sensor && e.summary) focusSensor = e.sensor;
+    if (r.cursor === r.events.length) r.playing = false;
+    renderPlatform();
+    followInvestigation();
+  }, CAPTURE_DELAY_MS);
+}
+function followInvestigation() {
+  if (workspaceView !== "inside" || pageName !== "demo") return;
+  requestAnimationFrame(() =>
+    $("eventFeed").lastElementChild?.scrollIntoView({
+      block: "nearest",
+      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "instant"
+        : "smooth",
+    }),
+  );
+}
+function eventTitle(e) {
+  if (e.kind === "evidence_received")
+    return "Inspecting the supplied sensor evidence";
+  if (e.kind === "tool_request")
+    return "Tool requested · waiting for its result";
+  if (e.validation?.code) return "A submission required correction";
+  if (e.kind === "completion")
+    return e.status === "completed"
+      ? "Investigation complete"
+      : "Investigation stopped";
+  return (
+    {
+      lookup_knowledge: "Retrieving documented engineering context",
+      search_history: "Comparing historical training incidents",
+      request_sensor: "Requesting an additional measurement",
+      submit_audit: "Evaluating the suspected cause",
+    }[e.tool] ||
+    e.title ||
+    e.kind
+  );
+}
+function renderConversation() {
+  const r = investigation(),
+    events = visibleEvents();
+  $("investigationLabel").textContent =
+    execution === "captured"
+      ? "Captured Muse activity · automatic presentation pacing, not original token timing. Headings are interface labels; findings below are recorded public output."
+      : "Live Meta Muse · actual public events as received. No private reasoning or invented intermediate messages.";
+  $("captureControls").hidden =
+    execution !== "captured" || r.phase !== 2 || !checkpointReached();
+  $("capturePause").textContent = r.playing ? "Pause replay" : "Resume replay";
+  $("capturePause").disabled = r.cursor >= r.events.length;
+  $("captureSkip").disabled = r.cursor >= r.events.length;
+  $("investigationActivity").textContent =
+    !checkpointReached() || r.phase !== 2
+      ? ""
+      : liveBusy
+        ? "Live request running · awaiting the next actual event"
+        : r.error
+          ? "Stopped · no completed assessment substituted"
+          : execution === "captured" && r.cursor < r.events.length
+            ? r.playing
+              ? "Replaying captured activity…"
+              : "Replay paused"
+            : "Public investigation records received";
+  const feed = $("eventFeed"),
+    owner = `${c().id}:${execution}`;
+  if (feed.dataset.owner !== owner) {
+    feed.replaceChildren();
+    feed.dataset.owner = owner;
+  }
+  while (feed.children.length > events.length) feed.lastElementChild.remove();
+  events.forEach((e, i) => {
+    if (feed.children[i]) {
+      feed.children[i].classList.toggle(
+        "selected-event",
+        selectedEvidenceEvent === i,
+      );
+      return;
+    }
+    const li = el(
+      "li",
+      undefined,
+      "conversation-event is-new" +
+        (selectedEvidenceEvent === i ? " selected-event" : ""),
+    );
+    li.dataset.eventIndex = i;
+    li.dataset.kind = e.kind;
+    if (e.tool) li.dataset.tool = e.tool;
+    const button = el("button", eventTitle(e), "event-title");
+    button.onclick = () => {
+      selectedEvidenceEvent = i;
+      renderPlatform();
+    };
+    li.append(button);
+    li.append(
+      el(
+        "small",
+        e.kind === "evidence_received"
+          ? "Received input packet"
+          : e.kind === "tool_request"
+            ? "Actual live tool request"
+            : e.kind === "completion"
+              ? "Execution status"
+              : "Actual public tool result",
+        "event-origin",
+      ),
+    );
+    if (e.observations)
+      for (const [s, v] of Object.entries(e.observations)) {
+        li.append(
+          el(
+            "p",
+            `${names[s] || s} · ${s}: ${v.available ? `${value(s, v.first)} → ${value(s, v.last)}; Δ ${value(s, v.delta)}; ${v.count} valid readings` : `Unavailable (${v.total} samples; no valid measurement)`}`,
+            "event-measurement",
+          ),
+        );
+      }
+    if (e.topic)
+      li.append(
+        el(
+          "p",
+          `Topic lookup: ${e.topic}. Returns predefined source-scoped facts, not general installed-well traversal.`,
+        ),
+      );
+    for (const f of e.facts || []) {
+      const fact = el(
+        "button",
+        `${f.subject} · ${f.relation.replaceAll("_", " ")} · ${f.object}`,
+        "returned-fact",
+      );
+      fact.onclick = () => {
+        selectedEvidenceEvent = i;
+        renderPlatform();
+        inspectNode({
+          label: fact.textContent,
+          kind: `${f.status} · ${f.scope}`,
+          data: f,
+        });
+      };
+      li.append(fact, el("small", `${f.status} · ${f.locator}`));
+    }
+    if (e.sensor && e.summary)
+      li.append(
+        el(
+          "p",
+          `${names[e.sensor] || e.sensor} · ${e.sensor}. Purpose: ${e.purpose}`,
+        ),
+        el(
+          "p",
+          e.summary.available
+            ? `Median ${value(e.sensor, e.summary.median)}; Δ ${value(e.sensor, e.summary.delta)}`
+            : "No valid readings returned",
+        ),
+        el(
+          "small",
+          `${e.cached ? "Cached" : "Charged"} · ${e.remaining_budget} sensor queries remaining`,
+        ),
+      );
+    for (const m of e.matches || [])
+      li.append(
+        el(
+          "p",
+          `${m.citation_id}: ${m.shared_sensors} shared sensors (${m.matched_sensors.join(", ")}); distance ${m.distance}. Empirical similarity, not confirmation of cause.`,
+        ),
+      );
+    if (e.matches && !e.matches.length)
+      li.append(el("p", "No historical match was returned."));
+    if (e.validation?.code)
+      li.append(
+        el(
+          "p",
+          `Python validation: ${e.validation.code} · ${e.validation.field}. ${e.validation.instruction || e.validation.correction || ""}`,
+        ),
+      );
+    if (e.assessment) {
+      li.append(el("h3", e.assessment.verdict.replaceAll("_", " ")));
+      for (const f of e.assessment.findings)
+        li.append(el("p", `${f.verdict.replaceAll("_", " ")}: ${f.statement}`));
+    }
+    if (e.kind === "completion")
+      li.append(el("p", `${e.status} · ${e.reason}`));
+    feed.append(li);
+  });
+}
+function renderPhysicalHypotheses(events) {
+  const box = $("physicalHypotheses");
+  box.replaceChildren();
+  const facts = events.flatMap((e) => e.facts || []),
+    assessment = PublicInvestigation.result(events);
+  const mechanisms = facts.filter((f) => f.relation === "described_as");
+  if (!mechanisms.length && !assessment) return;
+  const details = el("details"),
+    summary = el(
+      "summary",
+      "Physical explanation · sources and unresolved premises",
+    );
+  details.append(summary);
+  details.append(
+    el(
+      "p",
+      "Public source facts and submitted findings, not a reconstruction of Muse’s private reasoning. Generic equipment associations are not verified installed topology.",
+    ),
+  );
+  for (const f of mechanisms) {
+    details.append(
+      el("h4", `Documented description: ${f.object.replaceAll("_", " ")}`),
+      el("p", `Source: ${f.locator}. Scope: ${f.scope}.`),
+    );
+    const equipment = facts.find(
+      (x) => x.subject === f.subject && x.relation === "affects",
+    );
+    if (equipment)
+      details.append(
+        el(
+          "p",
+          `Documented generic equipment association: ${equipment.object.replaceAll("_", " ")}.`,
+        ),
+      );
+    const expectations = facts.filter((x) => x.relation.startsWith("example:"));
+    details.append(
+      el(
+        "p",
+        expectations.length
+          ? "Returned example directions: " +
+              expectations
+                .map((x) => `${x.object} ${x.relation.slice(8)}`)
+                .join("; ") +
+              ". A published example is not a universal or discriminating fault rule."
+          : "No verified fault-specific pressure expectation or discriminating test was returned. No differential-pressure model or installed flow path is inferred.",
+      ),
+    );
+  }
+  const observed = {
+    ...events.find((e) => e.kind === "evidence_received")?.observations,
+  };
+  for (const e of events)
+    if (e.sensor && e.summary) observed[e.sensor] = e.summary;
+  details.append(el("h4", "Actual observations available to Muse"));
+  const relevant = new Set([
+    "P-PDG",
+    "P-TPT",
+    ...facts
+      .filter((f) => f.relation.startsWith("example:"))
+      .map((f) => f.object),
+  ]);
+  for (const sensor of relevant) {
+    const reading = observed[sensor];
+    details.append(
+      el(
+        "p",
+        `${sensor}: ${!reading ? "Not observed by Muse; this example component cannot be evaluated." : !reading.available ? "No valid measurement was available." : `${value(sensor, reading.first)} → ${value(sensor, reading.last)}. Recorded endpoints, not proof of a mechanism.`}`,
+      ),
+    );
+  }
+  for (const f of assessment?.findings || []) {
+    if (f.basis === "measurement") continue;
+    details.append(
+      el("h4", `Muse public finding · ${f.verdict.replaceAll("_", " ")}`),
+      el("p", f.statement),
+      el("p", `Premises: ${f.premises.join("; ")}`),
+      el(
+        "p",
+        `Missing premise: ${f.missing_premise || "None stated within this finding’s narrow scope."}`,
+      ),
+      el(
+        "p",
+        `Next evidence: ${typeof f.next_evidence === "string" ? f.next_evidence : `${f.next_evidence.target}: ${f.next_evidence.purpose}`}`,
+      ),
+    );
+  }
+  box.append(details);
+}
+
 function investigation() {
   const key = `${c().id}:${execution}`;
   if (!investigations.has(key))
@@ -720,6 +1049,7 @@ function investigation() {
       cursor: 0,
       row: null,
       error: null,
+      playing: false,
     });
   return investigations.get(key);
 }
@@ -763,25 +1093,39 @@ function renderPlatform() {
   $("insideView").classList.toggle("active", workspaceView === "inside");
   $("experience").dataset.scene = "0";
   $("dataBadge").textContent =
-    c().replay.mode === "history" ? "Recorded history · viewer only · retrospective clip selection"
-      : c().replay.mode !== "endpoints" ? "Verified real window · viewer only"
-      : "Captured endpoints · raw replay unavailable";
+    c().replay.mode === "history"
+      ? "Recorded history · viewer only · retrospective clip selection"
+      : c().replay.mode !== "endpoints"
+        ? "Verified real window · viewer only"
+        : "Captured endpoints · raw replay unavailable";
   const r = investigation(),
     ready = checkpointReached();
   syncWorkflow();
-  const history = c().replay.mode === "history", point = monitoringPoint();
+  const history = c().replay.mode === "history",
+    point = monitoringPoint();
   $("checkpointAlert").hidden = history ? !anomalyReached() : !ready;
-  $("alertEyebrow").textContent = history ? "▲ PREFIX-ONLY ANOMALY ALERT" : "▲ DEMO INVESTIGATION CHECKPOINT";
-  $("checkpointTitle").textContent = history ? "Diagnostic alert triggered" :
-    c().replay.mode !== "endpoints"
+  $("alertEyebrow").textContent = history
+    ? "▲ PREFIX-ONLY ANOMALY ALERT"
+    : "▲ DEMO INVESTIGATION CHECKPOINT";
+  $("checkpointTitle").textContent = history
+    ? "Diagnostic alert triggered"
+    : c().replay.mode !== "endpoints"
       ? "Diagnostic window complete"
       : "Captured comparison complete";
   $("checkpointExplanation").textContent = history
     ? "Both pressures deviated by at least 6 robust reference scales for 30 seconds. This heuristic detects change, not a fault or confirmed cause. The reference is not certified normal."
     : "Retrospective review of complete-window summaries. This is a demo checkpoint, not a historical alarm or early prediction.";
-  const diagnosticCount = Math.max(0, Math.min(600, index - (c().replay.workflow.checkpoint.index - 599) + 1));
-  $("monitoringHeading").textContent = !history ? "Monitoring sensor measurements" : anomalyReached()
-    ? "Accumulating diagnostic evidence" : point.state === "warmup" ? "Observing a reference prefix" : "Monitoring sensor measurements";
+  const diagnosticCount = Math.max(
+    0,
+    Math.min(600, index - (c().replay.workflow.checkpoint.index - 599) + 1),
+  );
+  $("monitoringHeading").textContent = !history
+    ? "Monitoring sensor measurements"
+    : anomalyReached()
+      ? "Accumulating diagnostic evidence"
+      : point.state === "warmup"
+        ? "Observing a reference prefix"
+        : "Monitoring sensor measurements";
   $("monitoringExplanation").textContent = !history
     ? "Play or scrub the recorded measurements. The saved diagnosis becomes available only at the end-of-evidence checkpoint."
     : anomalyReached()
@@ -819,21 +1163,50 @@ function renderPlatform() {
   $("activeHypothesis").textContent =
     current === 0 ? "Service-line hydrate" : "Safety-valve closure";
   $("preDiagnosis").hidden = ready;
-  $("cause").textContent =
-    current === 0 ? "Service-line hydrate" : "Unexpected safety-valve closure";
+  const predicted = c().packet.baseline.prediction;
+  const fault =
+    PublicInvestigation.faultNames[predicted] || `Fault category ${predicted}`;
+  $("cause").textContent = `Suspected failure: ${fault}`;
+  const ranked = (c().packet.baseline.probabilities || [])
+    .filter((p) => p.represented_in_fit)
+    .sort((a, b) => b.probability - a.probability);
+  $("classifierStatement").textContent =
+    ranked.length && ranked[0].fault_type === predicted
+      ? `The statistical classifier ranked ${fault.toLowerCase()} highest among its trained categories. Its score is not a calibrated likelihood.`
+      : `The statistical classifier predicted ${fault.toLowerCase()}. This is a suspected category, not an established physical cause.`;
+  $("classifierFeatures").textContent =
+    `${c().classifier_context?.model || "Statistical evidence model"}: ${(c().classifier_context?.features || []).join(", ")}. No per-sensor feature importance is recorded.`;
+  $("classifierInputs").textContent =
+    c().classifier_context?.sensor_attribution ||
+    "Exact classifier input attribution is not supplied by this capture.";
   $("definition").textContent =
     current === 0
       ? "Hydrate is ice-like material that can accumulate in production equipment and restrict flow."
       : "A valve deep in the well can shut off production flow.";
   $("diagnosisObservations").replaceChildren(
-    el("li", "Downhole pressure increased."),
-    el(
-      "li",
-      current === 0 ? "Tree pressure increased." : "Tree pressure decreased.",
-    ),
+    ...["P-PDG", "P-TPT"].map((sensor) => {
+      const summary = c().observations[sensor],
+        li = el("li");
+      li.append(
+        el("strong", `${names[sensor]} · ${sensor}`),
+        el(
+          "span",
+          summary?.available
+            ? `${value(sensor, summary.first)} → ${value(sensor, summary.last)}`
+            : "No valid recorded measurements",
+        ),
+        el(
+          "small",
+          summary?.available
+            ? `Recorded endpoint change: ${value(sensor, summary.delta)} · ${summary.count} valid samples`
+            : "Unavailable evidence, not a zero measurement",
+        ),
+      );
+      return li;
+    }),
   );
   $("plausibility").textContent =
-    "The model compared these full-window summaries with fitting-well patterns. Similar measurements can have different causes. This is an uncalibrated retrospective prediction, not confirmed root cause.";
+    "This statistical prediction does not establish physical cause. Muse audits the stronger constructed claim below.";
   $("claimSummary").textContent = c().packet.claim;
   $("runBadge").textContent =
     execution === "captured"
@@ -862,56 +1235,7 @@ function renderPlatform() {
   $("back").hidden = !ready || liveBusy;
   $("back").textContent = "Restart replay";
   $("activityPanel").hidden = !ready || r.phase !== 2;
-  $("nextRecord").hidden =
-    !ready ||
-    r.phase !== 2 ||
-    execution !== "captured" ||
-    r.cursor >= r.events.length;
-  $("graphAdvance").hidden =
-    !ready ||
-    r.phase !== 2 ||
-    execution !== "captured" ||
-    r.cursor >= r.events.length;
-  $("eventFeed").replaceChildren(
-    ...visibleEvents().map((e) => {
-      const li = el("li");
-      li.append(el("strong", e.title || e.kind));
-      if (e.sensor)
-        li.append(
-          el(
-            "span",
-            `${names[e.sensor] || e.sensor}: ${e.summary.available ? "summary available" : "no valid readings"} · ${e.cached ? "cached" : "charged"} · ${e.remaining_budget} queries left. Purpose: ${e.purpose}`,
-          ),
-        );
-      if (e.topic) li.append(el("span", `Topic: ${e.topic}`));
-      if (e.matches)
-        li.append(
-          el(
-            "span",
-            e.matches.length
-              ? e.matches
-                  .map(
-                    (m) =>
-                      `${m.shared_sensors} shared: ${m.matched_sensors.join(", ")}`,
-                  )
-                  .join(" · ")
-              : "No historical matches returned.",
-          ),
-        );
-      if (e.validation)
-        li.append(
-          el(
-            "span",
-            e.validation.code
-              ? `Python validation: ${e.validation.code} / ${e.validation.field}`
-              : "Python structural/numeric validation passed; physical correctness unverified.",
-          ),
-        );
-      if (e.kind === "completion")
-        li.append(el("span", `${e.status} · ${e.reason}`));
-      return li;
-    }),
-  );
+  renderConversation();
   const result =
     r.row?.output || visibleEvents().findLast((e) => e.assessment)?.assessment;
   const box = $("operatorResult");
@@ -938,7 +1262,24 @@ function renderPlatform() {
         `${execution === "live" ? "NEW LIVE" : "CAPTURED"} ASSESSMENT`,
         "eyebrow",
       ),
-      el("h3", result.verdict.replaceAll("_", " ")),
+      el("h3", "Muse Spark assessment"),
+      el(
+        "p",
+        {
+          SUPPORTED: "Supported within the claim’s stated scope.",
+          PARTIALLY_SUPPORTED:
+            "Part of the claim is supported. The full claim is not established.",
+          NOT_ESTABLISHED:
+            "The supplied evidence does not establish the claim.",
+          CONTRADICTED: "The supplied evidence contradicts the claim.",
+        }[result.verdict] || result.verdict,
+        "key-finding",
+      ),
+      el(
+        "p",
+        `Recorded verdict: ${result.verdict.replaceAll("_", " ")}`,
+        "fine-print",
+      ),
     );
     const keyFinding =
       result.findings.find((f) =>
@@ -1082,8 +1423,16 @@ function renderPlatform() {
       ),
     );
   }
+  $("insideAssessment").replaceChildren();
+  if (ready && (result || r.error)) {
+    const copy = box.cloneNode(true);
+    copy.removeAttribute("id");
+    $("insideAssessment").append(copy);
+  }
+  $("inspectDetails").hidden = !ready || !result;
   renderTelemetry();
   renderEvidenceGraph();
+  syncCapturedClock();
   if (focusSensor && ready)
     document
       .querySelector(`[data-sensor="${focusSensor}"]`)
@@ -1100,8 +1449,14 @@ function beginInvestigation() {
   if (execution === "captured") {
     r.phase = 2;
     r.events = c().investigation_events.grounded;
+    resetPlayback();
     r.cursor = 1;
+    r.playing = true;
+    selectedEvidenceEvent = 0;
+    workspaceView = "inside";
+    $("graphPanel").open = !matchMedia("(max-width: 900px)").matches;
     renderPlatform();
+    followInvestigation();
   } else startLive();
 }
 async function startLive() {
@@ -1121,6 +1476,7 @@ async function startLive() {
   r.row = null;
   r.error = null;
   liveBusy = true;
+  workspaceView = "inside";
   renderPlatform();
   try {
     const response = await fetch("/api/live/stream", {
@@ -1156,7 +1512,9 @@ async function startLive() {
         terminal = true;
         r.error = event.code;
       }
+      selectedEvidenceEvent = r.events.length - 1;
       renderPlatform();
+      followInvestigation();
     };
     while (true) {
       const { value: chunk, done } = await reader.read();
@@ -1180,12 +1538,6 @@ async function startLive() {
     liveBusy = false;
     renderPlatform();
   }
-}
-function advanceRecord() {
-  if (!checkpointReached()) return;
-  const r = investigation();
-  r.cursor = Math.min(r.events.length, r.cursor + 1);
-  renderPlatform();
 }
 function inspectNode(node) {
   $("nodeTitle").textContent = node.label;
@@ -1213,162 +1565,73 @@ function inspectNode(node) {
   $("nodeDialog").showModal();
 }
 function renderEvidenceGraph() {
-  const nodes = new Map(),
-    edges = [];
-  const add = (id, label, kind, data, layer, sensor) => {
-    if (!nodes.has(id)) nodes.set(id, { id, label, kind, data, layer, sensor });
-    return id;
-  };
-  const link = (from, to, label) => edges.push({ from, to, label });
-  const events = visibleEvents();
-  for (const e of events) {
-    if (e.kind === "evidence_received") {
-      add(
-        "hypothesis",
-        `Classifier: fault ${e.hypothesis}`,
-        "Statistical hypothesis",
-        { prediction: e.hypothesis, calibrated: false },
-        0,
-      );
-      add(
-        "claim",
-        "Constructed claim to audit",
-        "Constructed evaluation claim",
-        { claim: e.claim },
-        0,
-      );
-      link("hypothesis", "claim", "audited claim");
-      for (const [s, summary] of Object.entries(e.observations)) {
-        const id = "measurement:" + s;
-        add(
-          id,
-          names[s] || s,
-          summary.available
-            ? "Measured summary"
-            : "Unavailable measurement summary",
-          {
-            sensor: s,
-            ...summary,
-            scope: "Fixed summary supplied to Muse, not raw playback",
-          },
-          1,
-          s,
-        );
-        link(id, "claim", "received evidence");
-      }
-    }
-    if (e.kind === "tool_result") {
-      const request = "request:" + e.sequence;
-      add(
-        request,
-        `${e.sequence}. ${e.tool}`,
-        e.validation?.code ? "Python validation" : "Actual tool response",
-        e,
-        1,
-      );
-      link("claim", request, "observable request");
-      if (e.sensor && e.summary) {
-        const id = e.citation_id;
-        add(
-          id,
-          names[e.sensor] || e.sensor,
-          "Additional charged summary",
-          { sensor: e.sensor, ...e.summary, scope: e.scope },
-          1,
-          e.sensor,
-        );
-        link(request, id, e.cached ? "cached summary" : "charged measurement");
-        if (nodes.has(e.source_id))
-          link(e.source_id, request, "cited generic sensor location");
-      }
-      for (const f of e.facts || []) {
-        const id = f.citation_id || f.id;
-        add(
-          id,
-          `${f.subject} ${f.relation} ${f.object}`,
-          `Documented relationship · ${f.scope}`,
-          f,
-          2,
-        );
-        link(request, id, "returned fact");
-      }
-      for (const m of e.matches || []) {
-        const id = m.citation_id;
-        add(
-          id,
-          `History: ${m.shared_sensors} shared sensors`,
-          "Empirical correlation · not cause",
-          m,
-          2,
-        );
-        link(request, id, "returned analogue");
-      }
-      if (e.assessment) {
-        e.assessment.findings.forEach((f, i) => {
-          const id = "finding:" + i;
-          add(id, f.statement, `Muse public assessment · ${f.verdict}`, f, 3);
-          link(request, id, "submitted finding");
-          for (const cite of f.citations)
-            if (nodes.has(cite)) link(cite, id, "model cites");
-          if (f.missing_premise) {
-            const gap = "gap:" + i;
-            add(
-              gap,
-              f.missing_premise,
-              "Unresolved premise · model assessment",
-              {
-                missing_premise: f.missing_premise,
-                next_evidence: f.next_evidence,
-              },
-              3,
-            );
-            link(id, gap, "missing premise");
-          }
-        });
-      }
-    }
-  }
+  const events = visibleEvents(),
+    projection = PublicInvestigation.graph(events),
+    nodes = new Map(projection.nodes.map((n) => [n.id, n]));
   const graph = $("evidenceGraph"),
-    counts = [0, 0, 0, 0];
+    counts = [0, 0, 0, 0, 0],
+    active = selectedEvidenceEvent ?? events.length - 1;
+  const topRows = Math.max(
+    projection.nodes.filter((n) => n.layer === 0).length,
+    projection.nodes.filter((n) => n.layer === 1).length,
+  );
   for (const n of nodes.values()) {
-    n.x = 15 + n.layer * 265;
-    n.y = 20 + counts[n.layer]++ * 88;
+    const column =
+      n.layer < 2 ? n.layer : n.layer === 2 ? 0 : n.layer === 3 ? 1 : 2;
+    const base = n.layer === 2 || n.layer === 3 ? topRows * 88 + 40 : 0;
+    n.x = 12 + column * 205;
+    n.y = 24 + base + counts[n.layer]++ * 88;
   }
+  const hasAssessment = counts[4] > 0;
   graph.setAttribute(
     "viewBox",
-    `0 0 1060 ${Math.max(330, Math.max(...counts) * 88 + 35)}`,
+    `0 0 ${hasAssessment ? 630 : 425} ${Math.max(340, ...Array.from(nodes.values(), (n) => n.y + 90))}`,
   );
   graph.replaceChildren();
-  for (const edge of edges) {
+  for (const edge of projection.edges) {
     const a = nodes.get(edge.from),
       b = nodes.get(edge.to);
     if (!a || !b) continue;
-    const p = svg("path", {
-      d: `M${a.x + 215} ${a.y + 31} C${a.x + 245} ${a.y + 31},${b.x - 20} ${b.y + 31},${b.x} ${b.y + 31}`,
-      class: "evidence-edge",
+    const line = svg("path", {
+      d: `M${a.x + 176} ${a.y + 30} C${a.x + 192} ${a.y + 30},${b.x - 22} ${b.y + 30},${b.x} ${b.y + 30}`,
+      class: `evidence-edge relation-${edge.kind} ${edge.event === active ? "current-relation" : ""}`,
+      "data-from": edge.from,
+      "data-to": edge.to,
+      "data-relation": edge.label,
     });
-    p.append(svg("title", {}, edge.label));
-    graph.append(p);
+    line.append(
+      svg(
+        "title",
+        {},
+        `${edge.label} · provenance: ${typeof edge.provenance === "string" ? edge.provenance : edge.provenance?.locator || "actual returned record"}`,
+      ),
+    );
+    graph.append(line);
   }
   for (const n of nodes.values()) {
+    if (n.sensor) n.label = names[n.sensor] || n.label;
+    const isActive = n.eventKeys.includes(active);
     const g = svg("g", {
-      class: `evidence-node layer-${n.layer}`,
+      class: `evidence-node type-${n.kind} ${isActive ? "current-node" : ""}`,
       role: "button",
       tabindex: 0,
       "aria-label": n.label,
+      "data-node-id": n.id,
+      "data-event-keys": n.eventKeys.join(","),
     });
     g.append(
-      svg("rect", { x: n.x, y: n.y, width: 215, height: 64, rx: 9 }),
+      svg("rect", { x: n.x, y: n.y, width: 176, height: 66, rx: 12 }),
       svg(
         "text",
-        { x: n.x + 12, y: n.y + 19, class: "node-kind" },
-        n.kind.slice(0, 29),
+        { x: n.x + 10, y: n.y + 17, class: "node-kind" },
+        n.kind.toUpperCase(),
       ),
     );
-    const label = n.label.replaceAll("_", " ");
+    const text = n.label.replaceAll("_", " ");
     g.append(
-      svg("text", { x: n.x + 12, y: n.y + 38 }, label.slice(0, 29)),
-      svg("text", { x: n.x + 12, y: n.y + 54 }, label.slice(29, 58)),
+      svg("text", { x: n.x + 10, y: n.y + 35 }, text.slice(0, 24)),
+      svg("text", { x: n.x + 10, y: n.y + 52 }, text.slice(24, 48)),
+      svg("title", {}, n.label),
     );
     g.onclick = () => inspectNode(n);
     g.onkeydown = (e) => {
@@ -1379,21 +1642,33 @@ function renderEvidenceGraph() {
     };
     graph.append(g);
   }
-  $("graphNodeList").replaceChildren(
-    ...Array.from(nodes.values()).map((n) => {
-      const b = el("button", n.label, "quiet");
-      b.onclick = () => inspectNode(n);
-      return b;
-    }),
-  );
-  if (!nodes.size)
-    graph.append(
-      svg(
-        "text",
-        { x: 40, y: 80 },
-        "Begin or replay an investigation to see actual received evidence.",
-      ),
+  $("graphNodeList").replaceChildren();
+  const list = el("details"),
+    header = el("summary", `Inspect all ${nodes.size} received graph entities`);
+  list.append(header);
+  for (const n of nodes.values()) {
+    const b = el("button", n.label, "quiet");
+    b.onclick = () => inspectNode(n);
+    list.append(b);
+  }
+  $("graphNodeList").append(list);
+  renderPhysicalHypotheses(events);
+  const signature = `${c().id}:${execution}:${active}:${nodes.size}`;
+  if (graph.dataset.focusSignature !== signature && nodes.size) {
+    graph.dataset.focusSignature = signature;
+    const highlighted = Array.from(nodes.values()).filter((n) =>
+      n.eventKeys.includes(active),
     );
+    const top = highlighted.length
+      ? Math.min(...highlighted.map((n) => n.y))
+      : 0;
+    requestAnimationFrame(() => {
+      graph.parentElement.scrollTop = Math.max(
+        0,
+        (top * graph.clientWidth) / (hasAssessment ? 630 : 425) - 20,
+      );
+    });
+  }
 }
 const architectureData = [
   [
@@ -1514,8 +1789,30 @@ $("insideView").onclick = () => {
   renderPlatform();
 };
 $("nextScene").onclick = beginInvestigation;
-$("nextRecord").onclick = advanceRecord;
-$("graphAdvance").onclick = advanceRecord;
+$("capturePause").onclick = () => {
+  const r = investigation();
+  r.playing = !r.playing;
+  renderPlatform();
+};
+$("captureRestart").onclick = () => {
+  if (execution !== "captured" || !checkpointReached()) return;
+  stopCapturedClock();
+  const r = investigation();
+  r.cursor = 1;
+  r.playing = true;
+  selectedEvidenceEvent = 0;
+  renderPlatform();
+};
+$("captureSkip").onclick = () => {
+  if (execution !== "captured" || !checkpointReached()) return;
+  stopCapturedClock();
+  const r = investigation();
+  r.cursor = r.events.length;
+  r.playing = false;
+  selectedEvidenceEvent = r.cursor - 1;
+  renderPlatform();
+  followInvestigation();
+};
 $("back").onclick = () => {
   if (liveBusy) return;
   resetPlayback();

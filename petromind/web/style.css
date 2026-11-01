@@ -2952,3 +2952,308 @@ select {
     min-height: 0;
   }
 }
+/* Focused classifier + public investigation presentation; telemetry layout retained. */
+#diagnosisCard h2 {
+  font-size: clamp(24px, 2.1vw, 34px);
+  line-height: 1.15;
+  margin: 12px 0 16px;
+}
+#classifierStatement {
+  color: #d8e9ed;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.diagnosis-comparisons {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 9px;
+}
+.diagnosis-comparisons li {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid #29434f;
+  border-radius: 10px;
+  background: #112732;
+}
+.diagnosis-comparisons strong {
+  font-size: 12px;
+  color: #a5c4d0;
+}
+.diagnosis-comparisons span {
+  font-size: 19px;
+  font-variant-numeric: tabular-nums;
+  color: #f6d4ac;
+}
+.diagnosis-comparisons small {
+  font-size: 11px;
+  color: #a5c4d0;
+}
+.investigation-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: 28px;
+  align-items: start;
+}
+.capture-controls {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+.investigation-activity {
+  color: #9de7d5;
+  min-height: 24px;
+  font-size: 13px;
+}
+.investigation-feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 18px;
+}
+#eventFeed.investigation-feed .conversation-event {
+  border: 1px solid #253d4a;
+  border-left: 3px solid #547587;
+  background: #0e202b;
+  border-radius: 14px;
+  padding: 20px;
+  margin: 0;
+  scroll-margin-top: 110px;
+}
+#eventFeed .selected-event {
+  border-left-color: #9ee7d6;
+}
+.event-title {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #f0f7f7;
+  text-align: left;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.event-origin {
+  display: block;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #94abb9;
+  margin: 8px 0 14px;
+}
+#eventFeed p {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #c7d9df;
+  overflow-wrap: anywhere;
+}
+#eventFeed .event-measurement {
+  font-variant-numeric: tabular-nums;
+  background: #132c36;
+  padding: 10px;
+  border-radius: 7px;
+}
+.returned-fact {
+  display: block;
+  border: 1px solid #3c665e;
+  background: #102b29;
+  color: #bce9dd;
+  border-radius: 7px;
+  text-align: left;
+  padding: 9px;
+  margin: 8px 0;
+  width: 100%;
+  overflow-wrap: anywhere;
+}
+.returned-fact + small {
+  display: block;
+  font-size: 10px;
+  color: #94abb9;
+}
+.evidence-column {
+  position: sticky;
+  top: 100px;
+  border: 1px solid #2a4652;
+  background: #0c1d27;
+  padding: 16px;
+  border-radius: 16px;
+  min-width: 0;
+}
+.evidence-column > summary {
+  font-weight: 600;
+  font-size: 15px;
+  color: #e1efee;
+  margin-bottom: 14px;
+  cursor: pointer;
+}
+.evidence-column .graph-scroll {
+  max-height: 540px;
+  overflow: auto;
+}
+#evidenceGraph {
+  min-width: 0;
+  width: 100%;
+}
+.evidence-node rect {
+  fill: #152b3c;
+  stroke: #4b758a;
+  stroke-width: 1.2;
+}
+.evidence-node text {
+  font-size: 10px;
+  fill: #e2efef;
+}
+.evidence-node .node-kind {
+  font-size: 8px;
+  fill: #a6bec8;
+  letter-spacing: 1px;
+}
+.evidence-node.type-fact rect,
+.evidence-node.type-equipment rect {
+  fill: #15342e;
+  stroke: #5a9b84;
+}
+.evidence-node.type-history rect {
+  fill: #2e263d;
+  stroke: #9e87bd;
+  stroke-dasharray: 4 3;
+}
+.evidence-node.type-gap rect,
+.evidence-node.type-unavailable rect {
+  fill: #332e24;
+  stroke: #c6a36c;
+  stroke-dasharray: 3 3;
+}
+.evidence-node.type-finding rect {
+  fill: #223f42;
+  stroke: #99ded1;
+}
+.evidence-node.current-node rect {
+  stroke: #e4edcc;
+  stroke-width: 2.5;
+}
+.evidence-edge {
+  stroke: #496776;
+  fill: none;
+  opacity: 0.65;
+  stroke-width: 1.2;
+}
+.evidence-edge.relation-empirical {
+  stroke: #b699db;
+  stroke-dasharray: 7 4;
+}
+.evidence-edge.relation-citation,
+.evidence-edge.relation-assessment,
+.evidence-edge.relation-hypothesis {
+  stroke: #d0b47d;
+  stroke-dasharray: 2 4;
+}
+.evidence-edge.relation-documented {
+  stroke: #8cd3b6;
+}
+.evidence-edge.current-relation {
+  opacity: 1;
+  stroke-width: 2.3;
+}
+.physical-hypotheses {
+  font-size: 12px;
+  line-height: 1.65;
+  border-top: 1px solid #29404b;
+  padding-top: 14px;
+  margin-top: 16px;
+}
+.physical-hypotheses summary {
+  color: #b5e1d6;
+  cursor: pointer;
+}
+#insideAssessment {
+  border-top: 2px solid #78bfae;
+  margin-top: 24px;
+  padding-top: 20px;
+}
+#insideAssessment h3 {
+  font-size: 27px;
+  line-height: 1.25;
+}
+#insideAssessment .key-finding {
+  font-size: 17px;
+  line-height: 1.6;
+}
+#insideAssessment .operator-brief {
+  font-size: 13px;
+}
+#graphNodeList details {
+  width: 100%;
+}
+#graphNodeList button {
+  display: block;
+  text-align: left;
+  font-size: 11px;
+  margin: 4px 0;
+}
+@keyframes evidence-arrive {
+  from {
+    opacity: 0.3;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (max-width: 900px) {
+  .investigation-columns {
+    grid-template-columns: 1fr;
+  }
+  .evidence-column {
+    position: static;
+  }
+  .conversation-column {
+    min-width: 0;
+  }
+}
+@media (max-width: 740px) {
+  #eventFeed.investigation-feed .conversation-event {
+    padding: 15px;
+  }
+  .capture-controls button {
+    min-height: 44px;
+  }
+  .event-title {
+    font-size: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .conversation-event {
+    animation: none !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+#eventFeed.investigation-feed {
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+}
+#eventFeed .conversation-event.is-new {
+  animation: evidence-arrive 0.32s ease-out;
+}
+.diagnosis-comparisons {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.diagnosis-comparisons span {
+  font-size: 16px;
+  line-height: 1.6;
+}
+@media (max-width: 400px) {
+  .diagnosis-comparisons {
+    grid-template-columns: 1fr;
+  }
+}

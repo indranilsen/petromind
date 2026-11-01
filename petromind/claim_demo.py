@@ -17,7 +17,13 @@ from .claim_evaluation import checked_protocol
 from .claim_review import demo_cases, load_capture, review_capture
 from .eval_protocol import DEFAULT_PRICES, digest, runtime_versions, source_digest
 from .eval_runner import append_json, read_jsonl, usage_and_cost
-from .investigation_events import captured_events, received_event, tool_event
+from .investigation_events import VERSION as PUBLIC_EVENTS_VERSION
+from .investigation_events import (
+    captured_events,
+    received_event,
+    request_event,
+    tool_event,
+)
 from .meta_api import MetaAPIError, MetaResponsesClient
 from .replay_workflow import replay_workflow
 from .science_evaluation import CostedClient, SpendingLedger
@@ -52,6 +58,7 @@ def freeze_live(
     contract = active_auditor if active_sensors else None
     protocol = {
         "study": contract.VERSION if contract else VERSION,
+        "public_events_version": PUBLIC_EVENTS_VERSION,
         "active_sensors": bool(active_sensors),
         "parent_protocol_id": p["protocol_id"],
         "source_digest": source_digest(),
@@ -121,6 +128,16 @@ class DemoApp:
             monitoring = load_monitoring(monitoring_directory, self.cases)
 
         for case in self.cases:
+            case["classifier_context"] = {
+                "producer": "Statistical machine-learning classifier",
+                "model": "Diagonal Gaussian evidence model",
+                "features": [
+                    "Median",
+                    "Standard deviation",
+                    "Difference of half-window medians",
+                ],
+                "sensor_attribution": "The capture retains the initial prediction and audit measurements, but not the exact per-prediction classifier sensor list. Audit inputs must not be treated as feature importance or necessarily all classifier inputs.",
+            }
             case["sensor_definitions"] = definitions()
             case["replay"] = attach_replay(
                 case, self.protocol, dataset=dataset, science_protocol=science_protocol
@@ -184,6 +201,7 @@ class DemoApp:
         contract = active_auditor if self.active_sensors else None
         if (
             p["study"] != self.live_version
+            or p.get("public_events_version") != PUBLIC_EVENTS_VERSION
             or bool(p.get("active_sensors")) != self.active_sensors
             or (
                 self.active_sensors
@@ -267,6 +285,12 @@ class DemoApp:
                 if on_public_event:
                     on_public_event(received_event(session.packet, "live"))
 
+                def record_request(details):
+                    public = request_event(details)
+                    append_json(trace, {"kind": "tool_request", "details": public})
+                    if on_public_event:
+                        on_public_event(public)
+
                 def record_event(e):
                     append_json(
                         trace, {"kind": e.kind, "details": json.loads(e.details_json)}
@@ -288,6 +312,7 @@ class DemoApp:
                         client,
                         AgentConfig(**p["agent_config"]),
                         on_event=record_event,
+                        on_tool_request=record_request,
                     )
                 finally:
                     client.close()
@@ -390,6 +415,7 @@ def make_server(app, port=8765):
                 "/demo": ("index.html", "text/html"),
                 "/technology": ("index.html", "text/html"),
                 "/app.js": ("app.js", "text/javascript"),
+                "/investigation.js": ("investigation.js", "text/javascript"),
                 "/style.css": ("style.css", "text/css"),
             }
             if self.path not in files:
