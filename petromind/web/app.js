@@ -75,7 +75,7 @@ const inventoryFor = (s) =>
   c().replay.inventory.find((row) => row.sensor === s);
 function newlyInspected(s) {
   return (
-    execution === "live" &&
+    execution !== "captured" &&
     visibleEvents().some(
       (e) => e.tool === "request_sensor" && e.sensor === s && e.summary,
     )
@@ -85,7 +85,7 @@ function observationStatus(s) {
   return inventoryFor(s)?.observed_by_muse
     ? "Received captured summary"
     : newlyInspected(s)
-      ? "Requested in this live audit"
+      ? `Requested in this ${execution === "saved" ? "saved" : "live"} audit`
       : "Viewer only · not observed by Muse";
 }
 function state(s) {
@@ -475,7 +475,24 @@ function chart(s) {
 }
 
 function renderDetails() {
-  const a = audit();
+  const selectedEvents = visibleEvents();
+  const selectedOutput = PublicInvestigation.result(selectedEvents);
+  const a =
+    execution === "captured"
+      ? audit()
+      : {
+          output: selectedOutput || { findings: [] },
+          sources: Object.fromEntries(
+            selectedEvents
+              .flatMap((e) => [...(e.facts || []), ...(e.matches || [])])
+              .map((f) => [f.citation_id, f]),
+          ),
+          notes: (selectedOutput?.findings || []).map(() => ({
+            text: "Recorded public finding; independent engineering review remains pending.",
+          })),
+        };
+  $("grounded").disabled = execution !== "captured";
+  $("ungrounded").disabled = execution !== "captured";
   $("evidenceContext").textContent =
     c().replay.timing +
     " " +
@@ -485,7 +502,15 @@ function renderDetails() {
     " No interpolation, filling or downsampling. Geometry is illustrative, not verified well-specific topology. Independent engineering review remains pending; this is not root-cause certification.";
   $("originalClaim").textContent = c().packet.claim;
   $("evidenceMeasurements").textContent = JSON.stringify(
-    c().observations,
+    execution === "captured"
+      ? c().observations
+      : Object.assign(
+          {},
+          c().observations,
+          ...selectedEvents
+            .filter((e) => e.sensor && e.summary)
+            .map((e) => ({ [e.sensor]: e.summary })),
+        ),
     null,
     2,
   );
@@ -508,7 +533,10 @@ function renderDetails() {
           "p",
           `Captured missing premise: ${f.missing_premise || "None stated"}`,
         ),
-        el("p", `Captured next evidence: ${f.next_evidence}`),
+        el(
+          "p",
+          `Recorded next evidence: ${typeof f.next_evidence === "string" ? f.next_evidence : JSON.stringify(f.next_evidence)}`,
+        ),
         el("p", "Editorial scope note: " + a.notes[i].text, "review-note"),
       );
       return n;
@@ -523,7 +551,7 @@ function renderDetails() {
       n.append(
         el(
           "p",
-          `Historical label ${f.training_event}; ${f.shared_sensors} shared sensors: ${f.matched_sensors.join(", ")}. Distance ${f.distance}, not a probability.`,
+          `${f.training_event !== undefined ? "Original historical label " + f.training_event + "; " : ""}${f.shared_sensors} shared sensors: ${f.matched_sensors.join(", ")}. Distance ${f.distance}, not a probability.`,
         ),
       );
       const p = el("progress");
@@ -545,11 +573,19 @@ function renderDetails() {
   }
   $("raw").textContent = JSON.stringify(
     {
-      attribution: "Original captured real Muse output, unchanged",
-      protocol_id: c().source_protocol_id,
+      attribution:
+        execution === "captured"
+          ? "Original captured real Muse output, unchanged"
+          : execution === "saved"
+            ? "Verified saved v5 public output, unchanged"
+            : "New live public output",
+      parent_capture_protocol_id: c().source_protocol_id,
       output: a.output,
       baseline: c().packet.baseline,
-      chronology: c().captured_activity[condition],
+      chronology:
+        execution === "captured"
+          ? c().captured_activity[condition]
+          : selectedEvents,
     },
     null,
     2,
@@ -636,7 +672,9 @@ let pageName =
 let workspaceView = "operator",
   execution = "captured",
   synthetic = false,
-  focusSensor = null;
+  focusSensor = null,
+  showAllEvidence = false,
+  selectedFinding = null;
 const investigations = new Map();
 const workflowStates = new Map();
 function elapsedLabel(seconds) {
@@ -746,7 +784,7 @@ function stopCapturedClock(pause = true) {
 function syncCapturedClock() {
   const r = investigation();
   const active =
-    execution === "captured" &&
+    execution !== "live" &&
     pageName === "demo" &&
     checkpointReached() &&
     !synthetic &&
@@ -768,6 +806,7 @@ function syncCapturedClock() {
     }
     r.cursor++;
     selectedEvidenceEvent = r.cursor - 1;
+    selectedFinding = null;
     const e = r.events[r.cursor - 1];
     if (e.sensor && e.summary) focusSensor = e.sensor;
     if (r.cursor === r.events.length) r.playing = false;
@@ -817,11 +856,13 @@ function renderConversation() {
   const r = investigation(),
     events = visibleEvents();
   $("investigationLabel").textContent =
-    execution === "captured"
-      ? "Captured Muse activity · automatic presentation pacing, not original token timing. Headings are interface labels; findings below are recorded public output."
+    execution !== "live"
+      ? execution === "saved"
+        ? c().saved_investigation.disclosure
+        : "Captured Muse activity · automatic presentation pacing, not original token timing. Headings are interface labels; findings below are recorded public output."
       : "Live Meta Muse · actual public events as received. No private reasoning or invented intermediate messages.";
   $("captureControls").hidden =
-    execution !== "captured" || r.phase !== 2 || !checkpointReached();
+    execution === "live" || r.phase !== 2 || !checkpointReached();
   $("capturePause").textContent = r.playing ? "Pause replay" : "Resume replay";
   $("capturePause").disabled = r.cursor >= r.events.length;
   $("captureSkip").disabled = r.cursor >= r.events.length;
@@ -832,7 +873,7 @@ function renderConversation() {
         ? "Live request running · awaiting the next actual event"
         : r.error
           ? "Stopped · no completed assessment substituted"
-          : execution === "captured" && r.cursor < r.events.length
+          : execution !== "live" && r.cursor < r.events.length
             ? r.playing
               ? "Replaying captured activity…"
               : "Replay paused"
@@ -864,6 +905,7 @@ function renderConversation() {
     const button = el("button", eventTitle(e), "event-title");
     button.onclick = () => {
       selectedEvidenceEvent = i;
+      selectedFinding = null;
       renderPlatform();
     };
     li.append(button);
@@ -873,7 +915,9 @@ function renderConversation() {
         e.kind === "evidence_received"
           ? "Received input packet"
           : e.kind === "tool_request"
-            ? "Actual live tool request"
+            ? execution === "saved"
+              ? "Recorded tool request"
+              : "Actual live tool request"
             : e.kind === "completion"
               ? "Execution status"
               : "Actual public tool result",
@@ -1071,7 +1115,7 @@ function investigation() {
 function visibleEvents() {
   if (!checkpointReached()) return [];
   const r = investigation();
-  return execution === "captured" ? r.events.slice(0, r.cursor) : r.events;
+  return execution !== "live" ? r.events.slice(0, r.cursor) : r.events;
 }
 function navigate(page, push = true) {
   if (page !== "demo") resetPlayback();
@@ -1082,6 +1126,7 @@ function navigate(page, push = true) {
 }
 function renderPlatform() {
   if (!cases.length) return;
+  if (execution === "saved" && !c().saved_investigation) execution = "captured";
   for (const name of ["home", "demo", "technology"])
     $(name + "Page").hidden = pageName !== name;
   document
@@ -1099,7 +1144,9 @@ function renderPlatform() {
   $("scenarioSelect").disabled = liveBusy;
   $("executionSelect").disabled = liveBusy;
   $("executionSelect").value = execution;
-  $("executionSelect").options[1].disabled = !status.live_enabled;
+  $("executionSelect").querySelector('[value="live"]').disabled =
+    !status.live_enabled;
+  $("savedExecution").disabled = !c().saved_investigation;
   $("syntheticNotice").hidden = !synthetic;
   $("historicalWorkspace").hidden = synthetic;
   $("consoleView").hidden = workspaceView !== "operator";
@@ -1161,8 +1208,10 @@ function renderPlatform() {
   $("inspectDetails").hidden = !ready;
   $("executionNote").hidden = !ready;
   $("executionNote").textContent =
-    execution === "captured"
-      ? "Captured investigation · no new API call"
+    execution !== "live"
+      ? execution === "saved"
+        ? "Verified saved v5 replay · no new API call"
+        : "Original captured investigation · no new API call"
       : "Live Meta API · clicking Investigate spends against the prepared cap";
   $("insidePending").hidden = ready && r.phase === 2;
   $("insidePending").textContent = ready
@@ -1224,13 +1273,13 @@ function renderPlatform() {
     "This statistical prediction does not establish physical cause. Muse audits the stronger constructed claim below.";
   $("claimSummary").textContent = c().packet.claim;
   $("runBadge").textContent =
-    execution === "captured"
-      ? `Captured v1 · ${r.cursor}/${r.events.length} records revealed`
+    execution !== "live"
+      ? `${execution === "saved" ? "Saved v5" : "Captured v1"} · ${r.cursor}/${r.events.length} records revealed`
       : liveBusy
         ? `${status.capabilities?.new_sensor_queries ? "Live v3" : "Live v2"} · actual tool events arriving`
         : `${status.capabilities?.new_sensor_queries ? "Live v3" : "Live v2"} · explicit API execution`;
   $("runInstruction").textContent =
-    execution === "captured"
+    execution !== "live"
       ? "This replays genuine captured activity, not a new API call. Advance records to inspect what happened."
       : status.live_enabled
         ? `Explicit action uses the Meta API. Fresh protocol limits: ${status.live_limits?.estimated_usd ?? 2} USD estimated, ${status.live_limits?.requests ?? 12} requests and ${status.live_limits?.output_tokens ?? 49152} output tokens globally; Python enforces remaining reservations.`
@@ -1274,7 +1323,7 @@ function renderPlatform() {
     box.append(
       el(
         "div",
-        `${execution === "live" ? "NEW LIVE" : "CAPTURED"} ASSESSMENT`,
+        `${execution === "live" ? "NEW LIVE" : execution === "saved" ? "SAVED v5" : "ORIGINAL CAPTURED"} ASSESSMENT`,
         "eyebrow",
       ),
       el("h3", "Muse Spark assessment"),
@@ -1302,6 +1351,23 @@ function renderPlatform() {
           f.verdict,
         ),
       ) || result.findings[result.findings.length - 1];
+    const takeaway = el("div", undefined, "assessment-takeaway");
+    const takeawayParts = PublicInvestigation.takeaway(result);
+    if (takeawayParts.length)
+      takeaway.append(el("small", "Summary of recorded findings", "eyebrow"));
+    for (const part of takeawayParts) {
+      const line = el("p", `${part.count} ${part.text}.`);
+      line.dataset.kind = part.kind;
+      takeaway.append(line);
+    }
+    if (takeaway.children.length) box.append(takeaway);
+    box.append(
+      el(
+        "p",
+        "How to read this evidence (editorial): a pattern can fit an example without uniquely identifying its cause. Whether a fault always produces that pattern is a separate question. Neither is proved by similarity alone.",
+        "scope-explanation",
+      ),
+    );
     const scopeNote = el(
       "p",
       "Presentation guide: support for a measurement or example comparison is not proof of its physical cause. Recorded findings and verdicts below are unchanged.",
@@ -1345,6 +1411,7 @@ function renderPlatform() {
         );
       for (const f of sections[key]) {
         const item = el("div", undefined, "scoped-finding");
+        item.dataset.verdict = f.verdict;
         item.append(
           el(
             "span",
@@ -1363,14 +1430,34 @@ function renderPlatform() {
               "scope-gap",
             ),
           );
-        item.append(
-          el("p", `Claim assessed: ${f.statement}`),
+        item.append(el("p", `Claim assessed: ${f.statement}`));
+        const exact = el("details");
+        exact.append(
+          el("summary", "Why · citations · missing premise"),
           el("p", f.justification),
+          el("p", `Citations: ${f.citations.join(", ") || "None"}`),
         );
+        if (f.next_evidence)
+          exact.append(
+            el(
+              "p",
+              `Next evidence: ${typeof f.next_evidence === "string" ? f.next_evidence : f.next_evidence.purpose || "None requested"}`,
+            ),
+          );
+        item.append(exact);
         if (f.missing_premise)
-          item.append(
+          exact.append(
             el("p", `Missing premise: ${f.missing_premise}`, "scope-gap"),
           );
+        const focus = el("button", "Show this evidence", "quiet");
+        focus.dataset.findingIndex = result.findings.indexOf(f);
+        focus.onclick = () => {
+          selectedFinding = "finding:" + result.findings.indexOf(f);
+          showAllEvidence = false;
+          renderEvidenceGraph();
+          $("graphPanel").open = true;
+        };
+        item.append(focus);
         section.append(item);
       }
       box.append(section);
@@ -1387,7 +1474,7 @@ function renderPlatform() {
         ),
       );
     }
-    if (execution === "captured" && keyFinding?.next_evidence)
+    if (execution !== "live" && keyFinding?.next_evidence)
       box.append(
         el(
           "p",
@@ -1475,7 +1562,7 @@ function renderPlatform() {
       );
       box.append(d);
     }
-    if (execution === "captured") {
+    if (execution !== "live") {
       const follow = el("details");
       follow.append(
         el("summary", "Next-evidence requests · editorial source review"),
@@ -1502,6 +1589,13 @@ function renderPlatform() {
   if (ready && (result || r.error)) {
     const copy = box.cloneNode(true);
     copy.removeAttribute("id");
+    for (const button of copy.querySelectorAll("[data-finding-index]"))
+      button.onclick = () => {
+        selectedFinding = "finding:" + button.dataset.findingIndex;
+        showAllEvidence = false;
+        renderEvidenceGraph();
+        $("graphPanel").open = true;
+      };
     $("insideAssessment").append(copy);
   }
   $("inspectDetails").hidden = !ready || !result;
@@ -1521,9 +1615,12 @@ function beginInvestigation() {
     renderPlatform();
     return;
   }
-  if (execution === "captured") {
+  if (execution !== "live") {
     r.phase = 2;
-    r.events = c().investigation_events.grounded;
+    r.events =
+      execution === "saved"
+        ? c().saved_investigation.events
+        : c().investigation_events.grounded;
     resetPlayback();
     r.cursor = 1;
     r.playing = true;
@@ -1588,6 +1685,7 @@ async function startLive() {
         r.error = event.code;
       }
       selectedEvidenceEvent = r.events.length - 1;
+      selectedFinding = null;
       renderPlatform();
       followInvestigation();
     };
@@ -1641,34 +1739,72 @@ function inspectNode(node) {
 }
 function renderEvidenceGraph() {
   const events = visibleEvents(),
-    projection = PublicInvestigation.graph(events),
+    full = PublicInvestigation.graph(events),
+    projection = showAllEvidence
+      ? full
+      : PublicInvestigation.focusedGraph(
+          events,
+          selectedEvidenceEvent ?? events.length - 1,
+          selectedFinding,
+        ),
     nodes = new Map(projection.nodes.map((n) => [n.id, n]));
   const graph = $("evidenceGraph"),
-    counts = [0, 0, 0, 0, 0],
     active = selectedEvidenceEvent ?? events.length - 1;
-  const topRows = Math.max(
-    projection.nodes.filter((n) => n.layer === 0).length,
-    projection.nodes.filter((n) => n.layer === 1).length,
-  );
+  const mobile = matchMedia("(max-width: 740px)").matches;
+  const columns = mobile ? 1 : showAllEvidence ? 5 : 3,
+    available = graph.parentElement.clientWidth || 600,
+    nodeWidth =
+      showAllEvidence && !mobile
+        ? 220
+        : Math.floor((available - 24 - (columns - 1) * 18) / columns);
+  const heights = Array(columns).fill(24);
   for (const n of nodes.values()) {
-    const column =
-      n.layer < 2 ? n.layer : n.layer === 2 ? 0 : n.layer === 3 ? 1 : 2;
-    const base = n.layer === 2 || n.layer === 3 ? topRows * 88 + 40 : 0;
-    n.x = 12 + column * 205;
-    n.y = 24 + base + counts[n.layer]++ * 88;
+    if (n.sensor) n.label = names[n.sensor] || n.label;
+    const words = n.label.replaceAll("_", " ").split(/\s+/),
+      lines = [""];
+    for (const word of words) {
+      const i = lines.length - 1;
+      if (
+        lines[i] &&
+        lines[i].length + word.length + 1 >
+          Math.max(18, Math.floor((nodeWidth - 20) / 6.5))
+      )
+        lines.push(word);
+      else lines[i] += (lines[i] ? " " : "") + word;
+    }
+    n.lines = lines;
+    n.height = Math.max(78, 34 + lines.length * 16);
+    const column = mobile
+      ? 0
+      : showAllEvidence
+        ? ({ finding: 3, gap: 4, fact: 2, history: 2, equipment: 1, entity: 1 }[
+            n.kind
+          ] ?? 0)
+        : ({ finding: 1, gap: 2 }[n.kind] ?? 0);
+    n.x = 12 + column * (nodeWidth + 18);
+    n.y = heights[column];
+    heights[column] += n.height + 24;
   }
-  const hasAssessment = counts[4] > 0;
+  const graphWidth = 24 + columns * nodeWidth + (columns - 1) * 18;
   graph.setAttribute(
     "viewBox",
-    `0 0 ${hasAssessment ? 630 : 425} ${Math.max(340, ...Array.from(nodes.values(), (n) => n.y + 90))}`,
+    `0 0 ${graphWidth} ${Math.max(220, ...heights)}`,
   );
+  graph.style.width = `${graphWidth}px`;
+  graph.style.height = `${Math.max(220, ...heights)}px`;
+  $("graphToggle").textContent = showAllEvidence
+    ? "Focus current evidence"
+    : `Show all evidence (${full.nodes.length})`;
+  $("graphFocusNote").textContent = showAllEvidence
+    ? "All evidence received so far. Edges are recorded relationships, never inferred causation."
+    : `${nodes.size} of ${full.nodes.length} received entities · focused on the current event or selected finding. Unconnected context is deliberately unconnected.`;
   graph.replaceChildren();
   for (const edge of projection.edges) {
     const a = nodes.get(edge.from),
       b = nodes.get(edge.to);
     if (!a || !b) continue;
     const line = svg("path", {
-      d: `M${a.x + 176} ${a.y + 30} C${a.x + 192} ${a.y + 30},${b.x - 22} ${b.y + 30},${b.x} ${b.y + 30}`,
+      d: `M${a.x + nodeWidth} ${a.y + 30} C${a.x + nodeWidth + 16} ${a.y + 30},${b.x - 22} ${b.y + 30},${b.x} ${b.y + 30}`,
       class: `evidence-edge relation-${edge.kind} ${edge.event === active ? "current-relation" : ""}`,
       "data-from": edge.from,
       "data-to": edge.to,
@@ -1687,7 +1823,7 @@ function renderEvidenceGraph() {
     if (n.sensor) n.label = names[n.sensor] || n.label;
     const isActive = n.eventKeys.includes(active);
     const g = svg("g", {
-      class: `evidence-node type-${n.kind} ${isActive ? "current-node" : ""}`,
+      class: `evidence-node type-${n.kind} verdict-${n.data?.verdict || "none"} ${isActive ? "current-node" : ""}`,
       role: "button",
       tabindex: 0,
       "aria-label": n.label,
@@ -1695,31 +1831,29 @@ function renderEvidenceGraph() {
       "data-event-keys": n.eventKeys.join(","),
     });
     g.append(
-      svg("rect", { x: n.x, y: n.y, width: 176, height: 66, rx: 12 }),
+      svg("rect", {
+        x: n.x,
+        y: n.y,
+        width: nodeWidth,
+        height: n.height,
+        rx: 12,
+      }),
       svg(
         "text",
         { x: n.x + 10, y: n.y + 17, class: "node-kind" },
-        n.kind.toUpperCase(),
+        n.kind === "finding"
+          ? (n.data.verdict || "FINDING").replaceAll("_", " ")
+          : n.kind.toUpperCase(),
       ),
     );
-    const words = n.label.replaceAll("_", " ").split(/\s+/),
-      lines = [""];
-    for (const word of words) {
-      const last = lines.length - 1;
-      if (lines[last] && lines[last].length + word.length + 1 > 24)
-        lines.push(word);
-      else lines[last] += (lines[last] ? " " : "") + word;
-    }
-    g.append(
-      svg("text", { x: n.x + 10, y: n.y + 35 }, lines[0]),
-      svg(
-        "text",
-        { x: n.x + 10, y: n.y + 52 },
-        (lines[1] || "") + (lines.length > 2 ? "…" : ""),
-      ),
-      svg("title", {}, n.label),
+    n.lines.forEach((line, i) =>
+      g.append(svg("text", { x: n.x + 10, y: n.y + 38 + i * 16 }, line)),
     );
-    g.onclick = () => inspectNode(n);
+    g.append(svg("title", {}, n.label));
+    g.onclick = () => {
+      if (n.kind === "finding") selectedFinding = n.id;
+      inspectNode(n);
+    };
     g.onkeydown = (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
@@ -1730,9 +1864,12 @@ function renderEvidenceGraph() {
   }
   $("graphNodeList").replaceChildren();
   const list = el("details"),
-    header = el("summary", `Inspect all ${nodes.size} received graph entities`);
+    header = el(
+      "summary",
+      `Inspect all ${full.nodes.length} received graph entities`,
+    );
   list.append(header);
-  for (const n of nodes.values()) {
+  for (const n of full.nodes) {
     const b = el("button", n.label, "quiet");
     b.onclick = () => inspectNode(n);
     list.append(b);
@@ -1742,6 +1879,7 @@ function renderEvidenceGraph() {
   const signature = `${c().id}:${execution}:${active}:${nodes.size}`;
   if (graph.dataset.focusSignature !== signature && nodes.size) {
     graph.dataset.focusSignature = signature;
+    graph.parentElement.scrollLeft = 0;
     const highlighted = Array.from(nodes.values()).filter((n) =>
       n.eventKeys.includes(active),
     );
@@ -1749,10 +1887,7 @@ function renderEvidenceGraph() {
       ? Math.min(...highlighted.map((n) => n.y))
       : 0;
     requestAnimationFrame(() => {
-      graph.parentElement.scrollTop = Math.max(
-        0,
-        (top * graph.clientWidth) / (hasAssessment ? 630 : 425) - 20,
-      );
+      graph.parentElement.scrollTop = Math.max(0, top - 20);
     });
   }
 }
@@ -1849,8 +1984,12 @@ $("caseSelect").onchange = () => {
   index = 0;
   workspaceView = "operator";
   condition = "grounded";
-  focusSensor = null;
+  ((focusSensor = null), (showAllEvidence = false), (selectedFinding = null));
   renderPlatform();
+};
+$("graphToggle").onclick = () => {
+  showAllEvidence = !showAllEvidence;
+  renderEvidenceGraph();
 };
 $("executionSelect").onchange = () => {
   execution = $("executionSelect").value;
@@ -1881,7 +2020,7 @@ $("capturePause").onclick = () => {
   renderPlatform();
 };
 $("captureRestart").onclick = () => {
-  if (execution !== "captured" || !checkpointReached()) return;
+  if (execution === "live" || !checkpointReached()) return;
   stopCapturedClock();
   const r = investigation();
   r.cursor = 1;
@@ -1890,7 +2029,7 @@ $("captureRestart").onclick = () => {
   renderPlatform();
 };
 $("captureSkip").onclick = () => {
-  if (execution !== "captured" || !checkpointReached()) return;
+  if (execution === "live" || !checkpointReached()) return;
   stopCapturedClock();
   const r = investigation();
   r.cursor = r.events.length;
@@ -1922,6 +2061,13 @@ $("closeNode").onclick = () => $("nodeDialog").close();
     cases = (await cr.json()).cases;
     status = await sr.json();
     index = 0;
+    const preferred = cases.findIndex(
+      (caseData) => caseData.saved_investigation,
+    );
+    if (preferred >= 0) {
+      current = preferred;
+      execution = "saved";
+    }
     const art = $("well").cloneNode(true);
     art.removeAttribute("id");
     art.setAttribute(

@@ -259,9 +259,105 @@
     }
     return sections;
   }
+  function focusedGraph(events, eventIndex, nodeId, limit = 10) {
+    const full = graph(events),
+      byId = new Map(full.nodes.map((n) => [n.id, n]));
+    const current = events[eventIndex];
+    const active =
+      current?.kind === "completion"
+        ? [...events].reverse().find((e) => e.assessment)
+        : current;
+    let anchor = byId.get(nodeId);
+    if (!anchor && active?.assessment) {
+      let i = active.assessment.findings.findIndex(
+        (f) =>
+          f.scope === "diagnostic_conclusion" &&
+          f.verdict === "NOT_ESTABLISHED",
+      );
+      if (i < 0)
+        i = active.assessment.findings.findIndex((f) => f.missing_premise);
+      anchor = byId.get("finding:" + (i < 0 ? 0 : i));
+    }
+    const selected = new Set();
+    const add = (id) => {
+      if (byId.has(id) && selected.size < limit) selected.add(id);
+    };
+    if (anchor) {
+      add(anchor.id);
+      for (const e of full.edges)
+        if (e.to === anchor.id || e.from === anchor.id) {
+          add(e.from);
+          add(e.to);
+        }
+      add("hypothesis"); // Context node; no invented connection to the finding.
+    } else {
+      const candidates = full.nodes.filter((n) =>
+        n.eventKeys.includes(eventIndex),
+      );
+      candidates.sort(
+        (a, b) =>
+          (({ fact: 0, history: 0, request: 0, measurement: 1 })[a.kind] ?? 2) -
+          ({ fact: 0, history: 0, request: 0, measurement: 1 }[b.kind] ?? 2),
+      );
+      for (const n of candidates) add(n.id);
+    }
+    for (const e of full.edges)
+      if (!anchor && (selected.has(e.from) || selected.has(e.to))) {
+        add(e.from);
+        add(e.to);
+      }
+    return {
+      nodes: full.nodes.filter((n) => selected.has(n.id)),
+      edges: full.edges.filter(
+        (e) => selected.has(e.from) && selected.has(e.to),
+      ),
+      total: full.nodes.length,
+    };
+  }
+  function takeaway(result) {
+    const f = result.findings || [],
+      count = (scope, verdict) =>
+        f.filter((x) => x.scope === scope && x.verdict === verdict).length;
+    return [
+      {
+        kind: "measured",
+        count: count("measured_observation", "SUPPORTED"),
+        text: "measured observations supported",
+      },
+      {
+        kind: "documented",
+        count: count("documented_comparison", "SUPPORTED"),
+        text: "documented comparisons supported",
+      },
+      {
+        kind: "causal",
+        count: count("diagnostic_conclusion", "NOT_ESTABLISHED"),
+        text: "causal conclusions not established",
+      },
+      {
+        kind: "contradicted",
+        count: f.filter((x) => x.verdict === "CONTRADICTED").length,
+        text: "claims contradicted by cited evidence",
+      },
+    ]
+      .filter((x) => x.count)
+      .map((x) => ({
+        ...x,
+        text:
+          x.count === 1
+            ? x.text
+                .replace("observations", "observation")
+                .replace("comparisons", "comparison")
+                .replace("conclusions", "conclusion")
+                .replace("claims", "claim")
+            : x.text,
+      }));
+  }
   const api = {
     graph,
     assessmentSections,
+    focusedGraph,
+    takeaway,
     faultNames,
     visible: (events, cursor) =>
       events.slice(0, Math.max(0, Math.min(cursor, events.length))),

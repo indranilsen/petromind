@@ -155,7 +155,9 @@ def mock_live_browser(browser, capture, *, fail=False):
                     not in page.locator("#operatorResult").inner_text()
                 )
             else:
-                page.locator("#operatorResult").get_by_text("NEW LIVE ASSESSMENT", exact=True).wait_for()
+                page.locator("#operatorResult").get_by_text(
+                    "NEW LIVE ASSESSMENT", exact=True
+                ).wait_for()
                 assert (
                     "Software-test measurement assertion."
                     in page.locator("#operatorResult").inner_text()
@@ -319,7 +321,9 @@ def mock_active_browser(browser, capture):
                 "Muse requested summary"
                 in page.locator('[data-sensor="T-TPT"]').inner_text()
             )
-            assert "1 sensor queries remaining" in page.locator("#eventFeed").inner_text()
+            assert (
+                "1 sensor queries remaining" in page.locator("#eventFeed").inner_text()
+            )
             page.locator("#insideView").click()
             assert (
                 page.get_by_role("button", name="Tree temperature", exact=True).count()
@@ -331,7 +335,9 @@ def mock_active_browser(browser, capture):
             )
             gate.set()
             page.locator("#operatorView").click()
-            page.locator("#operatorResult").get_by_text("NEW LIVE ASSESSMENT", exact=True).wait_for()
+            page.locator("#operatorResult").get_by_text(
+                "NEW LIVE ASSESSMENT", exact=True
+            ).wait_for()
             assert (
                 "Tree temperature (charged)"
                 in page.locator("#operatorResult").inner_text()
@@ -618,9 +624,11 @@ def main():
                 page.locator("#insideView").click()
                 assert page.locator(".evidence-node").count() == 5
                 page.locator("#captureSkip").click()
-                assert page.locator(".evidence-node").count() > 5
+                assert page.locator(".evidence-node").count() <= 10
                 if not page.locator("#graphPanel").evaluate("e=>e.open"):
                     page.locator("#graphPanel>summary").click()
+                page.locator("#graphToggle").click()
+                assert page.locator(".evidence-node").count() > 5
                 page.locator(".evidence-node.type-fact").first.click()
                 assert page.locator("#nodeData").inner_text()
                 page.keyboard.press("Escape")

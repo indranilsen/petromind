@@ -42,11 +42,14 @@ def check_files(args):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     sub = p.add_subparsers(dest="command", required=True)
-    for name in ("serve", "check", "review", "prepare-live"):
+    for name in ("serve", "check", "review", "prepare-live", "import-saved"):
         q = sub.add_parser(name)
         q.add_argument("--capture", type=Path, required=True)
         if name in ("serve", "check"):
             q.add_argument("--port", type=int, default=8765)
+            q.add_argument(
+                "--saved-run", type=Path, help="Explicit verified saved-replay bundle"
+            )
             q.add_argument(
                 "--monitoring",
                 type=Path,
@@ -63,6 +66,15 @@ def main():
             )
         else:
             q.add_argument("--out", type=Path, required=True)
+            if name == "import-saved":
+                q.add_argument("--run", type=Path, required=True)
+                q.add_argument("--request-id")
+                q.add_argument("--dataset", type=Path, default=Path("../3W/dataset"))
+                q.add_argument(
+                    "--science-protocol",
+                    type=Path,
+                    default=Path(".petromind/science-m5-v1/protocol.json"),
+                )
             if name == "prepare-live":
                 q.add_argument("--max-cost-usd", type=float, default=2)
                 q.add_argument("--active-sensors", action="store_true")
@@ -75,7 +87,27 @@ def main():
     a = p.parse_args()
     try:
         check_files(a)
-        if a.command == "review":
+        if a.command == "import-saved":
+            from petromind.saved_investigation import import_saved
+
+            source = (
+                json.loads(a.science_protocol.read_text())
+                if a.science_protocol.is_file()
+                else None
+            )
+            print(
+                json.dumps(
+                    import_saved(
+                        a.capture,
+                        a.run,
+                        a.out,
+                        request_id=a.request_id,
+                        dataset=a.dataset,
+                        science_protocol=source,
+                    )
+                )
+            )
+        elif a.command == "review":
             if a.out.exists():
                 raise ValueError("Use a fresh review output file")
             a.out.parent.mkdir(parents=True, exist_ok=True)
@@ -118,6 +150,7 @@ def main():
                 dataset=a.dataset,
                 science_protocol=source,
                 monitoring_directory=a.monitoring,
+                saved_directory=a.saved_run,
             )
             if a.command == "check":
                 replays = [
@@ -138,6 +171,9 @@ def main():
                             ),
                             "replays": replays,
                             "live_configured": a.enable_live is not None,
+                            "saved_replays": sum(
+                                "saved_investigation" in c for c in app.cases
+                            ),
                             "credential_present": bool(
                                 os.getenv("MODEL_API_KEY", "").strip()
                             ),
@@ -148,7 +184,7 @@ def main():
                 return 0
             server = make_server(app, a.port)
             print(
-                f"PetroMind: http://127.0.0.1:{server.server_port} — captured replay; live {'explicitly enabled' if a.enable_live else 'disabled'}",
+                f"PetroMind: http://127.0.0.1:{server.server_port} — {'saved v5 replay available' if a.saved_run else 'captured replay'}; live {'explicitly enabled' if a.enable_live else 'disabled'}",
                 flush=True,
             )
             try:

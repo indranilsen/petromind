@@ -122,6 +122,7 @@ class DemoApp:
         dataset=None,
         science_protocol=None,
         monitoring_directory=None,
+        saved_directory=None,
     ):
         self.cases = demo_cases(capture)
         self.review = review_capture(capture)
@@ -183,6 +184,18 @@ class DemoApp:
                         }
                     )
                 case["captured_activity"][method] = activities
+        if saved_directory is not None:
+            from .saved_investigation import load_saved
+
+            saved = load_saved(
+                capture,
+                saved_directory,
+                dataset=dataset,
+                science_protocol=science_protocol,
+            )
+            next(case for case in self.cases if case["id"] == saved["case_id"])[
+                "saved_investigation"
+            ] = saved
         self.live_directory = Path(live_directory) if live_directory else None
         self.client_factory = client_factory
         self.lock = threading.Lock()

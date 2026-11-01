@@ -46,7 +46,8 @@ def main():
                     f"http://127.0.0.1:{server.server_port}/demo",
                     wait_until="networkidle",
                 )
-                page.clock.install()
+                page.clock.install(time=0)
+                page.clock.pause_at(1000)
                 for i, case in enumerate(app.cases):
                     page.locator("#caseSelect").select_option(str(i))
                     assert page.locator("#diagnosisCard").is_hidden()
@@ -130,7 +131,18 @@ def main():
                                 "ns=>ns.map(n=>n.dataset.nodeId)"
                             )
                         )
-                        assert shown == supplied
+                        assert shown <= supplied
+                        assert page.locator(".evidence-node").count() <= 10
+                        page.locator("#graphToggle").click()
+                        assert (
+                            set(
+                                page.locator(".evidence-node.type-fact").evaluate_all(
+                                    "ns=>ns.map(n=>n.dataset.nodeId)"
+                                )
+                            )
+                            == supplied
+                        )
+                        page.locator("#graphToggle").click()
                         if not any(e.get("assessment") for e in expected[:count]):
                             assert page.locator("#insideAssessment").inner_text() == ""
                     page.clock.run_for(
