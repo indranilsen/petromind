@@ -1,3 +1,5 @@
+> Historical verification details below describe the earlier refinement. For the current full recorded journey, readiness status and exact commands, use [the readiness runbook](hackathon-readiness.md).
+
 # Replay and bounded live investigation refinement
 
 This change is stacked on PR #18. The offline suite passed **387 tests**; changed Python files passed Ruff. Keep **HOME | DEMO | TECHNOLOGY**; Demo keeps
@@ -169,24 +171,15 @@ Muse may reasonably decide no additional measurement can resolve the premise. No
 call or successful conclusion is forced, and a failure is not converted to abstention.
 The smoke command verifies the HTTP event route, not visual hierarchy or physical truth.
 
-To observe the **same protocol** in the browser after that test:
+## Choose one paid smoke route
 
-```bash
-python scripts/demo_claim_audit.py serve \
-  --capture .petromind/claim-audit-v1 \
-  --enable-live .petromind/demo-active-v3-smoke-001 \
-  --dataset ../3W/dataset \
-  --science-protocol .petromind/science-m5-v1/protocol.json
-```
-
-Captured replay remains free. Selecting Live and clicking Investigate starts **another
-paid attempt** against the remaining global cap; the browser does not import the CLI
-attempt automatically. To test the visual live route instead of the CLI route, serve
-an unused prepared directory and click once. Watch events before completion, switch
-Inside Muse, inspect the actual facts/measurements, then return to the operator summary.
-A stopped run shows a reason; there is no silent captured-result fallback or automatic
-retry. Closing the browser does not cancel the bounded server run; inspect its result
-before starting another paid attempt. No automatic larger study is launched.
+Use the CLI command above for one recorded HTTP-route investigation, **or** use
+an unused prepared protocol in the browser to inspect actual live UI events.
+Do not do both under an authorization for one investigation: the browser does
+not import the CLI attempt, and another Investigate click is a second paid run.
+See the [current runbook](hackathon-readiness.md) for complete mutually exclusive
+commands, cost limits and failure handling. Captured mode remains free and clearly
+separate. No automatic retry or captured-result substitution occurs.
 
 ## Offline regression commands
 

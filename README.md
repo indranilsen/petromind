@@ -1,67 +1,89 @@
-> New classifier and Inside Muse refinement: [run instructions and verification](docs/guided-muse-investigation.md). Explicit statistical-model attribution, automatic captured investigation, synchronized source-backed evidence graph and physical-premise disclosures. Monitoring and five-sensor boundaries remain unchanged. Captured mode makes no paid calls.
-
-> New optional recorded-history flow: [exact setup and verification commands](docs/monitoring/run.md). Prefix-only anomaly alert → original diagnostic-window accumulation → saved statistical diagnosis → unchanged Muse audit. [Actual two-clip findings](docs/monitoring/feasibility-v1.md): the first alert substantially predates the annotation, so this is an empirical change-monitoring demonstration, **not validated early fault detection**. Both uploaded real clips were checked in the browser; the full original dataset and paid Meta execution were not run here.
-
-> Without `--monitoring`, the [complete-evidence checkpoint](docs/monitoring-workflow.md) remains available. Opt-in live sensor queries still require the [separate fresh active protocol and verified original windows](docs/live-investigation-verification.md).
-
 # PetroMind
 
-**An AI investigation platform for industrial diagnostic claims.**
-A statistical classifier proposes a failure. Meta Muse Spark examines measurements,
-source-scoped engineering knowledge and restricted historical analogues to audit
-what the proposed diagnosis actually establishes.
+**A statistical model proposes a fault. Meta Muse Spark investigates what the evidence actually establishes.**
 
-The product has exactly three pages: **Home · Demo · Technology**. Demo combines
-the **Operator Console** and interactive **Inside Muse** evidence graph. Both
-views share incident, telemetry cursor and actual investigation events. Captured
-replay and explicitly initiated live v2 runs are visibly distinct.
+Home / Demo / Technology present real recorded Petrobras 3W measurements, a
+prefix-only anomaly monitor, a saved statistical diagnosis and an inspectable
+Muse claim audit. Captured replay and explicitly authorized live v3 are visibly
+separate. No private chain of thought or invented tool activity is displayed.
 
-```bash
-python -m pip install -e '.[test,agent]'
-python scripts/demo_claim_audit.py serve \
-  --capture .petromind/claim-audit-v1 \
-  --dataset ../3W/dataset \
-  --science-protocol .petromind/science-m5-v1/protocol.json
-# Open http://127.0.0.1:8765 — captured replay makes no paid calls
-```
+## Run the hackathon demo
 
-To enable live execution, use an already exported `MODEL_API_KEY`, stop the old
-server, and create a fresh capped protocol (preparation makes no API requests):
+Use Python 3.12 and the original authorized local claim capture and monitoring
+bundle. These artifacts and the 3W dataset are **not bundled in the public repo**.
+A fresh clone alone cannot replay these incidents. If `viewer.json` is missing,
+follow the [complete setup/export commands](docs/hackathon-readiness.md) first.
 
 ```bash
-python scripts/demo_claim_audit.py prepare-live \
+python -m pip install -e '.[test,agent,audit]'
+python scripts/demo_claim_audit.py check \
   --capture .petromind/claim-audit-v1 \
-  --out .petromind/demo-platform-live-v1 --max-cost-usd 1
+  --monitoring .petromind/monitoring-demo-v1
 python scripts/demo_claim_audit.py serve \
   --capture .petromind/claim-audit-v1 \
   --dataset ../3W/dataset \
   --science-protocol .petromind/science-m5-v1/protocol.json \
-  --enable-live .petromind/demo-platform-live-v1
+  --monitoring .petromind/monitoring-demo-v1
 ```
 
-In Demo, select **Live Muse API · v2 · paid**, reveal the statistical diagnosis,
-and click **Investigate with Muse Spark · live API**. That action spends API
-budget. Sources and actual tool results stream to both views. No private model
-reasoning is displayed. The current auditor exposes knowledge lookup, restricted
-history and structured claim submission; **new sensor queries and per-well
-topology traversal are not exposed in this mode**. Extra viewer telemetry never
-enters the fixed three-summary audit packet.
+Open **http://127.0.0.1:8765/demo**. These commands make no paid calls. Start at the
+first sample; alerts are computed from the observed prefix, and the original
+600-sample classifier window must finish before diagnosis is revealed. Click
+Investigate once to watch genuine captured records unfold automatically. Inspect
+the returned source facts, historical overlap, public findings and missing premise.
 
-The original reviewed capture is required and not redistributed. Raw replay loads
-only after private protocol mapping/fingerprint/window checks; otherwise actual
-captured endpoints appear with Play disabled. Synthetic Challenge is explicitly
-not enabled; no physics simulation or synthetic success is claimed.
+[Readiness runbook and one-run live smoke commands](docs/hackathon-readiness.md) ·
+[Three-minute judge script](docs/hackathon-demo.md) ·
+[Submission description](docs/hackathon-submission.md) ·
+[Verification receipt](docs/readiness-verification.md)
 
-See [complete setup, architecture and limits](docs/platform-demo.md),
-[screenshots](docs/screenshots/), [three-minute demo](docs/hackathon-demo.md),
-[submission description](docs/hackathon-submission.md), and
-[claim-level expert-review packet](docs/claim-level-review.md).
+Live v3 can request additional source-motivated summaries within the shared five-
+sensor budget; it requires verified original raw windows, a fresh capped protocol,
+server-side `MODEL_API_KEY` and an explicit paid action. No paid readiness call was
+run here. The supported deployment is a trusted **local Python process**, not a
+static site or a validated public multi-user service. Do not disable loopback,
+Host/Origin/token or spending protections to publish it.
 
-The earlier experiments remain intact. Conventional adaptive diagnosis achieved
-60.6% on the frozen 33 incidents; direct Muse sensor-only/GraphRAG achieved
-12.1%/15.2%. PetroMind does not claim GraphRAG improves classification. It is a
-decision-support investigation tool, not an autonomous equipment controller or
-safety-certified root-cause verifier.
+## Architecture and evidence boundary
+
+```mermaid
+flowchart TD
+  V["Recorded viewer telemetry"] --> M["Prefix-only monitor"]
+  M --> G["Alert + original evidence readiness gate"]
+  G -->|reveal| C["Saved statistical ML prediction"]
+  W["Original 600-sample window"] --> C
+  W --> S["Budgeted sensor-summary session"]
+  C --> A["Muse Spark claim investigation"]
+  S --> A
+  K["Source-scoped knowledge facts"] --> A
+  H["Permitted training analogues"] --> A
+  A --> P["Public assessment + evidence graph"]
+```
+
+The viewer's broader raw playback never enters the agent packet. Optional new
+queries use the original verified window. The diagram shows software data flow,
+not physical equipment topology. Classification is retrospective, not an online
+prediction moved to the alert time. Graph lookup returns vetted topic facts,
+not discovery of a particular well's installed piping.
+
+## Actual evidence and limits
+
+The frozen 33-incident study reported adaptive **20/33 (60.6%)**, fixed **13/33
+(39.4%)**, Muse sensor-only **4/33 (12.1%)**, graph **1/33 (3.0%)**, GraphRAG **5/33
+(15.2%)**. No GraphRAG classification advantage was demonstrated. Small claim-audit
+pilots are correlated constructed claims over actual telemetry, not general
+physical validation. Correct numbers/citations do not certify root cause.
+
+The two annotation-centered monitoring clips are a demonstration, not a blinded
+alarm benchmark. The first rule alert substantially predates the annotation; do
+not claim verified early fault detection. No statistically validated alarm
+performance, active-selection benefit or independent engineering certification
+is established. PetroMind is decision support, not an autonomous controller.
+
+## Earlier frameworks and experiments
+
+The following sections preserve reproducible research tooling; they are not
+additional instructions to expand evaluation before the submission.
 
 Milestone 1: a tested, label-blinded investigation framework for industrial
 fault diagnosis with a maximum of **five unique sensor queries**. An optional

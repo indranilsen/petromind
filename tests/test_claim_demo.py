@@ -456,9 +456,15 @@ def test_live_stream_uses_real_mocked_events_before_completion_and_no_viewer_inp
         TASKS[0], "d" * 32, on_public_event=lambda e: observed.append((len(calls), e))
     )
     assert [e["kind"] for _, e in observed] == [
-        "evidence_received", "tool_request", "tool_result", "tool_request", "tool_result",
+        "evidence_received",
+        "tool_request",
+        "tool_result",
+        "tool_request",
+        "tool_result",
     ]
-    assert observed[1][0] == observed[2][0] == 1 and observed[3][0] == observed[4][0] == 2
+    assert (
+        observed[1][0] == observed[2][0] == 1 and observed[3][0] == observed[4][0] == 2
+    )
     assert observed[2][1]["facts"] and observed[4][1]["assessment"] == row["output"]
     assert observed[1][1]["sequence"] == observed[2][1]["sequence"]
     assert observed[3][1]["sequence"] == observed[4][1]["sequence"]
@@ -595,7 +601,11 @@ def test_active_app_versions_protocol_streams_queries_and_rejects_wrong_window(
     assert row["new_sensor_queries"] == 1 and row["remaining_budget"] == 1
     assert row["observed_sensors"] == ["ABER-CKGL", "P-PDG", "P-TPT", "T-TPT"]
     assert row["output"]["contract_version"] == ACTIVE_VERSION
-    queried = next((n, e) for n, e in events if e.get("tool") == "request_sensor" and e["kind"] == "tool_result")
+    queried = next(
+        (n, e)
+        for n, e in events
+        if e.get("tool") == "request_sensor" and e["kind"] == "tool_result"
+    )
     assert "T-TPT" not in events[0][1]["observations"]
     assert queried[0] == 2 and queried[1]["summary"]["median"] == 55
     assert app.live(TASKS[0], "e" * 32) == row and len(calls) == 3
@@ -710,3 +720,91 @@ def test_checkpoint_metadata_is_viewer_only_and_not_a_historical_alarm(server):
         )
         assert "workflow" not in case["packet"] and "replay" not in case["packet"]
         assert "true_event" not in canonical(workflow)
+
+
+def test_demo_check_is_read_only_and_labels_endpoint_scope(
+    capture, monkeypatch, capsys
+):
+    import runpy
+    import sys
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError(
+            "Check must never bind a server or instantiate an API client"
+        )
+
+    monkeypatch.setattr("petromind.claim_demo.make_server", forbidden)
+    monkeypatch.setenv("MODEL_API_KEY", "SECRET_SENTINEL_ONLY")
+    monkeypatch.setattr(
+        sys, "argv", ["demo_claim_audit.py", "check", "--capture", str(capture)]
+    )
+    before = (capture / "results.jsonl").read_bytes()
+    with pytest.raises(SystemExit) as end:
+        runpy.run_path("scripts/demo_claim_audit.py", run_name="__main__")
+    result = json.loads(capsys.readouterr().out)
+    assert end.value.code == 0 and result["api_requests"] == 0
+    assert not result["complete_monitoring_available"]
+    assert "SECRET_SENTINEL_ONLY" not in canonical(result)
+    assert (capture / "results.jsonl").read_bytes() == before
+
+
+def test_missing_monitoring_bundle_has_actionable_safe_error(
+    capture, tmp_path, monkeypatch, capsys
+):
+    import runpy
+    import sys
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "demo_claim_audit.py",
+            "serve",
+            "--capture",
+            str(capture),
+            "--monitoring",
+            str(tmp_path / "missing"),
+        ],
+    )
+    with pytest.raises(SystemExit) as end:
+        runpy.run_path("scripts/demo_claim_audit.py", run_name="__main__")
+    result = json.loads(capsys.readouterr().out)
+    assert end.value.code == 2 and result["error"] == "missing_monitoring_bundle"
+    assert (
+        result["field"] == "monitoring"
+        and "prepare_monitoring_replay.py" in result["instruction"]
+    )
+    assert result["api_requests"] == 0 and str(tmp_path) not in canonical(result)
+
+
+def test_missing_capture_and_busy_port_are_distinguished(
+    capture, tmp_path, monkeypatch, capsys
+):
+    import errno
+    import runpy
+    import sys
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["demo_claim_audit.py", "check", "--capture", str(tmp_path / "absent")],
+    )
+    with pytest.raises(SystemExit) as end:
+        runpy.run_path("scripts/demo_claim_audit.py", run_name="__main__")
+    assert end.value.code == 2
+    assert json.loads(capsys.readouterr().out)["error"] == "missing_capture_file"
+
+    def busy(*args, **kwargs):
+        raise OSError(errno.EADDRINUSE, "PRIVATE_SENTINEL")
+
+    monkeypatch.setattr("petromind.claim_demo.make_server", busy)
+    monkeypatch.setattr(
+        sys, "argv", ["demo_claim_audit.py", "serve", "--capture", str(capture)]
+    )
+    with pytest.raises(SystemExit) as end:
+        runpy.run_path("scripts/demo_claim_audit.py", run_name="__main__")
+    result = json.loads(capsys.readouterr().out)
+    assert end.value.code == 2 and result["error"] == "port_in_use"
+    assert "--port 8766" in result[
+        "instruction"
+    ] and "PRIVATE_SENTINEL" not in canonical(result)

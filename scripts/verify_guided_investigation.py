@@ -100,6 +100,7 @@ def main():
                         in page.locator("#nodeData").inner_text()
                     )
                     assert page.locator("#nodeLinks a").count() == 1
+                    shot("provenance", "#nodeDialog")
                     page.locator("#closeNode").click()
                     page.locator("#eventFeed .event-title").first.click()
                     assert page.locator(".evidence-node.current-node").count() > 0
@@ -111,12 +112,33 @@ def main():
                     page.locator("#captureRestart").click()
                     assert page.locator("#eventFeed li").count() == 1
                     assert page.locator(".evidence-node.type-fact").count() == 0
-                    page.locator("#captureSkip").click()
-                    assert page.locator("#eventFeed li").count() == len(expected)
-                    kinds = page.locator("#eventFeed li").evaluate_all(
-                        "ns=>ns.map(n=>n.dataset.kind)"
-                    )
-                    assert kinds == [e["kind"] for e in expected]
+                    # Complete the entire captured journey automatically, not through Skip.
+                    for count in range(2, len(expected) + 1):
+                        page.clock.run_for(1400)
+                        assert page.locator("#eventFeed li").count() == count
+                        kinds = page.locator("#eventFeed li").evaluate_all(
+                            "ns=>ns.map(n=>n.dataset.kind)"
+                        )
+                        assert kinds == [e["kind"] for e in expected[:count]]
+                        supplied = {
+                            f["citation_id"]
+                            for e in expected[:count]
+                            for f in e.get("facts", [])
+                        }
+                        shown = set(
+                            page.locator(".evidence-node.type-fact").evaluate_all(
+                                "ns=>ns.map(n=>n.dataset.nodeId)"
+                            )
+                        )
+                        assert shown == supplied
+                        if not any(e.get("assessment") for e in expected[:count]):
+                            assert page.locator("#insideAssessment").inner_text() == ""
+                    page.clock.run_for(
+                        500
+                    )  # Finish the restrained scroll/reveal animation.
+                    heading = page.locator("#insideAssessment h3").first.bounding_box()
+                    assert heading and 0 <= heading["y"] < h - 35
+                    assert page.locator("#capturePause").is_disabled()
                     assert (
                         case["audits"]["grounded"]["output"]["verdict"].replace(
                             "_", " "
@@ -125,6 +147,18 @@ def main():
                     )
                     assert page.locator("#physicalHypotheses").inner_text()
                     shot("assessment", "#insideAssessment")
+                    page.emulate_media(reduced_motion="reduce")
+                    page.locator("#captureRestart").click()
+                    assert page.locator("#eventFeed li").count() == 1
+                    assert (
+                        page.locator("#eventFeed li").first.evaluate(
+                            "e=>getComputedStyle(e).animationName"
+                        )
+                        == "none"
+                    )
+                    page.locator("#captureSkip").click()
+                    assert page.locator("#eventFeed li").count() == len(expected)
+                    page.emulate_media(reduced_motion="no-preference")
                     page.locator("#operatorView").click()
                     page.locator("#slider").fill("0")
                     page.clock.run_for(7000)
@@ -147,6 +181,8 @@ def main():
                 "cases": 2,
                 "viewports": ["1440x900", "390x844"],
                 "automatic_order_pause_resume_restart_skip": True,
+                "full_automatic_completion_and_visible_verdict": True,
+                "reduced_motion_verified": True,
                 "actual_returned_graph_and_provenance": True,
                 "paid_requests": 0,
                 "recording_mode": app.cases[0]["replay"]["mode"],

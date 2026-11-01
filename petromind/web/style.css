@@ -3257,3 +3257,33 @@ select {
     grid-template-columns: 1fr;
   }
 }
+
+/* Final readiness: keep replay actions reachable and land on the actual verdict. */
+#nextScene {
+  position: sticky;
+  bottom: 14px;
+  z-index: 3;
+  box-shadow: 0 6px 24px #06131dcc;
+}
+.capture-controls {
+  position: sticky;
+  top: 84px;
+  z-index: 4;
+  background: #091923;
+  padding: 9px 0;
+  border-bottom: 1px solid #29434f;
+}
+.evidence-column {
+  top: 154px;
+}
+#insideAssessment {
+  scroll-margin-top: 164px;
+}
+@media (max-width: 740px) {
+  .capture-controls {
+    top: 68px;
+  }
+  #insideAssessment {
+    scroll-margin-top: 205px;
+  }
+}
