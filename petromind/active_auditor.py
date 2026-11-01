@@ -63,11 +63,13 @@ def active_tools():
 
 
 class ActiveAuditSession(ScopeAuditSession):
-    def __init__(self, packet, window, *, history=()):
+    def __init__(self, packet, window, *, history=(), history_labels_visible=True):
         raw_payload(
             window, {"observations": json.loads(canonical(packet["observations"]))}
         )
-        super().__init__(packet, history=history)
+        super().__init__(
+            packet, history=history, history_labels_visible=history_labels_visible
+        )
         self._initial_sensors = tuple(self.packet["observations"])
         self._sensors = DiagnosticSession(
             window, SENSORS, budget=5, variant="sensor_only"
@@ -168,7 +170,9 @@ class ActiveAuditSession(ScopeAuditSession):
             )
 
 
-def run_active_auditor(session, client, config=None, on_event=None, on_tool_request=None):
+def run_active_auditor(
+    session, client, config=None, on_event=None, on_tool_request=None
+):
     context = {
         **session.packet,
         "sensor_budget": 5,

@@ -1,98 +1,49 @@
-> Inside Muse now opens automatically and unfolds the genuine captured records. Use Pause/Resume or Show completed assessment instead of manual Next clicks. [Exact local setup and controls](guided-muse-investigation.md). Graph triples are actual returned source facts; citations and empirical analogues are not causal proof.
+# Three-minute judge walkthrough
 
-> Optional recorded-history version: [setup](monitoring/run.md), [actual monitoring limitations](monitoring/feasibility-v1.md). Keep this distinction in the narration: **anomaly ≠ fault prediction ≠ root cause**.
+Use the [readiness runbook](hackathon-readiness.md) to prepare the recorded bundle,
+check inputs, and start the app before recording. The recommended presentation
+uses genuine captured Muse output. Declare that mode once and keep its badge
+visible. Do not call captured activity a new live execution.
 
-## Three-minute recorded-history variant
-
-| Time | Action | Narration |
+| Time | Action | Suggested narration |
 | --- | --- | --- |
-| 0:00–0:25 | Home → Demo, replay at the first sample | “These are actual recorded measurements, including constant and missing channels. The first five minutes form an earlier measured reference, not certified normal operation.” |
-| 0:25–0:50 | Play briefly, then scrub through the first actual alert | “This fixed prefix-only rule detects sustained pressure deviation. It does not identify a fault. In this first clip it fires well before the expert annotation; we do not call that verified early detection.” |
-| 0:50–1:10 | Continue to 39:59 | “The original 600-sample diagnostic evidence must finish accumulating. We have not moved the classifier window to make the alert look successful.” |
-| 1:10–1:35 | Read saved statistical prediction, click Investigate with Muse Spark | “The statistical model proposed service-line hydrate. We are now replaying a genuine captured Muse audit, not making a new API call.” |
-| 1:35–2:15 | Watch automatic conversation and synchronized retrieved facts | “Muse checked the pressure summaries, retrieved source-scoped knowledge and compared the inference with what those sources actually establish. Broader replay samples were never added to its evidence.” |
-| 2:15–2:40 | Highlight supported observations versus missing specificity premise | “The pressure increases are real. The supplied evidence does not establish that hydrate specifically caused them. A plausible diagnosis is not a demonstrated cause.” |
-| 2:40–3:00 | Brief second captured example or next-evidence action | “A published pressure-pattern example supports a narrow comparison, not root cause. Next steps need applicable engineering documentation or validated discriminating criteria; we do not invent them.” |
+| 0:00–0:20 | Home → Demo. Begin with the first recorded sample. | “Industrial equipment produces many measurements, but a plausible fault prediction is not a proven cause. PetroMind lets an engineer investigate that distinction.” |
+| 0:20–0:40 | Play briefly; scrub the first case through 14:32. | “This is real Petrobras 3W telemetry. Sensors update from recorded samples, including missing readings. Our fixed prefix-only monitor detected sustained pressure deviation. It is a demonstration heuristic, not a validated industrial alarm.” |
+| 0:40–0:55 | Show evidence accumulation, then scrub to 39:59. | “An anomaly does not identify a fault. The original 600-sample diagnosis window must finish; we have not moved it to manufacture an early prediction.” |
+| 0:55–1:15 | Read the classifier heading and two pressure comparisons. | “The statistical machine-learning classifier proposed service-line hydrate—ice-like material that can restrict flow. The recorded pressures rose. That still does not establish what caused the change.” |
+| 1:15–1:45 | Click Investigate with Muse Spark. Let automatic replay unfold. | “This is a genuine previously recorded Muse investigation. Muse received its fixed, budgeted summaries—not all the telemetry the viewer can explore. These are actual public tool records, not a private reasoning transcript.” |
+| 1:45–2:10 | Pause on returned source facts; inspect a graph node and a history overlap. | “Muse queried documented engineering context and compared permitted training incidents. The graph shows the actual returned facts and cited evidence. Generic equipment associations are not the installed topology of this particular well. Similarity is not causal proof.” |
+| 2:10–2:40 | Resume; read the automatically displayed assessment and missing premise. | “Muse accepts the measured increases but identifies the unsupported step: no supplied verified criterion establishes that this pressure pattern specifically proves hydrate. We need applicable documentation or validated discriminating evidence, not a more confident explanation.” |
+| 2:40–3:00 | Briefly show the second captured case or Technology results. | “The second audit supports a narrow comparison with a published pressure-pattern example, without turning that match into root cause. Conventional methods outperformed direct Muse classification in our benchmark. Muse’s role here is auditable evidence investigation and uncertainty, not a claimed accuracy improvement.” |
 
-Scrubbing is navigation through real recordings, not a detector input shortcut or
-a new model action. Do not wait through the full 50-minute recording during a
-three-minute presentation. Do not present the annotation-centered clips as a
-blinded detector benchmark. No new classification or causal benefit is claimed.
+A 50-minute historical clip cannot play in full during a three-minute walkthrough.
+Scrubbing is honest navigation through recorded samples, not invented time-series
+behavior. Replay speed is 10×; model-record pacing is editorial and labeled.
+Sensor colors show relative change, not danger. The first clip's monitor fires
+well before the annotation, so **do not describe it as verified early fault detection**.
 
----
+## Network or API failure fallback (15 seconds)
 
-> Optional live v3: [prepare, verify and run instructions](live-investigation-verification.md). First demonstrate the unchanged captured cases. Additional sensor summaries are available only when explicitly queried under the shared five-sensor budget; never describe viewer scrubbing as new Muse evidence. Active sensor selection efficacy and physical correctness remain unestablished.
+Show the actual failure notice; never replace it silently. Say:
 
-# Three-minute platform demo
+> “The live call did not complete. I’m switching to a previously recorded Muse run
+> over these same fixed inputs. This is captured playback, not a new live answer.”
 
-Use captured replay for a reliable recording. It contains real past Muse executions,
-not a live simulation. If using live, configure a fresh capped protocol first and
-explicitly select live mode. Do not claim a new live call while showing replay.
+Select Captured real Muse run and click Investigate. The original captured events
+and verdict remain unchanged. Do not imitate live token timing or manufacture a
+successful tool call. Do not initiate another paid attempt during a recorded demo
+unless separately authorized and cost-capped. The reliable submission recording
+can use captured mode throughout, without requiring a network connection.
 
-| Time | Page / action | Narration |
-|---|---|---|
-| 0:00–0:20 | Home → Open historical incident replay | “This production well has pressure, temperature, flow and equipment-state measurements. Some readings are missing or constant. Similar measurements can have different causes.” |
-| 0:20–0:55 | Monitoring at sample 0 → Play or scrub | “We start at the first recorded observation. Values, relative trends, the sample counter and chart cursor follow the same sample. Raw mode replays actual samples; without the local dataset, this is an explicitly labeled two-endpoint comparison.” |
-| 0:55–1:15 | Reach the marked checkpoint | “The replay has reached the end of the diagnostic window. This is a demo investigation checkpoint, not a historical alarm. The saved classifier needs full-window summaries, so we do not show it as an earlier prediction.” |
-| 1:15–1:35 | Diagnosis expands automatically | “The statistical classifier suggests service-line hydrate: ice-like material that can restrict flow. These pressure increases are observations; a statistical pattern does not establish the cause. The stronger claim was constructed for evaluation.” |
-| 1:35–2:05 | Click Investigate with Muse Spark → advance actual captured events | “Only now do we ask Muse to investigate. In this recording, these are genuine captured tool responses, not a new API call. Muse checks measurements, source-backed knowledge and restricted training analogues.” |
-| 2:05–2:35 | Inside Muse → inspect a source, then Console assessment | “The evidence graph records actual requests and citations. A generic description of hydrate obstruction does not establish a necessary or specific pressure response. Muse distinguishes the supported pressure changes from the unsupported causal premise.” |
-| 2:35–2:50 | Rewind/forward or briefly show the second case | “Rewinding hides the diagnosis and preserves the audit; returning does not call the model again. In the second example, a published-pattern comparison has a narrow supported scope, not proof of root cause.” |
-| 2:50–3:00 | Technology | “Python enforces evidence budgets, provenance and validation. Statistical methods performed better at fault classification in our earlier benchmark. Muse's role here is evidence assessment, not certified root-cause determination.” |
+## Before pressing Record
 
-For live mode, first prepare a fresh capped protocol after installing the current
-code. Reaching the checkpoint does not spend money: only the explicitly selected
-live investigation action invokes Meta. Actual events stream as they happen. V3
-can request up to two additional sensor summaries within the original total of
-five; v2 cannot. Knowledge is generic/source-scoped, not exact well topology.
-Replay never silently substitutes for a failed live run. Synthetic Challenge
-remains deferred. [Run and real-data verification commands](monitoring-workflow.md).
-
-
-# Submission description
-
-**PetroMind — when a diagnosis outruns its evidence**
-
-PetroMind uses Meta Muse Spark to investigate industrial diagnostic claims. It
-separates measured observations from causal assertions, retrieves provenance-tagged
-engineering context, identifies unsupported premises, and names the evidence
-needed for a stronger conclusion—or explicitly says no verified discriminating
-test is available.
-
-Our demonstration uses actual Petrobras 3W development measurements and two real
-captured Muse audits. In one, recorded pressures increased, but that did not
-establish the claimed service-line hydrate diagnosis. Muse accepted the numerical
-observations while identifying the missing necessity/specificity premise. In the
-other, Muse recognized a match to a published pressure-pattern example while
-preserving the distinction between example consistency and proof of root cause.
-
-Muse performs the substantive decomposition, evidence lookup and claim analysis.
-Python enforces observation budgets, source provenance, exact numeric checks,
-bounded repairs and API spending reservations. The interface makes each premise,
-source, uncertainty and next-evidence request inspectable. Captured replay is
-explicitly labeled; a separate versioned live integration remains available.
-
-We did not pursue a claim that an LLM outperforms statistical fault diagnosis.
-On our frozen 33-incident benchmark, conventional adaptive diagnosis achieved
-60.6%, while direct Muse sensor-only and GraphRAG achieved 12.1% and 15.2%.
-Graph-only Muse achieved 3.0%. These results are preserved. The claim-auditing
-pilot completed four investigations; its two constructed tasks are not a general
-accuracy benchmark, and independent engineering review remains pending.
-
-The graph is documented only within the scope of its sources. Generic locations
-are not verified individual-well topology, published examples are not universal
-fault laws, and historical similarity is not causal confirmation. PetroMind is
-a decision-support prototype—not a safety-certified operational decision system,
-root-cause verifier, or autonomous equipment controller. No models were fine-tuned.
-
-# Architecture in one paragraph
-
-A trusted loader verifies the original capture and projects only already charged
-sensor summaries, the statistical prediction, constructed claim and public source
-context. In replay, the UI displays the original validated Muse output unchanged
-and separately labeled source/logic review. In live v2, Muse chooses documented
-knowledge topics/history tools and submits scope-specific findings through the
-existing bounded Responses runner. Deterministic Python validation checks numbers,
-received IDs, recommendation catalog targets and limits; it does not establish
-physical entailment. A loopback HTTP server delivers static HTML/CSS/JS and keeps
-credentials, private metadata and capture files out of the browser.
+- Validate the full recorded journey with `demo_claim_audit.py check --capture ...
+  --monitoring ...`; the runbook supplies complete commands.
+- Confirm the chosen mode. Keep Home / Demo / Technology and Operator Console /
+  Inside Muse, not a debug console, as the visible product.
+- Know the two computed alert positions (14:32 / 31:02) and original diagnosis
+  readiness (39:59). Do not show private annotation labels or incident paths.
+- Check the source dialog and final assessment on the actual recording machine.
+- Keep screenshots / a recorded walkthrough available as fallback, clearly labeled.
+- Never expose the API key, private source protocol, hidden target label or raw
+  evaluator filename in the video or public repository.

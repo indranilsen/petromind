@@ -113,7 +113,13 @@ def tools(grounded=True):
         )
     ]
     return [
-        {"type": "function", "name": n, "description": d, "parameters": p, "strict": True}
+        {
+            "type": "function",
+            "name": n,
+            "description": d,
+            "parameters": p,
+            "strict": True,
+        }
         for n, d, p in definitions
     ]
 
@@ -121,7 +127,9 @@ def tools(grounded=True):
 class ClaimAuditSession:
     """No access to raw frames, labels, paths or new measurements through this API."""
 
-    def __init__(self, packet, *, grounded=True, history=()):
+    def __init__(
+        self, packet, *, grounded=True, history=(), history_labels_visible=True
+    ):
         self.packet = deepcopy(
             {
                 k: packet[k]
@@ -145,6 +153,9 @@ class ClaimAuditSession:
         self._failures = 0
         self._context_calls = 0
         self._known = {"measurement:" + s for s in packet["observations"]}
+        if type(history_labels_visible) is not bool:
+            raise ValueError("Historical label visibility must be explicit boolean")
+        self._history_labels_visible = history_labels_visible
         self._history = deepcopy(list(history))
         history_keys = {
             "case_id",
@@ -310,7 +321,14 @@ class ClaimAuditSession:
                     "search_history takes no arguments.",
                 )
             matches = [
-                {**h, "citation_id": f"analogue:{i}"}
+                {
+                    **{
+                        k: v
+                        for k, v in h.items()
+                        if self._history_labels_visible or k != "training_event"
+                    },
+                    "citation_id": f"analogue:{i}",
+                }
                 for i, h in enumerate(self._history)
             ]
             self._known.update(h["citation_id"] for h in matches)

@@ -26,8 +26,10 @@ public findings and missing premises. Explicit live Muse runs stream observable
 activity; clearly labeled captured replay supports a reliable demonstration.
 No private chain of thought, fictitious tool chronology or invented telemetry is
 shown. The current live auditor exposes source-topic knowledge lookup, restricted
-history and structured submission; it cannot query extra sensors or traverse
-verified well-specific topology. Viewer-only telemetry is kept separate.
+history and structured submission. Opt-in live v3 can request additional
+source-motivated sensor summaries within the same total five-sensor budget. It
+cannot traverse verified well-specific topology. Viewer-only telemetry remains
+separate; additional queries are not forced or claimed to improve diagnosis.
 
 The innovation we investigate is the model's ability to examine whether a causal
 conclusion follows from evidence, rather than generate another classifier label.
@@ -46,3 +48,29 @@ is deferred; no validated physics simulator or synthetic success is claimed.
 PetroMind is a decision-support prototype, not an autonomous controller,
 safety-certified operational recommendation or general root-cause verifier.
 No fine-tuning or new infrastructure was introduced.
+
+
+## Short description
+
+PetroMind uses Meta Muse Spark to investigate whether an industrial diagnosis is
+justified by real sensor measurements and documented engineering knowledge. A
+statistical classifier proposes a fault; Muse inspects budgeted evidence, source
+facts and permitted historical analogues, then identifies supported observations,
+unsupported causal premises and the evidence needed next. A recorded-data
+Operator Console and evolving evidence graph make that investigation inspectable.
+
+## Submission delivery
+
+The supported demonstration runs locally with separately supplied authorized
+data/capture artifacts; the public clone does not bundle the incidents or private
+protocols. Captured mode is genuine prior model activity, explicitly labeled.
+Public cloud hosting and a real paid readiness smoke test were not verified here.
+Use the [runbook](hackathon-readiness.md), [three-minute script](hackathon-demo.md)
+and the current verification receipt before recording. No general diagnostic
+verification, prospective alarm efficacy or physically certified reasoning claim
+is made.
+
+New interactive live history suppresses training-event labels under a fresh pinned
+projection version. Original captured audits retain their original training-label
+metadata and must not be described as retrospectively label-free. Neither route
+exposes hidden held-out target labels or private well/source paths to the agent.

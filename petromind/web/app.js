@@ -777,14 +777,20 @@ function syncCapturedClock() {
 }
 function followInvestigation() {
   if (workspaceView !== "inside" || pageName !== "demo") return;
-  requestAnimationFrame(() =>
-    $("eventFeed").lastElementChild?.scrollIntoView({
-      block: "nearest",
-      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "instant"
-        : "smooth",
-    }),
-  );
+  requestAnimationFrame(() => {
+    const finalPanel = $("insideAssessment");
+    const target = finalPanel.children.length
+      ? finalPanel
+      : $("eventFeed").lastElementChild;
+    target?.scrollIntoView({
+      block: finalPanel.children.length ? "start" : "nearest",
+      behavior:
+        finalPanel.children.length ||
+        matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "instant"
+          : "smooth",
+    });
+  });
 }
 function eventTitle(e) {
   if (e.kind === "evidence_received")
@@ -930,6 +936,15 @@ function renderConversation() {
         el(
           "p",
           `${m.citation_id}: ${m.shared_sensors} shared sensors (${m.matched_sensors.join(", ")}); distance ${m.distance}. Empirical similarity, not confirmation of cause.`,
+        ),
+      );
+    if (e.matches?.length)
+      li.append(
+        el(
+          "small",
+          e.matches.some((m) => Object.hasOwn(m, "training_event"))
+            ? "Original captured analogue metadata includes training-event categories, not hidden target labels. This historical record is preserved."
+            : "Training-event labels are not returned in this live history projection.",
         ),
       );
     if (e.matches && !e.matches.length)
@@ -1627,10 +1642,21 @@ function renderEvidenceGraph() {
         n.kind.toUpperCase(),
       ),
     );
-    const text = n.label.replaceAll("_", " ");
+    const words = n.label.replaceAll("_", " ").split(/\s+/),
+      lines = [""];
+    for (const word of words) {
+      const last = lines.length - 1;
+      if (lines[last] && lines[last].length + word.length + 1 > 24)
+        lines.push(word);
+      else lines[last] += (lines[last] ? " " : "") + word;
+    }
     g.append(
-      svg("text", { x: n.x + 10, y: n.y + 35 }, text.slice(0, 24)),
-      svg("text", { x: n.x + 10, y: n.y + 52 }, text.slice(24, 48)),
+      svg("text", { x: n.x + 10, y: n.y + 35 }, lines[0]),
+      svg(
+        "text",
+        { x: n.x + 10, y: n.y + 52 },
+        (lines[1] || "") + (lines.length > 2 ? "…" : ""),
+      ),
       svg("title", {}, n.label),
     );
     g.onclick = () => inspectNode(n);
