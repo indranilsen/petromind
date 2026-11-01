@@ -100,3 +100,27 @@ def test_manual_next_buttons_are_removed_and_public_module_is_packaged():
     assert 'id="capturePause"' in html and 'id="captureSkip"' in html
     assert 'src="/investigation.js"' in html
     assert "STATISTICAL MACHINE-LEARNING CLASSIFIER" in html
+
+
+def test_scope_groups_preserve_actual_public_v4_result_without_regrading():
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node required for frontend contract checks")
+    script = r"""
+const assert=require('node:assert/strict');
+const p=require('./petromind/web/investigation.js');
+const f=require('./tests/fixtures/live006-public-assessment.json');
+const result=f.recorded_assessment, before=JSON.stringify(result);
+const groups=p.assessmentSections(result);
+assert.equal(groups.measured.length,2); assert.equal(groups.documented.length,1);
+assert.equal(groups.causal.length,1); assert.equal(groups.other.length,0);
+assert.equal(groups.causal[0].verdict,'PARTIALLY_SUPPORTED');
+assert.equal(groups.causal[0],result.findings[3]);
+assert.equal(JSON.stringify(result),before);
+const legacy={findings:[{basis:'unsupported',verdict:'NOT_ESTABLISHED',statement:'legacy scope unspecified'}]};
+assert.equal(p.assessmentSections(legacy).other.length,1);
+assert.equal(p.assessmentSections(legacy).causal.length,0);
+"""
+    subprocess.run(
+        [node, "-e", script], cwd=Path(__file__).resolve().parents[1], check=True
+    )

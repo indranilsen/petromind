@@ -1,0 +1,434 @@
+{
+  "purpose": "Unmodified public v4 findings for regression only; corrected copies in tests are not a regraded live run.",
+  "archive_sha256": "196637d71f0fc6bf30c5c9602b03021c5e5c4b45abb10c67658c4e03a0b84a46",
+  "recorded_assessment": {
+    "contract_version": "claim-auditor-v4-active-recommendations",
+    "findings": [
+      {
+        "basis": "measurement",
+        "citations": [
+          "measurement:P-PDG"
+        ],
+        "justification": "Last-minus-first is positive within the fixed window; this supports rise only, not cause.",
+        "missing_premise": "",
+        "next_evidence": {
+          "kind": "none",
+          "purpose": "",
+          "target": ""
+        },
+        "premises": [
+          "P-PDG first 24103160.0 Pa and last 24394920.0 Pa, delta 291760.0 Pa over 600 samples."
+        ],
+        "scope": "measured_observation",
+        "statement": "P-PDG rose during the diagnostic window.",
+        "verdict": "SUPPORTED"
+      },
+      {
+        "basis": "measurement",
+        "citations": [
+          "measurement:P-TPT"
+        ],
+        "justification": "Last-minus-first is positive within the fixed window; this supports rise only, not cause.",
+        "missing_premise": "",
+        "next_evidence": {
+          "kind": "none",
+          "purpose": "",
+          "target": ""
+        },
+        "premises": [
+          "P-TPT first 10272620.0 Pa and last 10604840.0 Pa, delta 332220.0 Pa over 600 samples."
+        ],
+        "scope": "measured_observation",
+        "statement": "P-TPT rose during the diagnostic window.",
+        "verdict": "SUPPORTED"
+      },
+      {
+        "basis": "documented",
+        "citations": [
+          "knowledge:example:8:P-PDG",
+          "knowledge:example:8:P-TPT"
+        ],
+        "justification": "Limited example similarity only; published examples are explicitly not universal fault rules and do not prove cause.",
+        "missing_premise": "",
+        "next_evidence": {
+          "kind": "none",
+          "purpose": "",
+          "target": ""
+        },
+        "premises": [
+          "Observed joint increases: P-PDG delta 291760.0 Pa and P-TPT delta 332220.0 Pa.",
+          "Published pattern:8 example documents increase in P-PDG and increase in P-TPT."
+        ],
+        "scope": "documented_comparison",
+        "statement": "The joint P-PDG and P-TPT increase is compatible with a published example showing increases in both sensors.",
+        "verdict": "SUPPORTED"
+      },
+      {
+        "basis": "unsupported",
+        "citations": [
+          "measurement:P-PDG",
+          "measurement:P-TPT",
+          "knowledge:fault:9:equipment",
+          "knowledge:fault:9:mechanism"
+        ],
+        "justification": "Overall claim is partially supported: joint rise is measured but necessity and exclusivity for fault 9 are undocumented; numbers and prediction do not prove root cause.",
+        "missing_premise": "Missing documented necessity rule that service-line hydrate always produces joint P-PDG/P-TPT rise and excludes other faults, plus verified per-well topology and discriminating test.",
+        "next_evidence": {
+          "kind": "no_verified_discriminating_test",
+          "purpose": "No verified discriminating test is supplied to resolve whether joint P-PDG/P-TPT rise discriminates fault 9 from other causes.",
+          "target": "fault:9"
+        },
+        "premises": [
+          "P-PDG delta 291760.0 Pa and P-TPT delta 332220.0 Pa are positive.",
+          "Fault 9 is documented only as hydrate obstruction affecting the service line.",
+          "No retrieved document states fault 9 necessarily makes both pressures rise."
+        ],
+        "scope": "diagnostic_conclusion",
+        "statement": "Joint P-PDG and P-TPT rise alone establishes service-line hydrate (fault 9) by necessity.",
+        "verdict": "PARTIALLY_SUPPORTED"
+      }
+    ],
+    "independent_review_required": true,
+    "numeric_observations": [
+      {
+        "metric": "first",
+        "sensor": "P-PDG",
+        "value": 24103160.0
+      },
+      {
+        "metric": "last",
+        "sensor": "P-PDG",
+        "value": 24394920.0
+      },
+      {
+        "metric": "delta",
+        "sensor": "P-PDG",
+        "value": 291760.0
+      },
+      {
+        "metric": "first",
+        "sensor": "P-TPT",
+        "value": 10272620.0
+      },
+      {
+        "metric": "last",
+        "sensor": "P-TPT",
+        "value": 10604840.0
+      },
+      {
+        "metric": "delta",
+        "sensor": "P-TPT",
+        "value": 332220.0
+      }
+    ],
+    "physical_correctness_verified": false,
+    "verdict": "PARTIALLY_SUPPORTED"
+  },
+  "observations": {
+    "ABER-CKGL": {
+      "available": true,
+      "change": 0.0,
+      "constant_value": 53.0,
+      "count": 600,
+      "delta": 0.0,
+      "extreme_count": 0,
+      "first": 53.0,
+      "invalid_count": 0,
+      "is_constant": true,
+      "last": 53.0,
+      "median": 53.0,
+      "missing_count": 0,
+      "nonfinite_count": 0,
+      "nonnumeric_count": 0,
+      "quality_flags": [
+        "constant_measurement_requires_context"
+      ],
+      "quality_status": "constant",
+      "std": 0.0,
+      "total": 600,
+      "zero_count": 0
+    },
+    "P-PDG": {
+      "available": true,
+      "change": 57170.0,
+      "constant_value": null,
+      "count": 600,
+      "delta": 291760.0,
+      "extreme_count": 0,
+      "first": 24103160.0,
+      "invalid_count": 0,
+      "is_constant": false,
+      "last": 24394920.0,
+      "median": 24324485.0,
+      "missing_count": 0,
+      "nonfinite_count": 0,
+      "nonnumeric_count": 0,
+      "quality_flags": [],
+      "quality_status": "variable",
+      "std": 67646.94830107926,
+      "total": 600,
+      "zero_count": 0
+    },
+    "P-TPT": {
+      "available": true,
+      "change": 112695.0,
+      "constant_value": null,
+      "count": 600,
+      "delta": 332220.0,
+      "extreme_count": 0,
+      "first": 10272620.0,
+      "invalid_count": 0,
+      "is_constant": false,
+      "last": 10604840.0,
+      "median": 10524875.0,
+      "missing_count": 0,
+      "nonfinite_count": 0,
+      "nonnumeric_count": 0,
+      "quality_flags": [],
+      "quality_status": "variable",
+      "std": 81607.17845474237,
+      "total": 600,
+      "zero_count": 0
+    }
+  },
+  "returned_facts": [
+    {
+      "citation_id": "knowledge:location:P-PDG",
+      "id": "location:P-PDG",
+      "locator": "PARQUET_FILE_PROPERTIES.P-PDG",
+      "object": "downhole_gauge",
+      "provenance": {
+        "git_blob": "4c4799e80e04a9cf8b10cb3f9a23f1c487797cc9",
+        "immutable_url": "https://api.github.com/repos/petrobras/3W/git/blobs/4c4799e80e04a9cf8b10cb3f9a23f1c487797cc9",
+        "url": "https://github.com/petrobras/3W/blob/main/dataset/dataset.ini",
+        "version": "2.0.0"
+      },
+      "relation": "pressure_at",
+      "scope": "dataset_design_not_verified_per_well",
+      "source": "ini",
+      "status": "documented",
+      "subject": "P-PDG"
+    },
+    {
+      "citation_id": "knowledge:unit:P-PDG",
+      "id": "unit:P-PDG",
+      "locator": "PARQUET_FILE_PROPERTIES.P-PDG",
+      "object": "Pa",
+      "provenance": {
+        "git_blob": "4c4799e80e04a9cf8b10cb3f9a23f1c487797cc9",
+        "immutable_url": "https://api.github.com/repos/petrobras/3W/git/blobs/4c4799e80e04a9cf8b10cb3f9a23f1c487797cc9",
+        "url": "https://github.com/petrobras/3W/blob/main/dataset/dataset.ini",
+        "version": "2.0.0"
+      },
+      "relation": "unit",
+      "scope": "dataset_design_not_verified_per_well",
+      "source": "ini",
+      "status": "documented",
+      "subject": "P-PDG"
+    },
+    {
+      "citation_id": "knowledge:example:2:P-PDG",
+      "id": "example:2:P-PDG",
+      "locator": "Figure 3 caption",
+      "object": "P-PDG",
+      "provenance": {
+        "authors": "Vaz Vargas et al.",
+        "license": "CC BY 4.0",
+        "url": "https://arxiv.org/html/2507.01048v1",
+        "version": "2507.01048v1"
+      },
+      "relation": "example:increase",
+      "scope": "published_example_not_fault_rule",
+      "source": "authors",
+      "status": "documented",
+      "subject": "pattern:2"
+    },
+    {
+      "citation_id": "knowledge:example:6:P-PDG",
+      "id": "example:6:P-PDG",
+      "locator": "Figure 4 caption",
+      "object": "P-PDG",
+      "provenance": {
+        "authors": "Vaz Vargas et al.",
+        "license": "CC BY 4.0",
+        "url": "https://arxiv.org/html/2507.01048v1",
+        "version": "2507.01048v1"
+      },
+      "relation": "example:increase",
+      "scope": "published_example_not_fault_rule",
+      "source": "authors",
+      "status": "documented",
+      "subject": "pattern:6"
+    },
+    {
+      "citation_id": "knowledge:example:8:P-PDG",
+      "id": "example:8:P-PDG",
+      "locator": "Figure 5 caption",
+      "object": "P-PDG",
+      "provenance": {
+        "authors": "Vaz Vargas et al.",
+        "license": "CC BY 4.0",
+        "url": "https://arxiv.org/html/2507.01048v1",
+        "version": "2507.01048v1"
+      },
+      "relation": "example:increase",
+      "scope": "published_example_not_fault_rule",
+      "source": "authors",
+      "status": "documented",
+      "subject": "pattern:8"
+    },
+    {
+      "citation_id": "knowledge:example:3:P-PDG",
+      "id": "example:3:P-PDG",
+      "locator": "Figure 6 caption",
+      "object": "P-PDG",
+      "provenance": {
+        "authors": "Vaz Vargas et al.",
+        "license": "CC BY 4.0",
+        "url": "https://arxiv.org/html/2507.01048v1",
+        "version": "2507.01048v1"
+      },
+      "relation": "example:oscillation",
+      "scope": "published_example_not_fault_rule",
+      "source": "authors",
+      "status": "documented",
+      "subject": "pattern:3"
+    },
+    {
+      "citation_id": "knowledge:location:P-TPT",
+      "id": "location:P-TPT",
+      "locator": "PARQUET_FILE_PROPERTIES.P-TPT",
+      "object": "subsea_tree_transducer",
+      "provenance": {
+        "git_blob": "4c4799e80e04a9cf8b10cb3f9a23f1c487797cc9",
+        "immutable_url": "https://api.github.com/repos/petrobras/3W/git/blobs/4c4799e80e04a9cf8b10cb3f9a23f1c487797cc9",
+        "url": "https://github.com/petrobras/3W/blob/main/dataset/dataset.ini",
+        "version": "2.0.0"
+      },
+      "relation": "pressure_at",
+      "scope": "dataset_design_not_verified_per_well",
+      "source": "ini",
+      "status": "documented",
+      "subject": "P-TPT"
+    },
+    {
+      "citation_id": "knowledge:unit:P-TPT",
+      "id": "unit:P-TPT",
+      "locator": "PARQUET_FILE_PROPERTIES.P-TPT",
+      "object": "Pa",
+      "provenance": {
+        "git_blob": "4c4799e80e04a9cf8b10cb3f9a23f1c487797cc9",
+        "immutable_url": "https://api.github.com/repos/petrobras/3W/git/blobs/4c4799e80e04a9cf8b10cb3f9a23f1c487797cc9",
+        "url": "https://github.com/petrobras/3W/blob/main/dataset/dataset.ini",
+        "version": "2.0.0"
+      },
+      "relation": "unit",
+      "scope": "dataset_design_not_verified_per_well",
+      "source": "ini",
+      "status": "documented",
+      "subject": "P-TPT"
+    },
+    {
+      "citation_id": "knowledge:example:2:P-TPT",
+      "id": "example:2:P-TPT",
+      "locator": "Figure 3 caption",
+      "object": "P-TPT",
+      "provenance": {
+        "authors": "Vaz Vargas et al.",
+        "license": "CC BY 4.0",
+        "url": "https://arxiv.org/html/2507.01048v1",
+        "version": "2507.01048v1"
+      },
+      "relation": "example:decrease",
+      "scope": "published_example_not_fault_rule",
+      "source": "authors",
+      "status": "documented",
+      "subject": "pattern:2"
+    },
+    {
+      "citation_id": "knowledge:example:6:P-TPT",
+      "id": "example:6:P-TPT",
+      "locator": "Figure 4 caption",
+      "object": "P-TPT",
+      "provenance": {
+        "authors": "Vaz Vargas et al.",
+        "license": "CC BY 4.0",
+        "url": "https://arxiv.org/html/2507.01048v1",
+        "version": "2507.01048v1"
+      },
+      "relation": "example:increase",
+      "scope": "published_example_not_fault_rule",
+      "source": "authors",
+      "status": "documented",
+      "subject": "pattern:6"
+    },
+    {
+      "citation_id": "knowledge:example:8:P-TPT",
+      "id": "example:8:P-TPT",
+      "locator": "Figure 5 caption",
+      "object": "P-TPT",
+      "provenance": {
+        "authors": "Vaz Vargas et al.",
+        "license": "CC BY 4.0",
+        "url": "https://arxiv.org/html/2507.01048v1",
+        "version": "2507.01048v1"
+      },
+      "relation": "example:increase",
+      "scope": "published_example_not_fault_rule",
+      "source": "authors",
+      "status": "documented",
+      "subject": "pattern:8"
+    },
+    {
+      "citation_id": "knowledge:example:3:P-TPT",
+      "id": "example:3:P-TPT",
+      "locator": "Figure 6 caption",
+      "object": "P-TPT",
+      "provenance": {
+        "authors": "Vaz Vargas et al.",
+        "license": "CC BY 4.0",
+        "url": "https://arxiv.org/html/2507.01048v1",
+        "version": "2507.01048v1"
+      },
+      "relation": "example:oscillation",
+      "scope": "published_example_not_fault_rule",
+      "source": "authors",
+      "status": "documented",
+      "subject": "pattern:3"
+    },
+    {
+      "citation_id": "knowledge:fault:9:equipment",
+      "id": "fault:9:equipment",
+      "locator": "Section 2.4 event descriptions",
+      "object": "service_line",
+      "provenance": {
+        "authors": "Vaz Vargas et al.",
+        "license": "CC BY 4.0",
+        "url": "https://arxiv.org/html/2507.01048v1",
+        "version": "2507.01048v1"
+      },
+      "relation": "affects",
+      "scope": "dataset_design_not_verified_per_well",
+      "source": "authors",
+      "status": "documented",
+      "subject": "fault:9"
+    },
+    {
+      "citation_id": "knowledge:fault:9:mechanism",
+      "id": "fault:9:mechanism",
+      "locator": "Section 2.4 event descriptions",
+      "object": "hydrate_obstruction",
+      "provenance": {
+        "authors": "Vaz Vargas et al.",
+        "license": "CC BY 4.0",
+        "url": "https://arxiv.org/html/2507.01048v1",
+        "version": "2507.01048v1"
+      },
+      "relation": "described_as",
+      "scope": "dataset_design_not_verified_per_well",
+      "source": "authors",
+      "status": "documented",
+      "subject": "fault:9"
+    }
+  ]
+}

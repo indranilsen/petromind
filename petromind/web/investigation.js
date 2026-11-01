@@ -239,8 +239,29 @@
     });
     return { nodes: [...nodes.values()], edges };
   }
+  function assessmentSections(result) {
+    const sections = { measured: [], documented: [], causal: [], other: [] };
+    for (const f of result.findings || []) {
+      // Group for presentation only; never rewrite a recorded scope or verdict.
+      const key =
+        f.scope === "measured_observation"
+          ? "measured"
+          : f.scope === "documented_comparison"
+            ? "documented"
+            : f.scope === "diagnostic_conclusion"
+              ? "causal"
+              : !f.scope && f.basis === "measurement"
+                ? "measured"
+                : !f.scope && f.basis === "documented"
+                  ? "documented"
+                  : "other";
+      sections[key].push(f);
+    }
+    return sections;
+  }
   const api = {
     graph,
+    assessmentSections,
     faultNames,
     visible: (events, cursor) =>
       events.slice(0, Math.max(0, Math.min(cursor, events.length))),

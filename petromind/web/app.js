@@ -1302,19 +1302,79 @@ function renderPlatform() {
           f.verdict,
         ),
       ) || result.findings[result.findings.length - 1];
-    if (keyFinding)
-      box.append(
-        el(
-          "p",
-          `${keyFinding.verdict}: ${keyFinding.statement}`,
-          "key-finding",
-        ),
-      );
-    if (keyFinding?.missing_premise)
-      box.append(
-        el("h4", "The missing link"),
-        el("p", keyFinding.missing_premise),
-      );
+    const scopeNote = el(
+      "p",
+      "Presentation guide: support for a measurement or example comparison is not proof of its physical cause. Recorded findings and verdicts below are unchanged.",
+      "fine-print",
+    );
+    box.append(scopeNote);
+    const sections = PublicInvestigation.assessmentSections(result);
+    for (const [key, title, description] of [
+      [
+        "measured",
+        "What the sensors establish",
+        "Measured findings apply to the supplied summaries, not an inferred cause.",
+      ],
+      [
+        "documented",
+        "What the documentation establishes",
+        "An example comparison applies only to the features actually checked. A production-line example is not proof of service-line hydrate.",
+      ],
+      [
+        "causal",
+        "What remains unknown about root cause",
+        "A plausible explanation needs applicable discriminating evidence. Missing evidence is not a contradiction.",
+      ],
+      [
+        "other",
+        "Other recorded findings",
+        "These older findings have no declared atomic scope; they have not been regraded.",
+      ],
+    ]) {
+      if (key === "other" && !sections[key].length) continue;
+      const section = el("section", undefined, "assessment-scope");
+      section.dataset.scope = key;
+      section.append(el("h4", title), el("p", description, "fine-print"));
+      if (!sections[key].length)
+        section.append(
+          el(
+            "p",
+            "No separate finding was recorded for this scope.",
+            "fine-print",
+          ),
+        );
+      for (const f of sections[key]) {
+        const item = el("div", undefined, "scoped-finding");
+        item.append(
+          el(
+            "span",
+            `Recorded verdict: ${f.verdict.replaceAll("_", " ")}`,
+            "scope-verdict",
+          ),
+        );
+        if (
+          f.scope === "diagnostic_conclusion" &&
+          f.verdict === "PARTIALLY_SUPPORTED"
+        )
+          item.append(
+            el(
+              "p",
+              "Legacy recorded label — not regraded. Partial support for the composite claim must not be read as partial proof of this cause.",
+              "scope-gap",
+            ),
+          );
+        item.append(
+          el("p", `Claim assessed: ${f.statement}`),
+          el("p", f.justification),
+        );
+        if (f.missing_premise)
+          item.append(
+            el("p", `Missing premise: ${f.missing_premise}`, "scope-gap"),
+          );
+        section.append(item);
+      }
+      box.append(section);
+    }
     if (keyFinding?.next_evidence) {
       const n = keyFinding.next_evidence;
       box.append(

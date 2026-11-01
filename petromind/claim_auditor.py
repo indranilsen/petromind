@@ -352,6 +352,16 @@ class ClaimAuditSession:
             + ["valve_codes"]
         )
 
+    def _validate_overall(self, a):
+        """Legacy aggregation, retained verbatim for v1 through v4 sessions."""
+        if a["verdict"] not in {f["verdict"] for f in a["findings"]}:
+            return (
+                "inconsistent_verdict",
+                "verdict",
+                "Overall verdict must occur among the findings; explain claim scope explicitly.",
+            )
+        return None
+
     def _validate(self, a):
         def err(code, field, fix):
             return code, field, fix
@@ -457,12 +467,9 @@ class ClaimAuditSession:
                     field + ".missing_premise",
                     "Name the missing premise and smallest next evidence.",
                 )
-        if a["verdict"] not in {f["verdict"] for f in a["findings"]}:
-            return err(
-                "inconsistent_verdict",
-                "verdict",
-                "Overall verdict must occur among the findings; explain claim scope explicitly.",
-            )
+        overall_error = self._validate_overall(a)
+        if overall_error:
+            return overall_error
         nums = a["numeric_observations"]
         if not isinstance(nums, list) or len(nums) > 12:
             return err(
