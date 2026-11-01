@@ -8,13 +8,14 @@ was made. All frozen experiment files and captured model outputs are unchanged.
 
 | Check | Result | Scope |
 | --- | --- | --- |
-| Python offline suite | **445 passed** | Budget, cache, missing/invalid/constant/zero data, provenance, label isolation, source split checks, schema/repair contracts and new startup regressions |
+| Python offline suite | **449 passed** | Budget, cache, missing/invalid/constant/zero data, provenance, label isolation, source split checks, schema/repair contracts and new startup regressions |
 | Recorded monitoring UI | **Passed** | Two supplied clips, 3,001 positions each; 36 selected positions × 12 displayed sensors; 27-channel inventory; synchronized charts/values, alerts, diagnostic readiness, rewind and no-alert software fixture |
 | Automatic complete Muse journey | **Passed** | Both cases at 1440×900 and 390×844; actual events revealed in order through completion without Skip; Skip tested separately, pause/resume/restart, no future graph facts/assessment, source inspection, visible final heading, reduced motion |
 | Home / Demo / Technology and mock live | **Passed** | Three pages, both viewports, zero JavaScript errors; seven mocked Meta HTTP responses cover incremental v2/v3 events, additional sensor query and failure states |
 | Real paid Meta connectivity | **Not run** | Credential and full original dataset unavailable here; no paid-authorization flag invoked. Mock results do not establish API functionality |
 | Full original dataset replay | **Not run here** | Actual recorded projections were supplied; original files were previously audited on the user's machine. This run does not independently authenticate those originals |
 | Frozen-artifact integrity | **Passed** | Original claim protocol, claim results and private source protocol byte hashes match their pre-verification values; capture loader also verifies its fixed protocol/row digests |
+| Historical event-label visibility | **Fixed for new live; exception in frozen replay** | All six original training analogue records contain `training_event`; no held-out target field. Original records stay unchanged. New live responses/audits suppress event labels under a fresh pinned projection version |
 | Source/provenance and physical claims | **Scoped review** | Graph uses actual returned facts and citations, not installed-well topology. Numerical/source integrity is checked; physical interpretation remains independently unreviewed |
 | Public tracked-tree scan | **No real credentials/private source paths found by the scoped patterns** | Matches were explicit fake credentials/well names in software tests. This is not a comprehensive secret scan of all remote Git history |
 | Ruff / JavaScript syntax / diff checks | **Passed** | Changed code and local tested commit |
@@ -62,10 +63,16 @@ boundary, not a new online classifier timestamp.
    Kept pause/resume/restart controls reachable; the classifier's existing primary
    action remains reachable while reading its result. No pre-readiness action is
    exposed. Graph labels wrap at word boundaries rather than splitting words.
-4. **Submission and startup docs lagged live v3 and the monitoring requirements.**
+4. **Historical training labels were present in agent-facing analogue metadata.**
+   Frozen captures are retained and explicitly disclosed as not label-free.
+   Newly prepared live runs suppress the event-label field in responses/audits,
+   pin `training-history-label-free-v1` and require a fresh protocol. Existing
+   experiment defaults remain unchanged; held-out target isolation is preserved.
+5. **Submission and startup docs lagged live v3 and the monitoring requirements.**
    Corrected supported tools, consolidated canonical commands and the three-minute
    script, added local-deployment limits, and separated the CLI versus UI single-
-   investigation smoke routes. No prompts, tool schemas or scientific methods changed.
+   investigation smoke routes. No prompts, tool-argument schemas or scientific methods changed. The new live
+   historical-result privacy projection is separately versioned.
 
 ## Browser review and screenshots
 
@@ -91,7 +98,9 @@ labels/paths does not certify anonymization or instrument calibration.
 ## Submission recommendation and remaining limits
 
 **Ready to record the scoped captured demonstration**, with an explicit replay
-badge and the timed script. Real API readiness remains pending one deliberately
+badge and the timed script. Frozen history is not retroactively label-free: its training-event metadata is
+an explicit remaining exception. New interactive live history suppresses those
+fields. Real API readiness remains pending one deliberately
 authorized, cost-capped local smoke. Public cloud deployment and a self-contained
 public incident package are not delivered. The application is supported on a
 trusted local machine with the required authorized artifacts.

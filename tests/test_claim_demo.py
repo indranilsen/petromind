@@ -808,3 +808,107 @@ def test_missing_capture_and_busy_port_are_distinguished(
     assert "--port 8766" in result[
         "instruction"
     ] and "PRIVATE_SENTINEL" not in canonical(result)
+
+
+def test_label_free_live_history_keeps_original_capture_contract_default():
+    history = [
+        {
+            "case_id": "a" * 32,
+            "training_event": 2,
+            "distance": 0.1,
+            "shared_sensors": 1,
+            "matched_sensors": ["P-TPT"],
+        }
+    ]
+    original = ScopeAuditSession(packet(), history=history)
+    original_result = original.dispatch("search_history", {})
+    assert original_result["matches"][0]["training_event"] == 2
+    live = ScopeAuditSession(packet(), history=history, history_labels_visible=False)
+    result = live.dispatch("search_history", {})
+    assert "training_event" not in canonical(result)
+    assert "training_event" not in canonical([asdict(e) for e in live.audit_trail])
+    assert result["matches"][0]["shared_sensors"] == 1
+    assert result["matches"][0]["matched_sensors"] == ["P-TPT"]
+    assert result["matches"][0]["citation_id"] == "analogue:0"
+    assert live.remaining_budget == original.remaining_budget == 2
+
+
+def test_live_protocol_pins_label_free_projection_and_refuses_missing_pin(
+    capture, tmp_path
+):
+    from petromind.claim_demo import HISTORY_PROJECTION_VERSION
+
+    out = tmp_path / "label-free-live"
+    freeze_live(capture, out)
+    p = json.loads((out / "protocol.json").read_text())
+    assert p["history_projection_version"] == HISTORY_PROJECTION_VERSION
+    p.pop("history_projection_version")
+    p.pop("protocol_id")
+    p["protocol_id"] = digest(p)
+    (out / "protocol.json").write_text(canonical(p))
+    with pytest.raises(ValueError, match="Fresh matching"):
+        DemoApp(capture, out)
+
+
+def test_actual_live_route_projects_history_without_event_labels(
+    capture, tmp_path, monkeypatch
+):
+    out = tmp_path / "history-live"
+    freeze_live(capture, out)
+    monkeypatch.setenv("MODEL_API_KEY", "not-a-real-test-credential")
+    calls = []
+
+    def respond(request):
+        body = json.loads(request.content)
+        assert "training_event" not in canonical(body)
+        calls.append(body)
+        if len(calls) == 2:
+            outputs = [
+                v for v in body["input"] if v.get("type") == "function_call_output"
+            ]
+            returned = json.loads(outputs[-1]["output"])
+            assert returned["matches"][0]["shared_sensors"] == 1
+            assert "training_event" not in canonical(returned)
+        return httpx.Response(
+            200,
+            json={
+                "status": "completed",
+                "error": None,
+                "output": [
+                    {
+                        "type": "function_call",
+                        "name": "search_history" if len(calls) == 1 else "submit_audit",
+                        "call_id": str(len(calls)),
+                        "arguments": canonical({} if len(calls) == 1 else submit()),
+                    }
+                ],
+                "usage": {"input_tokens": 10, "output_tokens": 10},
+            },
+        )
+
+    def factory(**kwargs):
+        return MetaResponsesClient(**kwargs, transport=httpx.MockTransport(respond))
+
+    app = DemoApp(capture, out, client_factory=factory)
+    task = next(t for t in app.protocol["tasks"] if t["task_id"] == TASKS[0])
+    # Synthetic trusted training snapshot; no frozen file or real source is modified.
+    app.protocol["histories"][task["source_case_id"]] = [
+        {
+            "case_id": "c" * 32,
+            "training_event": 8,
+            "distance": 0.1,
+            "shared_sensors": 1,
+            "matched_sensors": ["P-TPT"],
+        }
+    ]
+    events = []
+    row = app.live(TASKS[0], "9" * 32, on_public_event=events.append)
+    assert row["status"] == "completed" and row["requests"] == 2
+    history = next(
+        e
+        for e in events
+        if e.get("tool") == "search_history" and e["kind"] == "tool_result"
+    )
+    assert history["matches"][0]["citation_id"] == "analogue:0"
+    assert "training_event" not in canonical(history)
+    assert row["remaining_budget"] == 2 and row["new_sensor_queries"] == 0

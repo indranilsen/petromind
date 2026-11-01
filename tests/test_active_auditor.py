@@ -295,3 +295,24 @@ def test_concurrent_repeat_charges_only_once(active):
     assert sum(not r["cached"] for r in rows) == 1
     assert s.new_sensor_queries == 1 and s.remaining_budget == 1
     assert verify_audit(s.audit_trail)
+
+
+def test_active_live_history_can_omit_event_labels_without_changing_budget(active):
+    _, packet, window = active
+    history = [
+        {
+            "case_id": "b" * 32,
+            "training_event": 9,
+            "distance": 0.2,
+            "shared_sensors": 1,
+            "matched_sensors": ["P-TPT"],
+        }
+    ]
+    session = ActiveAuditSession(
+        packet, window, history=history, history_labels_visible=False
+    )
+    before = session.remaining_budget
+    result = session.dispatch("search_history", {})
+    assert "training_event" not in canonical(result)
+    assert result["matches"][0]["citation_id"] == "analogue:0"
+    assert session.remaining_budget == before == 2

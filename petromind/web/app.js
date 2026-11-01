@@ -938,6 +938,15 @@ function renderConversation() {
           `${m.citation_id}: ${m.shared_sensors} shared sensors (${m.matched_sensors.join(", ")}); distance ${m.distance}. Empirical similarity, not confirmation of cause.`,
         ),
       );
+    if (e.matches?.length)
+      li.append(
+        el(
+          "small",
+          e.matches.some((m) => Object.hasOwn(m, "training_event"))
+            ? "Original captured analogue metadata includes training-event categories, not hidden target labels. This historical record is preserved."
+            : "Training-event labels are not returned in this live history projection.",
+        ),
+      );
     if (e.matches && !e.matches.length)
       li.append(el("p", "No historical match was returned."));
     if (e.validation?.code)

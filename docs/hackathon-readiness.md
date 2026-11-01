@@ -158,6 +158,22 @@ silently after failure; inspect the saved attempt. Closing the browser does not
 cancel an already bounded server run. Requests for extra sensors require returned
 source-backed sensor-location context and share the original five-query budget.
 
+## Historical-label boundary
+
+Newly prepared interactive live protocols pin `training-history-label-free-v1`:
+retrieval omits the `training_event` field from both tool responses and their
+public audit entries. Training-only source validation remains server-side; overlap,
+distance and citation IDs remain available. A fresh protocol is required, not an
+in-place edit to an existing run. Tool arguments, prompts, budgets and diagnostic
+policy are unchanged. Prior evaluation sessions keep their original defaults.
+
+**Frozen captured audits are an explicit exception:** their six returned training
+analogues included training-event categories. These are training labels, not the
+held-out target's label, but the captures are not label-free historical evidence.
+They are preserved exactly rather than retrospectively redacted. Do not claim a
+label-free historical contract for those past runs. This limitation is separate
+from the continued isolation of hidden target labels, source paths and well IDs.
+
 ## Reproduce verification and screenshots
 
 ```bash

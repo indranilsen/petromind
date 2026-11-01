@@ -69,3 +69,8 @@ Use the [runbook](hackathon-readiness.md), [three-minute script](hackathon-demo.
 and the current verification receipt before recording. No general diagnostic
 verification, prospective alarm efficacy or physically certified reasoning claim
 is made.
+
+New interactive live history suppresses training-event labels under a fresh pinned
+projection version. Original captured audits retain their original training-label
+metadata and must not be described as retrospectively label-free. Neither route
+exposes hidden held-out target labels or private well/source paths to the agent.

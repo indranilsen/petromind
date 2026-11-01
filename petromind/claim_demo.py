@@ -36,6 +36,8 @@ from .scope_auditor import (
     scope_tools,
 )
 
+HISTORY_PROJECTION_VERSION = "training-history-label-free-v1"
+
 
 def freeze_live(
     capture,
@@ -59,6 +61,7 @@ def freeze_live(
     protocol = {
         "study": contract.VERSION if contract else VERSION,
         "public_events_version": PUBLIC_EVENTS_VERSION,
+        "history_projection_version": HISTORY_PROJECTION_VERSION,
         "active_sensors": bool(active_sensors),
         "parent_protocol_id": p["protocol_id"],
         "source_digest": source_digest(),
@@ -202,6 +205,7 @@ class DemoApp:
         if (
             p["study"] != self.live_version
             or p.get("public_events_version") != PUBLIC_EVENTS_VERSION
+            or p.get("history_projection_version") != HISTORY_PROJECTION_VERSION
             or bool(p.get("active_sensors")) != self.active_sensors
             or (
                 self.active_sensors
@@ -269,10 +273,15 @@ class DemoApp:
                 history = self.protocol["histories"].get(task["source_case_id"], ())
                 session = (
                     active_auditor.ActiveAuditSession(
-                        case["packet"], self._active_windows[case_id], history=history
+                        case["packet"],
+                        self._active_windows[case_id],
+                        history=history,
+                        history_labels_visible=False,
                     )
                     if self.active_sensors
-                    else ScopeAuditSession(case["packet"], history=history)
+                    else ScopeAuditSession(
+                        case["packet"], history=history, history_labels_visible=False
+                    )
                 )
                 ledger = SpendingLedger(
                     self.live_directory / "reservations.jsonl", p, "pilot"
@@ -402,7 +411,7 @@ def make_server(app, port=8765):
                                 "submit_audit",
                             ],
                             "new_sensor_queries": app.active_sensors,
-                            "history_scope": "Frozen training-only snapshot from initial sensors; additional queries do not rerank.",
+                            "history_scope": "Frozen training-only snapshot from initial sensors; additional queries do not rerank. New live results omit training-event labels; frozen captured records retain their original metadata.",
                             "well_topology_traversal": False,
                             "knowledge_graph": "Source-scoped facts by public topic; not per-well topology",
                             "inherited_sensor_summaries": 3,

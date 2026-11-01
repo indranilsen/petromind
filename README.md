@@ -80,6 +80,11 @@ not claim verified early fault detection. No statistically validated alarm
 performance, active-selection benefit or independent engineering certification
 is established. PetroMind is decision support, not an autonomous controller.
 
+New interactive live protocols suppress historical training-event labels under
+`training-history-label-free-v1`. Frozen captures retain their original training
+labels (never hidden target labels), so replay is explicitly **not retroactively
+label-free**. See the receipt for this preserved-record exception.
+
 ## Earlier frameworks and experiments
 
 The following sections preserve reproducible research tooling; they are not
