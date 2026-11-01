@@ -19,6 +19,11 @@ def main():
         q.add_argument("--capture", type=Path, required=True)
         if name == "serve":
             q.add_argument("--port", type=int, default=8765)
+            q.add_argument(
+                "--monitoring",
+                type=Path,
+                help="Explicit local viewer-only monitoring bundle",
+            )
             q.add_argument("--dataset", type=Path, default=Path("../3W/dataset"))
             q.add_argument(
                 "--science-protocol",
@@ -79,7 +84,11 @@ def main():
                 else None
             )
             app = DemoApp(
-                a.capture, a.enable_live, dataset=a.dataset, science_protocol=source
+                a.capture,
+                a.enable_live,
+                dataset=a.dataset,
+                science_protocol=source,
+                monitoring_directory=a.monitoring,
             )
             server = make_server(app, a.port)
             print(

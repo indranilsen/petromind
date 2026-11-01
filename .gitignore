@@ -14,3 +14,5 @@ data/
 build/
 dist/
 .petromind/
+# Real telemetry-derived review images stay local, not in public PRs.
+docs/screenshots/causal-monitoring/

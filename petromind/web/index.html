@@ -370,7 +370,7 @@
               hidden
               role="status"
             >
-              <p class="eyebrow">▲ DEMO INVESTIGATION CHECKPOINT</p>
+              <p id="alertEyebrow" class="eyebrow">▲ DEMO INVESTIGATION CHECKPOINT</p>
               <h3 id="checkpointTitle">Investigation checkpoint reached</h3>
               <p id="checkpointExplanation"></p>
             </section>
@@ -382,6 +382,7 @@
               <p class="eyebrow">STATISTICAL FAULT DIAGNOSIS · SUSPECTED FAULT</p>
               <h2 id="cause"></h2>
               <p id="definition"></p>
+              <p class="fine-print">Observations from the original 600-sample diagnostic window:</p>
               <ul id="diagnosisObservations"></ul>
               <p id="plausibility"></p>
               <details>
@@ -391,8 +392,8 @@
             </section>
             <section id="preDiagnosis">
               <p class="eyebrow">BEGIN WITH MEASUREMENTS</p>
-              <h2>Monitoring sensor measurements</h2>
-              <p>
+              <h2 id="monitoringHeading">Monitoring sensor measurements</h2>
+              <p id="monitoringExplanation">
                 Play or scrub the recorded measurements. The diagnosis becomes
                 available at the marked end-of-evidence checkpoint.
               </p>

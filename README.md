@@ -1,8 +1,6 @@
-> Full-history monitoring work starts with the [offline incident-history audit](docs/incident-history-audit.md). The selected full Parquet files are unavailable in Work; run the supplied local audit and return `report.json` before choosing a causal detector. Existing replay and Muse evidence remain unchanged.
+> New optional recorded-history flow: [exact setup and verification commands](docs/monitoring/run.md). Prefix-only anomaly alert → original diagnostic-window accumulation → saved statistical diagnosis → unchanged Muse audit. [Actual two-clip findings](docs/monitoring/feasibility-v1.md): the first alert substantially predates the annotation, so this is an empirical change-monitoring demonstration, **not validated early fault detection**. Both uploaded real clips were checked in the browser; the full original dataset and paid Meta execution were not run here.
 
-> Current Console workflow: [monitoring → checkpoint → statistical diagnosis → Muse](docs/monitoring-workflow.md). Replay starts at sample 0. The explicitly labeled demo checkpoint is at the end of the loaded evidence; it is not an operational alarm or an early prediction. Includes exact local run/real-data verification commands.
-
-> Replay and live refinements: see [exact local verification and opt-in v3 instructions](docs/live-investigation-verification.md). `request_sensor` is available only with a fresh active protocol and verified raw development windows. Real-data and paid Meta execution have **not** been verified in the implementation workspace; offline/mock checks are separate.
+> Without `--monitoring`, the [complete-evidence checkpoint](docs/monitoring-workflow.md) remains available. Opt-in live sensor queries still require the [separate fresh active protocol and verified original windows](docs/live-investigation-verification.md).
 
 # PetroMind
 
