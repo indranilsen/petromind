@@ -1,3 +1,5 @@
+> Full-history monitoring work starts with the [offline incident-history audit](docs/incident-history-audit.md). The selected full Parquet files are unavailable in Work; run the supplied local audit and return `report.json` before choosing a causal detector. Existing replay and Muse evidence remain unchanged.
+
 > Current Console workflow: [monitoring → checkpoint → statistical diagnosis → Muse](docs/monitoring-workflow.md). Replay starts at sample 0. The explicitly labeled demo checkpoint is at the end of the loaded evidence; it is not an operational alarm or an early prediction. Includes exact local run/real-data verification commands.
 
 > Replay and live refinements: see [exact local verification and opt-in v3 instructions](docs/live-investigation-verification.md). `request_sensor` is available only with a fresh active protocol and verified raw development windows. Real-data and paid Meta execution have **not** been verified in the implementation workspace; offline/mock checks are separate.

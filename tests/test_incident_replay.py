@@ -290,3 +290,54 @@ def test_resolved_private_window_strips_labels_and_metadata(replay_fixture):
     assert list(resolved.columns) == ["ABER-CKGL", "P-PDG", "P-TPT", "T-TPT"]
     assert len(resolved) == 600 and resolved.index.equals(frame.iloc[20:].index)
     assert "class" not in resolved and "state" not in resolved
+
+
+def test_full_history_audit_uses_same_trusted_locator_and_original_evidence(
+    replay_fixture, tmp_path, monkeypatch
+):
+    from petromind.history_audit import run_history_audit
+
+    root, path, _frame, science, claim, original = replay_fixture
+    case = {**original, "packet": {"observations": original["observations"]}}
+    monkeypatch.setattr("petromind.history_audit.load_capture", lambda _: (claim, []))
+    monkeypatch.setattr("petromind.history_audit.demo_cases", lambda _: [case])
+    before = canonical(case)
+    other = root / "7"
+    other.mkdir()
+    (other / "WELL-00003_private.parquet").write_bytes(b"held out never read")
+    original_read = pd.read_parquet
+    opened = []
+
+    def read(p, *a, **kw):
+        opened.append(Path(p))
+        assert Path(p) == path
+        return original_read(p, *a, **kw)
+
+    monkeypatch.setattr("petromind.history_audit.pd.read_parquet", read)
+    out = tmp_path / "audit"
+    result = run_history_audit("unused", root, science, out, export=True)
+    assert (
+        result["api_requests"] == 0
+        and result["detector"] == "not_run_pending_data_review"
+    )
+    r = json.loads((out / "report.json").read_text())["cases"][0]
+    assert r["samples_total"] == 620 and r["samples_before_first_transient"] == 20
+    assert r["samples_in_initial_transient_run"] == 600
+    text = (out / "report.json").read_text()
+    for secret in (
+        "WELL-",
+        str(path),
+        "file_hash",
+        "locator_hash",
+        "well_group",
+        "true_event",
+    ):
+        assert secret not in text
+    assert canonical(case) == before and opened
+    assert (out / "case-1-trajectories.svg").exists()
+    assert (out / "local-fixture" / "manifest.json").exists()
+    with pytest.raises(ValueError, match="fresh"):
+        run_history_audit("unused", root, science, out)
+    path.write_bytes(path.read_bytes() + b"changed")
+    with pytest.raises(ValueError, match="Frozen incident changed"):
+        run_history_audit("unused", root, science, tmp_path / "other")
