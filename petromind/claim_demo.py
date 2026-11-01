@@ -1,4 +1,4 @@
-"""Loopback-only claim demo: immutable real replay and explicitly enabled v2/v3 live."""
+"""Loopback-only claim demo: immutable real replay and explicitly enabled versioned live."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from time import monotonic
 
-from . import active_auditor
+from . import reliable_auditor as active_auditor
 from .agent import AgentConfig
 from .audit import canonical
 from .claim_evaluation import checked_protocol
@@ -25,16 +25,20 @@ from .investigation_events import (
     tool_event,
 )
 from .meta_api import MetaAPIError, MetaResponsesClient
-from .replay_workflow import replay_workflow
-from .science_evaluation import CostedClient, SpendingLedger
-from .scope_auditor import (
+from .reliable_auditor import (
     DOCUMENTS,
-    INSTRUCTIONS,
-    VERSION,
     ScopeAuditSession,
     run_scope_auditor,
     scope_tools,
 )
+from .reliable_auditor import (
+    SCOPE_INSTRUCTIONS as INSTRUCTIONS,
+)
+from .reliable_auditor import (
+    SCOPE_VERSION as VERSION,
+)
+from .replay_workflow import replay_workflow
+from .science_evaluation import CostedClient, SpendingLedger
 
 HISTORY_PROJECTION_VERSION = "training-history-label-free-v1"
 
@@ -74,7 +78,7 @@ def freeze_live(
         "limits": {
             "pilot": {"requests": 12, "output_tokens": 49152, "estimated_usd": max_cost}
         },
-        "note": "Explicit interactive executions only. Fresh v2/v3 has no new paid evaluation or engineering certification.",
+        "note": "Explicit interactive executions only. Fresh v4 has no new paid evaluation or engineering certification.",
     }
     if active_sensors:
         protocol["active_windows_digest"] = active_windows(

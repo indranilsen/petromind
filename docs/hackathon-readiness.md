@@ -5,6 +5,9 @@ assessment.** This is a local demonstration of evidence auditing, not validated
 industrial early warning or root-cause certification. Home / Demo / Technology
 remain the only pages. Synthetic Challenge is deferred.
 
+For the v4 submission-repair fix and a fresh capped smoke test, see
+[live assessment repair](live-audit-repair.md). Previous live protocols must not be reused.
+
 ## Clean setup and required local files
 
 Use Python 3.12 (offline CI also covers 3.10), then install:
@@ -23,7 +26,7 @@ these incidents. Keep those authorized local artifacts outside version control:
 
 - `.petromind/claim-audit-v1`: unchanged reviewed `protocol.json` and `results.jsonl`.
 - `../3W/dataset`: your separately obtained 3W data; needed for original-source
-  verification and active live v3, not required once a bounded viewer bundle exists.
+  verification and active live v4, not required once a bounded viewer bundle exists.
 - `.petromind/science-m5-v1/protocol.json`: matching private source protocol.
 - An exported history `local-fixture` and its matching offline `report.json`.
 
@@ -102,7 +105,7 @@ The following steps are for deliberate local authorization, after installing the
 final source and exporting `MODEL_API_KEY` in your shell. Never paste the key into
 chat, command arguments, a browser, or Git. There is no `.env` autoload.
 
-First verify original raw inputs, then prepare an **unused** capped v3 protocol.
+First verify original raw inputs, then prepare an **unused** capped v4 protocol.
 These commands make no Meta requests:
 
 ```bash

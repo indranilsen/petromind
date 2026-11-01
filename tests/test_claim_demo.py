@@ -14,6 +14,7 @@ from petromind.claim_review import TASKS, demo_cases, review_capture
 from petromind.eval_protocol import digest
 from petromind.measurements import summarize
 from petromind.meta_api import MetaResponsesClient
+from petromind.reliable_auditor import SCOPE_VERSION as LIVE_VERSION
 from petromind.scope_auditor import (
     VERSION,
     ScopeAuditSession,
@@ -292,7 +293,7 @@ def test_live_requires_fresh_versioned_protocol_and_does_not_call_on_start(
 ):
     out = tmp_path / "live"
     r = freeze_live(capture, out)
-    assert r["api_requests"] == 0 and r["contract_version"] == VERSION
+    assert r["api_requests"] == 0 and r["contract_version"] == LIVE_VERSION
 
     def forbidden(**kw):
         raise AssertionError("No API client on start")
@@ -357,7 +358,7 @@ def test_mock_live_v2_execution_is_separate_idempotent_and_budgeted(
     row = app.live(TASKS[0], "a" * 32)
     assert (
         row["status"] == "completed"
-        and row["output"]["contract_version"] == VERSION
+        and row["output"]["contract_version"] == LIVE_VERSION
         and row["new_sensor_queries"] == 0
     )
     assert app.live(TASKS[0], "a" * 32) == row and len(calls) == 1
@@ -516,8 +517,8 @@ def test_active_app_versions_protocol_streams_queries_and_rejects_wrong_window(
     import numpy as np
     import pandas as pd
 
-    from petromind.active_auditor import VERSION as ACTIVE_VERSION
     from petromind.incident_replay import raw_payload
+    from petromind.reliable_auditor import VERSION as ACTIVE_VERSION
 
     p = json.loads((capture / "protocol.json").read_text())
     rows = [json.loads(l) for l in (capture / "results.jsonl").read_text().splitlines()]
@@ -912,3 +913,20 @@ def test_actual_live_route_projects_history_without_event_labels(
     assert history["matches"][0]["citation_id"] == "analogue:0"
     assert "training_event" not in canonical(history)
     assert row["remaining_budget"] == 2 and row["new_sensor_queries"] == 0
+
+
+def test_previous_live_contract_rejected_without_overwriting_protocol(
+    capture, tmp_path
+):
+    out = tmp_path / "old-live"
+    freeze_live(capture, out)
+    path = out / "protocol.json"
+    p = json.loads(path.read_text())
+    p["study"] = VERSION  # original v2 scope contract, not v4
+    p.pop("protocol_id")
+    p["protocol_id"] = digest(p)
+    path.write_text(canonical(p))
+    before = path.read_bytes()
+    with pytest.raises(ValueError, match="Fresh matching live protocol"):
+        DemoApp(capture, out)
+    assert path.read_bytes() == before
