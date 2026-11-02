@@ -327,6 +327,7 @@ def test_saved_browser_progression_and_graph(saved, monkeypatch):
                 )
                 page.screenshot(path=str(screenshots / f"{label}-focused-graph.png"))
                 page.locator("#operatorView").click()
+                page.locator("#handoffDetails > summary").click()
                 page.locator("#inspectDetails").click()
                 assert (
                     "Verified saved v5 public output"

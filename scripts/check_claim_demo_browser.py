@@ -27,6 +27,103 @@ def reach_checkpoint(page):
     assert page.locator("#nextScene").is_visible()
 
 
+def assert_classifier_handoff(page, case):
+    packet_before = page.evaluate("JSON.stringify(c().packet)")
+    ids = page.locator("#classifierHandoff > *").evaluate_all(
+        "els => els.map(e => e.id)"
+    )
+    assert ids == [
+        "checkpointAlert",
+        "diagnosisCard",
+        "investigationNext",
+        "handoffDetails",
+    ]
+    assert page.locator("#checkpointAlert").is_visible()
+    assert (
+        page.locator("#classifierTitle").inner_text() == "Statistical classifier result"
+    )
+    assert page.locator("#cause").inner_text().startswith("Suspected failure:")
+    assert (
+        "not proof or a calibrated probability"
+        in page.locator("#classifierStatement").inner_text()
+    )
+    assert "prefix-only" not in page.locator("#classifierHandoff").inner_text().lower()
+    assert (
+        "600-sample diagnostic window"
+        not in page.locator("#classifierHandoff").inner_text()
+    )
+    assert (
+        page.locator("#executionControl").locator("..").get_attribute("id")
+        == "investigationNext"
+    )
+    assert page.locator("#executionSelect").input_value() in {"captured", "saved"}
+    assert page.locator("#executionSelect option[value=live]").evaluate(
+        "e => e.disabled"
+    ) == (not page.evaluate("status.live_enabled"))
+    assert "Replay:" in page.locator("#runInstruction").inner_text()
+    assert "automatically" in page.locator("#runInstruction").inner_text()
+    # The causal boundary and purpose precede the action in both DOM and layout.
+    assert (
+        page.locator("#plausibility").inner_text()
+        == "This statistical prediction does not establish physical cause. Muse audits the stronger constructed claim below."
+    )
+    assert (
+        page.locator("#plausibility").bounding_box()["y"]
+        < page.locator("#nextScene").bounding_box()["y"]
+    )
+    assert not page.locator("#handoffDetails").evaluate("e => e.open")
+    assert page.locator("#claimSummary").is_hidden()
+    assert page.locator("#classifierInputs").is_hidden()
+    ranked = sorted(
+        [
+            p
+            for p in case["packet"]["baseline"]["probabilities"]
+            if p["represented_in_fit"]
+        ],
+        key=lambda p: p["probability"],
+        reverse=True,
+    )
+    rows = page.locator("#classifierCandidates li")
+    assert rows.count() == min(3, len(ranked))
+    for i, candidate in enumerate(ranked[:3]):
+        row = rows.nth(i)
+        assert int(row.get_attribute("data-fault")) == candidate["fault_type"]
+        assert float(row.get_attribute("data-score")) == candidate["probability"]
+        width = row.locator(".candidate-track > span").evaluate(
+            "e => parseFloat(e.style.width)"
+        )
+        assert (
+            abs(width - 100 * candidate["probability"] / ranked[0]["probability"])
+            < 1e-4
+        )
+    for i, sensor in enumerate(["P-PDG", "P-TPT"]):
+        summary = case["observations"][sensor]
+        direction = (
+            "missing"
+            if not summary["available"]
+            else "up"
+            if summary["delta"] > 0
+            else "down"
+            if summary["delta"] < 0
+            else "stable"
+        )
+        assert (
+            page.locator("#diagnosisObservations li")
+            .nth(i)
+            .get_attribute("data-direction")
+            == direction
+        )
+    # Native disclosure remains available to keyboard users, with the exact captured claim.
+    disclosure = page.locator("#handoffDetails > summary")
+    disclosure.focus()
+    disclosure.press("Enter")
+    assert page.locator("#claimSummary").inner_text() == case["packet"]["claim"]
+    assert page.locator("#classifierInputs").is_visible()
+    disclosure.press("Enter")
+    assert not page.locator("#handoffDetails").evaluate("e => e.open")
+    assert page.evaluate("JSON.stringify(c().packet)") == packet_before
+
+
 def mock_live_browser(browser, capture, *, fail=False):
     """Real server/runner/client path, HTTP mocked. No screenshots or paid calls."""
     import os
@@ -127,6 +224,11 @@ def mock_live_browser(browser, capture, *, fail=False):
             assert not calls
             reach_checkpoint(page)
             page.locator("#executionSelect").select_option("live")
+            assert (
+                "fresh Muse investigation"
+                in page.locator("#runInstruction").inner_text()
+            )
+            assert "paid API" in page.locator("#runInstruction").inner_text()
             page.locator("#nextScene").click()
             page.get_by_text(
                 "Retrieving documented engineering context", exact=True
@@ -313,6 +415,11 @@ def mock_active_browser(browser, capture):
             )
             reach_checkpoint(page)
             page.locator("#executionSelect").select_option("live")
+            assert (
+                "fresh Muse investigation"
+                in page.locator("#runInstruction").inner_text()
+            )
+            assert "paid API" in page.locator("#runInstruction").inner_text()
             page.locator("#nextScene").click()
             page.get_by_text(
                 "Requesting an additional measurement", exact=True
@@ -351,6 +458,86 @@ def mock_active_browser(browser, capture):
             server.server_close()
             thread.join()
     return len(calls)
+
+
+def alert_handoff_fixture_browser(browser, url, payload):
+    """Constructed software fixture for alert gates/copy; no real-telemetry claim."""
+    from copy import deepcopy
+
+    from petromind.causal_monitor import MonitorConfig, monitor_trace
+
+    fixture = deepcopy(payload)
+    case = fixture["cases"][0]
+    replay = case["replay"]
+    elapsed = list(range(600))
+    streams = {**replay["series"], **replay["viewer_series"]}
+    for sensor, stream in streams.items():
+        stream["samples"] = [
+            {"value": float(i % 7) + (1000 if i >= 320 else 0), "quality": "valid"}
+            if sensor in {"P-PDG", "P-TPT"}
+            else {"value": None, "quality": "missing"}
+            for i in elapsed
+        ]
+        stream["reference"] = 0 if sensor in {"P-PDG", "P-TPT"} else None
+    trace = monitor_trace(elapsed, streams)
+    first_alert = next(i for i, point in enumerate(trace) if point["new_alert"])
+    assert first_alert < 599
+    replay.update(
+        mode="history",
+        can_play=True,
+        timestamps=None,
+        elapsed_seconds=elapsed,
+        sample_labels=None,
+    )
+    replay["workflow"] = {
+        "positions": 600,
+        "counter_unit": "recorded samples",
+        "elapsed_seconds": elapsed,
+        "checkpoint": {"index": 599},
+        "monitor": {"config": MonitorConfig().public(), "trace": trace},
+    }
+    errors, requests = [], []
+    for width, height in [(1440, 900), (390, 844)]:
+        page = browser.new_page(viewport={"width": width, "height": height})
+        page.on("pageerror", lambda error: errors.append(str(error)))
+        page.on(
+            "request",
+            lambda request: (
+                requests.append(request.url) if "/api/live" in request.url else None
+            ),
+        )
+        page.route("**/api/cases", lambda route: route.fulfill(json=fixture))
+        page.goto(url + "/demo", wait_until="networkidle")
+        assert_monitoring(page)
+        page.locator("#slider").fill(str(first_alert - 1))
+        assert page.locator("#checkpointAlert").is_hidden()
+        page.locator("#slider").fill(str(first_alert))
+        assert (
+            page.locator("#checkpointTitle").inner_text()
+            == "Diagnostic alert triggered"
+        )
+        assert (
+            "earlier measured reference"
+            in page.locator("#checkpointExplanation").inner_text()
+        )
+        assert (
+            "does not identify the failure cause"
+            in page.locator("#checkpointExplanation").inner_text()
+        )
+        assert page.locator("#diagnosisCard").is_hidden()
+        assert page.locator("#executionControl").is_hidden()
+        assert page.locator("#nextScene").is_hidden()
+        page.locator("#slider").fill("599")
+        assert_classifier_handoff(page, case)
+        page.locator("#handoffDetails > summary").click()
+        assert (
+            "6 robust reference scales"
+            in page.locator("#alertRuleDetails").inner_text()
+        )
+        assert page.evaluate("document.documentElement.scrollWidth<=innerWidth")
+        page.close()
+    assert not errors, errors
+    assert not requests, requests
 
 
 def raw_widget_browser(browser, url, payload):
@@ -601,6 +788,7 @@ def main():
                 reach_checkpoint(page)
                 assert page.locator(".tree .sensor-reading").inner_text() != first
                 assert page.locator("#diagnosisCard").is_visible()
+                assert_classifier_handoff(page, case)
                 assert (
                     page.locator("#nextScene").inner_text()
                     == "Investigate with Muse Spark"
@@ -653,6 +841,7 @@ def main():
                 page.locator(".site-nav a").nth(2).click()
                 page.locator(".site-nav a").nth(1).click()
                 assert page.locator("#slider").input_value() == str(maximum)
+                page.locator("#handoffDetails > summary").click()
                 page.locator("#inspectDetails").click()
                 assert (
                     json.loads(page.locator("#raw").text_content())["output"]
@@ -676,6 +865,7 @@ def main():
             assert page.evaluate("document.documentElement.scrollWidth<=innerWidth")
         assert not errors, errors
         assert not any("/api/live" in r or "api.meta.ai" in r for r in requests)
+        alert_handoff_fixture_browser(browser, a.url, payload)
         raw_widget_browser(browser, a.url, payload)
         irregular_progress_browser(browser, a.url, payload)
         mock_calls = (
@@ -707,6 +897,9 @@ def main():
                     "active_sensor_and_failure_paths": bool(a.mock_live_capture),
                     "raw_browser_fixture": "constructed software fixture, not real-data verification",
                     "captured_outputs_unchanged": True,
+                    "four_block_classifier_handoff": True,
+                    "alert_handoff_fixture": "constructed software fixture, not real-data verification",
+                    "ranked_scores_and_direction_checks": True,
                 }
             )
         )

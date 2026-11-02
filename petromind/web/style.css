@@ -4826,7 +4826,295 @@ select {
   }
 }
 
-#technologyPage .tech-verdict-key { display: flex; flex-wrap: wrap; gap: 14px; margin: 22px 0 10px; }
+#technologyPage .tech-verdict-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 22px 0 10px;
+}
 @media (max-width: 740px) {
-  #technologyPage .tech-signal-label { font-size: 16px; }
+  #technologyPage .tech-signal-label {
+    font-size: 16px;
+  }
+}
+
+/* Classifier handoff: presentation only; all evidence gates remain in app.js. */
+#consoleView .operator-panel:has(.classifier-handoff) {
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+.classifier-handoff {
+  display: grid;
+  gap: 14px;
+}
+.classifier-handoff .handoff-block {
+  min-width: 0;
+  margin: 0;
+  border: 1px solid #304954;
+  border-radius: 14px;
+  background: #10242f;
+  padding: 21px 23px;
+}
+.classifier-handoff .handoff-kicker {
+  color: #aac0c9;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+.classifier-handoff h3 {
+  font-size: 19px;
+  line-height: 1.3;
+  margin: 0 0 10px;
+}
+.classifier-handoff p {
+  font-size: 13px;
+  line-height: 1.65;
+  margin: 8px 0;
+  color: #bacdd3;
+}
+.classifier-handoff .handoff-alert {
+  border-left: 3px solid #e5bc80;
+  background: #2a2923;
+}
+.classifier-handoff .handoff-alert .handoff-kicker {
+  color: #eac48f;
+}
+.classifier-handoff .handoff-alert h3 {
+  color: #f6e0bc;
+}
+.classifier-handoff #checkpointExplanation {
+  margin-bottom: 0;
+}
+.classifier-handoff #diagnosisCard h2 {
+  font-size: clamp(25px, 2.05vw, 32px);
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  margin: 15px 0 10px;
+  color: #f0f6f6;
+}
+.classifier-handoff #classifierTitle {
+  font-size: 15px;
+  font-weight: 550;
+  color: #a5c6d8;
+}
+.classifier-handoff #definition {
+  color: #cfdee2;
+}
+.classifier-handoff #classifierStatement {
+  font-size: 12px;
+  color: #abc1c9;
+  line-height: 1.65;
+}
+.classifier-handoff .classifier-ranking {
+  margin: 17px 0;
+  border-top: 1px solid #304752;
+  padding-top: 12px;
+}
+.classifier-handoff h4 {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 0 10px;
+  color: #d3e2e7;
+}
+.classifier-handoff #classifierCandidates {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 9px;
+}
+.classifier-handoff #classifierCandidates li {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 72px;
+  gap: 9px;
+  align-items: center;
+  font-size: 11px;
+  color: #a9c0cb;
+}
+.classifier-handoff #classifierCandidates li:first-child {
+  color: #e7f4f8;
+  font-weight: 600;
+}
+.classifier-handoff .candidate-rank {
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: #86a1af;
+}
+.classifier-handoff .candidate-track {
+  display: block;
+  height: 5px;
+  background: #253c48;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.classifier-handoff .candidate-track > span {
+  display: block;
+  height: 100%;
+  background: #87b9d5;
+  border-radius: 3px;
+}
+.classifier-handoff p.handoff-caption {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #a3bbc5;
+  margin: 10px 0 0;
+}
+.classifier-handoff .handoff-observation-title {
+  margin-top: 14px;
+}
+.classifier-handoff .diagnosis-comparisons {
+  margin: 0;
+  gap: 9px;
+}
+.classifier-handoff .diagnosis-comparisons li {
+  padding: 11px;
+  gap: 6px;
+  background: #0b1d28;
+  border-color: #2d4753;
+}
+.classifier-handoff .diagnosis-comparisons strong {
+  font-size: 11px;
+  color: #b4cbd3;
+}
+.classifier-handoff .diagnosis-comparisons .measurement-direction {
+  font-size: 15px;
+  line-height: 1.3;
+  font-weight: 600;
+  color: #d0d9dc;
+}
+.classifier-handoff [data-direction="up"] .measurement-direction {
+  color: #f0bf94;
+}
+.classifier-handoff [data-direction="down"] .measurement-direction {
+  color: #98c7f0;
+}
+.classifier-handoff [data-direction="missing"] {
+  border-style: dashed;
+}
+.classifier-handoff .diagnosis-comparisons span {
+  font-size: 11px;
+  color: #bdcfd5;
+  line-height: 1.5;
+}
+.classifier-handoff .diagnosis-comparisons small {
+  font-size: 10px;
+  line-height: 1.5;
+  color: #94b0bd;
+}
+.classifier-handoff .handoff-next {
+  border-color: #639a8d;
+  background: linear-gradient(130deg, #13312f, #112831);
+}
+.classifier-handoff .handoff-next .handoff-kicker {
+  color: #a5ddc9;
+}
+.classifier-handoff .handoff-boundary {
+  border-left: 3px solid #a0e3cf;
+  padding: 2px 0 2px 13px;
+  font-size: 16px;
+  line-height: 1.55;
+  font-weight: 600;
+  color: #e8f5f1;
+  margin: 15px 0;
+}
+.classifier-handoff .muse-role {
+  color: #bdd5d5;
+  font-size: 13px;
+}
+.classifier-handoff #executionControl {
+  display: grid;
+  gap: 7px;
+  margin: 20px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #c5dbda;
+}
+.classifier-handoff #executionSelect {
+  width: 100%;
+  min-height: 44px;
+  font-size: 12px;
+  background: #0b2029;
+  border: 1px solid #567d80;
+  border-radius: 8px;
+  color: #e0eeee;
+  padding: 10px 12px;
+}
+.classifier-handoff #nextScene {
+  width: 100%;
+  display: block;
+  margin: 18px 0 0;
+  position: static;
+  font-size: 14px;
+  min-height: 48px;
+  text-align: center;
+}
+.classifier-handoff .handoff-details {
+  padding: 0;
+  background: #0d202b;
+  border-color: #2b414c;
+}
+.classifier-handoff .handoff-details > summary {
+  padding: 18px 21px;
+  font-size: 13px;
+  color: #b8cdd6;
+  cursor: pointer;
+}
+.classifier-handoff .handoff-detail-body {
+  padding: 3px 21px 20px;
+}
+.classifier-handoff .handoff-detail-body h4 {
+  margin-top: 20px;
+}
+.classifier-handoff .handoff-detail-body p {
+  font-size: 12px;
+}
+.classifier-handoff .handoff-detail-body .fine-print {
+  color: #9eb6c2;
+  font-size: 11px;
+}
+.classifier-handoff .handoff-detail-body .badge {
+  display: inline-block;
+  margin: 0;
+  white-space: normal;
+}
+.classifier-handoff #capabilityDetails {
+  margin-top: 18px;
+}
+#consoleView #preDiagnosis {
+  padding: 21px;
+}
+@media (max-width: 740px) {
+  .classifier-handoff .handoff-block {
+    padding: 19px;
+  }
+  .classifier-handoff .handoff-details {
+    padding: 0;
+  }
+  .classifier-handoff #diagnosisCard h2 {
+    font-size: 28px;
+  }
+  .classifier-handoff .handoff-boundary {
+    font-size: 16px;
+  }
+  .classifier-handoff #classifierCandidates li {
+    grid-template-columns: 20px minmax(0, 1fr) 52px;
+  }
+}
+.classifier-handoff #executionSelect {
+  max-width: none;
+}
+.classifier-handoff .cause-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: #b8cfd8;
+  margin-bottom: 6px;
+}
+.classifier-handoff .cause-name {
+  display: block;
+  font-weight: 650;
 }
