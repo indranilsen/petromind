@@ -1,0 +1,184 @@
+{
+  "study": "sprint-a-atomic-research-v1",
+  "date": "2026-11-02",
+  "protocol_id": "ffb35114e95fe9587b133d1e94f140fdde53b3dc55af0c4e7981055e751e2eb8",
+  "tasks": 12,
+  "underlying_previously_inspected_development_incidents": 2,
+  "source_fact_count": 90,
+  "source_group_counts": {
+    "fit": 15,
+    "development": 8,
+    "excluded_m3_test": 8
+  },
+  "controls": {
+    "always_not_established_accuracy": 0.4166666666666667,
+    "always_not_established_macro_recall": 0.3333333333333333,
+    "reference_class_counts": {
+      "CONTRADICTED": 2,
+      "NOT_ESTABLISHED": 5,
+      "SUPPORTED": 5
+    }
+  },
+  "deterministic": {
+    "accuracy": 1.0,
+    "attempted": 12,
+    "completed": 12,
+    "correct": 12,
+    "estimated_known_usage_usd": 0.0,
+    "evidence_conditioned_verdict_correct": 12,
+    "failure_categories": {},
+    "independent_semantic_reviews": 0,
+    "macro_recall": 1.0,
+    "mean_latency_seconds": 0.0006313099999412467,
+    "missing_premise_correctness": null,
+    "next_evidence_usefulness": null,
+    "physical_correctness_verified": false,
+    "recall_by_verdict": {
+      "CONTRADICTED": 1.0,
+      "NOT_ESTABLISHED": 1.0,
+      "SUPPORTED": 1.0
+    },
+    "requests": 0,
+    "scorable_claims": 12,
+    "tokens": {
+      "cached_tokens": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    },
+    "unsupported_causal_supported": 0,
+    "unsupported_free_text_physical_claims": null,
+    "useful_sensor_selection_rate": null,
+    "validation_rejections": 0
+  },
+  "model_variants": {
+    "A_sensor": {
+      "attempted": 0,
+      "accuracy": null
+    },
+    "B_knowledge": {
+      "attempted": 0,
+      "accuracy": null
+    },
+    "C_history": {
+      "attempted": 0,
+      "accuracy": null
+    },
+    "D_legacy_partial": {
+      "attempted": 0,
+      "accuracy": null
+    },
+    "E_connected": {
+      "attempted": 0,
+      "accuracy": null
+    }
+  },
+  "live_status": "blocked_missing_MODEL_API_KEY",
+  "spending": {
+    "actual_billed_usd": null,
+    "conservative_estimated_usd_reserved": 0.0,
+    "http_reservations": 0,
+    "note": "Frozen repository prices and conservative reservations, not a provider invoice guarantee; unknown/failed responses keep full reservations.",
+    "remaining_conservative_session_usd": 5.0,
+    "session_hard_estimated_usd": 5.0
+  },
+  "gate": "PENDING_LIVE_AND_INDEPENDENT_REVIEW",
+  "retrieval_probe": {
+    "B_knowledge": {
+      "query": "fault:9",
+      "returned_facts": 2,
+      "serialized_context_bytes": 741,
+      "required_fact_recall": null
+    },
+    "E_connected": {
+      "query": "fault:9",
+      "returned_facts": 24,
+      "serialized_context_bytes": 13335,
+      "required_fact_recall": null
+    }
+  },
+  "limitations": [
+    "Constructed, formalized development claims, not real expert diagnoses or population accuracy.",
+    "Full-source deterministic baseline receives the same public proposition contracts, not private reference answers.",
+    "Documentation/source-scope scores are not independent engineering certification.",
+    "D is a partial reconstruction: original equipment lookup plus captured development-history snapshots, not original M3 telemetry/index.",
+    "A has no engineering lookup; B/E use the same fact pool, E changes only source-edge expansion; C adds history; D also exposes original training-event labels.",
+    "Frozen historical snapshots use initial charged sensors only; no unqueried target availability is supplied.",
+    "One stochastic sample per task/variant is exploratory and does not establish causal graph benefit.",
+    "No production changes, M3 test tuning or automatic expansion."
+  ],
+  "paired_comparisons": [
+    {
+      "left": "A_sensor",
+      "limitation": "Constructed tasks are correlated within incidents; one stochastic run per method cannot establish causal graph benefit.",
+      "paired_tasks": 0,
+      "right": "B_knowledge",
+      "right_minus_left_accuracy": null,
+      "tasks_left_better": 0,
+      "tasks_right_better": 0
+    },
+    {
+      "left": "B_knowledge",
+      "limitation": "Constructed tasks are correlated within incidents; one stochastic run per method cannot establish causal graph benefit.",
+      "paired_tasks": 0,
+      "right": "C_history",
+      "right_minus_left_accuracy": null,
+      "tasks_left_better": 0,
+      "tasks_right_better": 0
+    },
+    {
+      "left": "B_knowledge",
+      "limitation": "Constructed tasks are correlated within incidents; one stochastic run per method cannot establish causal graph benefit.",
+      "paired_tasks": 0,
+      "right": "E_connected",
+      "right_minus_left_accuracy": null,
+      "tasks_left_better": 0,
+      "tasks_right_better": 0
+    },
+    {
+      "left": "deterministic",
+      "limitation": "Constructed tasks are correlated within incidents; one stochastic run per method cannot establish causal graph benefit.",
+      "paired_tasks": 0,
+      "right": "A_sensor",
+      "right_minus_left_accuracy": null,
+      "tasks_left_better": 0,
+      "tasks_right_better": 0
+    },
+    {
+      "left": "deterministic",
+      "limitation": "Constructed tasks are correlated within incidents; one stochastic run per method cannot establish causal graph benefit.",
+      "paired_tasks": 0,
+      "right": "B_knowledge",
+      "right_minus_left_accuracy": null,
+      "tasks_left_better": 0,
+      "tasks_right_better": 0
+    },
+    {
+      "left": "deterministic",
+      "limitation": "Constructed tasks are correlated within incidents; one stochastic run per method cannot establish causal graph benefit.",
+      "paired_tasks": 0,
+      "right": "C_history",
+      "right_minus_left_accuracy": null,
+      "tasks_left_better": 0,
+      "tasks_right_better": 0
+    },
+    {
+      "left": "deterministic",
+      "limitation": "Constructed tasks are correlated within incidents; one stochastic run per method cannot establish causal graph benefit.",
+      "paired_tasks": 0,
+      "right": "D_legacy_partial",
+      "right_minus_left_accuracy": null,
+      "tasks_left_better": 0,
+      "tasks_right_better": 0
+    },
+    {
+      "left": "deterministic",
+      "limitation": "Constructed tasks are correlated within incidents; one stochastic run per method cannot establish causal graph benefit.",
+      "paired_tasks": 0,
+      "right": "E_connected",
+      "right_minus_left_accuracy": null,
+      "tasks_left_better": 0,
+      "tasks_right_better": 0
+    }
+  ],
+  "protocol_note": "Fresh v2 protocol adds paired-report code; original unpaid v1 protocol, results and receipt remain unchanged. References, cases, prompts and tools are unchanged."
+}
