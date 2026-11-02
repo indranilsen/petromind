@@ -1,0 +1,76 @@
+{
+  "protocol": "synthetic-physics-v1.1",
+  "verification_kind": "supplementary offline integration pass; no frozen artifact changes",
+  "tested_pr_head": "160e574f15bcdebfec70ef61dddf5b37bd879e3d",
+  "durable_recovery": {
+    "archive_sha256": "10f06578af1255e92bad13d1f4c8735c24c1f3d4f2e1947ad5cde3d45b5e5294",
+    "archive_bytes": 361716,
+    "byte_identical_regeneration": true
+  },
+  "hashes": {
+    "public_entries_verified": 36,
+    "private_core_entries_verified": 34,
+    "core_is_subset_of_original_commitment": true,
+    "original_manifest_caveat": "Stale v1 log/metadata entries remain documented in FREEZE_ADDENDUM.json; only the exact 34-file v1.1 core is asserted intact."
+  },
+  "leakage_boundary": {
+    "within_case_packet_check": "passed",
+    "unqueried_sensor_samples_in_graph": false,
+    "cross_case_overlap": true,
+    "required_isolation": "Fresh context per case; packet and whitelisted serialized tool results only; no corpus, filesystem, private scores or archive exposed."
+  },
+  "offline_smoke": {
+    "status": "passed",
+    "coverage": "one accepted case; other six absent and scored as missing by unchanged suite evaluator",
+    "initial_sensor_count": 3,
+    "new_sensor_requests": 1,
+    "charged_sensors": 4,
+    "graph_edges_returned": 4,
+    "assessment_accepted": true,
+    "score_produced": true,
+    "mechanical_suite_points_of_29": 2.4978354978354975,
+    "semantic_total": null,
+    "model_requests": 0,
+    "estimated_cost_usd": 0,
+    "audit_final_digest": "0bcb7078a72cda1ed68f90cf734430de87cf38dd7bdd5b2979e2854f982de12e",
+    "private_score_sha256": "61882480eabcc86f8a87b13c5a76234a595fa34bbd189c9168c27380b3e587fa"
+  },
+  "recovered_full_suite_baseline": {
+    "mechanical_points_of_29": 29,
+    "semantic_total": null,
+    "reference_answers_sent_to_host_or_smoke_agent": false
+  },
+  "tests": {
+    "frozen_public_interface": 16,
+    "private_physics_reproducibility": 6,
+    "new_transport_boundary": 4,
+    "all_passed": true
+  },
+  "production_isolation": {
+    "byte_identical_to_frozen_base": [
+      "petromind/atomic_auditor.py",
+      "petromind/reliable_auditor.py",
+      "petromind/scope_auditor.py",
+      "petromind/claim_auditor.py"
+    ],
+    "synthetic_imports_production": false,
+    "v5_supported_diagnostic_rejection_preserved": true
+  },
+  "frozen_scenarios_expected_verdicts_scoring_weights_changed": false,
+  "model_requests": 0,
+  "estimated_api_cost_usd": 0,
+  "limitations": [
+    "Seven dependent variants of one incident; no population accuracy or industrial certification.",
+    "No human semantic grading; structural acceptance is not physical entailment.",
+    "Bridge is local sequential transport, not an OS sandbox, authenticated remote service, or crash-resume facility.",
+    "Hash chains need a trusted recorder and separately retained final digest."
+  ],
+  "supplementary_file_hashes": {
+    "HANDOFF.md": "ad45d0d9c7ef5b03f10917f58c44eaa580f4e5cd90ad36a54354ea0b05cfe4d8",
+    "INTEGRATION_GUIDE.md": "a93f7ec93f151262ae90bb63f50833e365b9416cfc6c124b6ecfb17836525505",
+    "integration/offline_smoke.py": "654fdb884be571792ad910fd22e4bf7c98a665dfef82173ab007be4b2fd77e66",
+    "integration/test_trusted_host.py": "4d2f58227cb9b1ef59cebf74321bbb1e1ff2501bd48aed2f0a9b8b8b9003a032",
+    "integration/trusted_host.py": "d1999076d09f1c9b793b35a00cf66aebbd7e173cdeb5024deac9d0a8608bcd52",
+    "integration/verify_readiness.py": "868a127bc2c7f308e4642c08e28b9e4e333f9038e65348cbd5b52f762c1f06e0"
+  }
+}
