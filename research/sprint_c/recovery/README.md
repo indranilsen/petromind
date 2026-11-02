@@ -22,10 +22,10 @@ an existing working tree.
 bash
 set -euo pipefail
 umask 077
-mkdir -p "$HOME/Library/Application Support/PetroMindResearch"
-cd "$HOME/Library/Application Support/PetroMindResearch"
-git clone https://github.com/indranilsen/petromind.git sprint-c
-cd sprint-c
+mkdir -p "/Users/isen/Personal"
+cd "/Users/isen/Personal"
+git clone https://github.com/indranilsen/petromind.git petromind-sprint-c
+cd petromind-sprint-c
 git fetch origin research/sprint-c-citation-verdict
 git checkout --detach REVIEWED_COMMIT
 git status --short
@@ -53,7 +53,7 @@ bash scripts/sprint_c_mac.sh prepare "$HOME/Downloads/PetroMind-Sprint-C-Recover
 ```
 
 This creates a **new** protected root at
-`~/Library/Application Support/PetroMindSprintC`. It verifies the outer SHA and
+`/Users/isen/Personal/PetroMindSprintC`. It verifies the outer SHA and
 manifest, rejects unsafe tar members, verifies all **136** original commitments,
 extracts the frozen private evaluator and verifies its readiness. The original
 inner archive SHA is
@@ -78,7 +78,7 @@ fresh disposable probe; it has neither spent money nor approved reconciliation.
 ## 3. Inspect, then explicitly approve
 
 ```bash
-cat "$HOME/Library/Application Support/PetroMindSprintC/proposal.json"
+cat "/Users/isen/Personal/PetroMindSprintC/proposal.json"
 cat research/sprint_c/recovery/INVESTIGATION.md
 cat research/sprint_c/recovery/FINAL_REVIEW.md
 cat research/sprint_c/recovery/results/budget-forecast.json
@@ -159,7 +159,7 @@ next-evidence usefulness stay null pending qualified independent review.
 
 Export prints a SHA-256 and creates:
 
-`~/Library/Application Support/PetroMindSprintC/final-export.tar.gz`
+`/Users/isen/Personal/PetroMindSprintC/final-export.tar.gz`
 
 It contains accounting/anchors/activation/registry, review, storage witnesses,
 captures, source commit, final audit and file commitments, plus scored comparisons

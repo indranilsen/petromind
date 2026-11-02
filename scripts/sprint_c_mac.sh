@@ -3,7 +3,7 @@
 set -euo pipefail
 umask 077
 test "$(uname -s)" = Darwin || { echo 'Use your trusted Mac.' >&2; exit 1; }
-PM_ROOT="$HOME/Library/Application Support/PetroMindSprintC"
+PM_ROOT="/Users/isen/Personal/PetroMindSprintC"
 PM_PACKAGE="$PM_ROOT/preserved/PetroMind-Sprint-C-PRIVATE"
 PM_PRIVATE="$PM_ROOT/evaluator/private_sprint_b"
 PM_DB="$PM_ROOT/continuation/continuation.sqlite"
