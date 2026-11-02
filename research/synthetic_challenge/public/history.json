@@ -1,0 +1,21 @@
+[
+  {
+    "description": "Constructed past incident with deposit classified as hydrate by a laboratory sample.",
+    "id": "history:h17",
+    "observed": {
+      "P-MON-CKP": "decrease",
+      "P-TPT": "increase"
+    },
+    "scope": "Different hypothetical installation. No topology transfer. No current deposit sample.",
+    "similarity": 0.93,
+    "similarity_definition": "Constructed rank score on two pressure directions; not a probability or calibrated retrieval metric.",
+    "synthetic": true,
+    "unrecorded": [
+      "SYN-Q-PROD",
+      "SYN-P-SEP",
+      "fluid composition",
+      "inhibitor concentration",
+      "local minimum temperature"
+    ]
+  }
+]

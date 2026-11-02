@@ -1,0 +1,8 @@
+{
+  "version": "synthetic-physics-v1.1",
+  "private_core_digest": "1ec243a58e953d63f6361ebd3fbe485510e33d11363ab6a28a38ef25e710cb05",
+  "original_private_manifest_digest": "74867715b59caa065b6fa26bb7d5238a23cf85fb13be3aee3bb8c1dbdc898819",
+  "note": "Core is an exact subset of the original pre-evaluation commitment; no core file changed. Original manifest also included stale v1 run logs and prior freeze metadata. Those are preserved separately; they are excluded from this core integrity check.",
+  "model_evaluations": 0,
+  "scenario_or_reference_changes_after_v1_1_freeze": false
+}

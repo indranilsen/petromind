@@ -1,0 +1,28 @@
+{
+  "version": "synthetic-physics-v1",
+  "frozen_at": "2026-11-02T17:05:11.492985+00:00",
+  "base_commit": "516dab2004594cd6efdf0ec2f9ef3427b040321a",
+  "model_calls_before_freeze": 0,
+  "public_files": {
+    "PROVENANCE.md": "1f9bce98af3c8c77612eeab59ccd40b72d03c48cca901b6737c9b2bf0e8ebda6",
+    "README.md": "fedadddf781820c0b13cf1bb4dc85a4c1f9a43d6a2902bc6ac805e64b011cf6a",
+    "RUBRIC.md": "5115f0f701a382ddcb80c46ce8546f06111a6db35e0f79ad332a585528a56b98",
+    "adapter.py": "779364ac05f5a1ed5ce625caf5b192f67567d9b5e550f696b5b6d3fd7f5dea99",
+    "public/cases/c-13df.json": "e4b7dec8bcc183572f7d9ee8e9d96e9f4ff2cd9cf6da1e2ef6af0c17a5286d4f",
+    "public/cases/c-42e8.json": "fc573ffcbf9da1ccd02c7fed288569531ccd4ffb2f4ddbdedf66c85eda1b85a1",
+    "public/cases/c-6f03.json": "554b01242f2cfb72725502cf5db7e19df83473f44c64961866b2d9396da605f8",
+    "public/cases/c-7a91.json": "58b7206fb558ee6a252baf6eb9a9787f34596e3e1fffc2dafc242ffd4a304f00",
+    "public/cases/c-80b2.json": "8a2b629e2b61884d6569cfb39fd88d0acc68e0d4e32d0958c2dcc5079b276787",
+    "public/cases/c-9bc4.json": "df3409083741d25bf5fdbdfe3d8584eeb01a7294e0e022032db9ff8b6b814092",
+    "public/cases/c-a57c.json": "c0d61efecf9066278bb346ff9fd48b9b2f9ec0732fa3d69fa3336bef26dc3ec8",
+    "public/documents.json": "3ac1034a80da4f92efe103f33f8bd197b86e972b838be5e61bb32add527d2f67",
+    "public/graph.json": "b02ced4790f4566f673d154de0a0a519a0f780992a4e6205852b6e39ebc3bb35",
+    "public/history.json": "c9052f2112852c1479dd9acff82d1a348b59e16c6dc430dab5ad018495e17bac",
+    "public/index.json": "137babd846b3b5a6e832bd324c4ce6d4646249ec585ff4347827cc11fcc148b9",
+    "public/model.json": "abb4e07b795cb86a5370ef98410a2c865f7cde6b1346ddf2f425ed112f78bb62",
+    "tests/test_adapter.py": "a9d1ed6c8ab07147d3762cdb2cc8d02bfa9a2c42c36423ea7b398b77f320463a"
+  },
+  "public_root_digest": "4b0ad2a38ff3846135b15c1dbe277ae563d49847845591451017092baa3a6621",
+  "private_package_commitment": "37052411b89195621948a0cb1f32b324c157e452a9841d19163523a7fd5e1852",
+  "scope": "cases, graph, model, documents, history, key, vault, generator, rubric and fixed baseline frozen before any model evaluation"
+}

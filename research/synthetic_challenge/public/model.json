@@ -1,0 +1,30 @@
+{
+  "assumptions": [
+    "Positive forward flow; no elevation head, leak, parallel path or distributed line storage.",
+    "Synthetic mapping: P-TPT=P_U; P-MON-CKP=P_D; SYN-P-SEP=P_S; SYN-Q-PROD=Q. This mapping is supplied only for this model.",
+    "Bounds include calibration bias and noise, apply simultaneously and independently; clocks synchronized. GOOD endpoints are trustworthy within stated bounds.",
+    "Temperature is a passive first-order thermal channel with external cooling; it does not predict hydrate phase or generate hydraulic resistance.",
+    "SYN-OPEN-K is a stuck telemetry channel; percent opening is not calibrated hydraulic conductance.",
+    "No verified per-well real topology, fluid composition, free-water assay, inhibitor concentration, local minimum wall temperature, hydrate envelope or deposit sample supplied."
+  ],
+  "epistemic_status": "explicit_synthetic_model_assumption",
+  "equations": [
+    "Q_in=(P_R-P_U)/R_s",
+    "C*dP_U/dt=Q_in-Q",
+    "P_U-P_D=R_L*Q^2",
+    "P_D-P_S=R_K*Q^2"
+  ],
+  "id": "model:M1",
+  "identifiability": "Positive Q and simultaneous pressures across a segment identify its effective R under M1 with uncertainty bounds. M1 has no material-to-resistance constitutive law; material identity is not a hydraulic state variable.",
+  "limits": "No gas slip, slugging, phase change, reservoir model, material chemistry, control dynamics, wave propagation or industrial validation. Do not recommend operational action from this benchmark.",
+  "material_assignments": "Hydrate, scale and debris are admissible latent obstruction labels for any positive R_L trajectory, with identical hydraulic equations; they are not chemical simulations.",
+  "scope": "This hypothetical producing-well outlet is a horizontal liquid-equivalent surrogate, not an installed Petrobras well.",
+  "topology": "supply -> linear inflow resistance -> compliant tree node U -> segment L -> node D -> choke K -> separator S. No branches or pump in L/K; same local volumetric flow Q in L and K.",
+  "units": {
+    "C": "m3/Pa",
+    "R_L,R_K": "Pa s2/m6",
+    "R_s": "Pa s/m3",
+    "flow": "m3/s local liquid-equivalent",
+    "pressure": "Pa absolute"
+  }
+}
