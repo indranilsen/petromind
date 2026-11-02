@@ -38,7 +38,8 @@ the returned source facts, historical overlap, public findings and missing premi
 [Readiness runbook and one-run live smoke commands](docs/hackathon-readiness.md) ·
 [Three-minute judge script](docs/hackathon-demo.md) ·
 [Submission description](docs/hackathon-submission.md) ·
-[Verification receipt](docs/readiness-verification.md)
+[Verification receipt](docs/readiness-verification.md) ·
+[Visual Technology walkthrough and browser checks](docs/technology-page.md)
 
 Live v3 can request additional source-motivated summaries within the shared five-
 sensor budget; it requires verified original raw windows, a fresh capped protocol,
