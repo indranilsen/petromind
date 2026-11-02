@@ -1,0 +1,22 @@
+{
+  "version": "sprint-c-offline-budget-forecast-v1",
+  "basis": "17 completed archived v1/v2 cells; planning only, no pooled scientific inference",
+  "completed_historical_cells": 17,
+  "permitted_remaining_cells": 22,
+  "known_usage_mean_per_completed_cell_usd": "0.046738661764705882",
+  "known_usage_max_per_completed_cell_usd": "0.06338915",
+  "mean_extrapolation_22_cells_usd": "1.028250558823529404",
+  "two_times_historical_max_for_22_cells_usd": "2.78912260",
+  "largest_single_request_reservation_usd": "1.307648",
+  "two_times_max_plus_inflight_headroom_usd": "4.09677060",
+  "conditional_capacity_after_owner_review_usd": "5.26804515",
+  "recommended_additional_authorization_usd": "0",
+  "no_additional_money_authorized": true,
+  "limitations": [
+    "Usage estimates are not invoices. Future paths/requests can differ. This is not an assurance of completion.",
+    "Before HTTP the guard requires a full request reservation; it stops if conditional capacity is insufficient. No cap increase is implemented.",
+    "At most six complete matched groups; the original failed cell is never replayed."
+  ],
+  "absolute_worst_case_176_request_bound_usd": "230.146048",
+  "absolute_worst_case_is_not_a_funding_recommendation": true
+}

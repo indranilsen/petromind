@@ -1,0 +1,21 @@
+{
+  "mock_only": true,
+  "paid_http_calls": 0,
+  "mock_responses": 22,
+  "permitted_cells": 22,
+  "matched_groups_after_mock": 6,
+  "semantic_grades": null,
+  "preserved_failed_cells": [
+    [
+      "c-6f03",
+      "V2"
+    ]
+  ],
+  "export_manifest_verified": 217,
+  "scoring_included": true,
+  "archive_preparation": "Outer 24 and original 136 commitments verified with Mac detection mocked; no local certificate created",
+  "audit_status": "VALIDATED",
+  "original_proposal_id": "b51a6501e191516e2fbf7324b00680a48e1ed2e5ad9ac59ac5fee6ef7f2fcd11",
+  "unchanged_plan_id": "cd01310923d9fc8a766d64f0cbd9bc11db032a60c5235e57500b45e49adfca5e",
+  "note": "Mock abstentions are transport/security validation, never scientific experiment results or owner approval."
+}

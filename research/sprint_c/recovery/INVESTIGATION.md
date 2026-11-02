@@ -130,8 +130,8 @@ The proposal is not an activated account balance.
 
 ## Local continuation design and readiness
 
-The optional local continuation uses SQLite transactions with FULL synchronous
-commits, append-only event-table triggers, immutable per-event anchor files and
+The optional local continuation uses SQLite rollback transactions with EXTRA
+synchronous commits and fullfsync enabled, append-only event-table triggers, immutable per-event anchor files and
 one owner lock for the complete lifecycle. A reservation's committed row and
 anchor must both persist before HTTP. Settlement releases only validated new
 usage; uncertain new requests keep full holds and stop execution. Restart checks
@@ -142,7 +142,7 @@ historical response ID or changed pricing/ceiling fails closed.
 The new journal does not pretend to contain the old history. Its genesis is an
 explicit **conservative carry-forward** linked to the immutable proposal and owner
 review. Approval is tied to one canonical database/output location. Exclusive
-activation and a registry at the selected forensic package prevent ordinary
+activation and a fixed registry in the owner's home, outside the forensic package, prevent ordinary
 output-directory changes from resetting the budget or replaying cells. Do not
 clone an active package/journal to create a second spender. This is a trusted-owner
 local design, not tamper-proof protection against an operator who destroys every

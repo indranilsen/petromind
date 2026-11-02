@@ -2,22 +2,23 @@
 import fcntl,json,os,secrets,sqlite3,subprocess,sys,time
 from pathlib import Path
 from petromind.eval_protocol import digest
+from . import durability
 
 
 def fsync_dir(root):
-    fd=os.open(root,os.O_RDONLY)
-    try:os.fsync(fd)
-    finally:os.close(fd)
+    durability.sync_dir(root)
 
 
 def validate(root,surface='hosted_disposable'):
     root=Path(root).resolve();root.mkdir(mode=0o700)
-    nonce=secrets.token_hex(24);(root/'nonce').write_text(nonce);fsync_dir(root)
+    facts=durability.local_surface(root) if surface=='trusted_local_owner' else {'platform':'hosted','local_macos_approved':False}
+    if surface=='trusted_local_owner' and not facts['local_macos_approved']:raise ValueError('trusted_local_mac_required')
+    nonce=secrets.token_hex(24);durability.durable_text(root/'nonce',nonce)
     checks={}
     log=root/'append';head=root/'head'
-    with log.open('x') as f:f.write('one\n');f.flush();os.fsync(f.fileno())
+    with log.open('x') as f:f.write('one\n');f.flush();durability.sync_file(f.fileno())
     fsync_dir(root);checks['sequential_append_readback']=log.read_text()=='one\n'
-    with (root/'head.new').open('x') as f:f.write('1');f.flush();os.fsync(f.fileno())
+    with (root/'head.new').open('x') as f:f.write('1');f.flush();durability.sync_file(f.fileno())
     os.replace(root/'head.new',head);fsync_dir(root);checks['file_directory_fsync_atomic_replace']=head.read_text()=='1'
     with (root/'lock').open('a') as f:
         fcntl.flock(f,fcntl.LOCK_EX)
@@ -29,13 +30,14 @@ def validate(root,surface='hosted_disposable'):
     checks['interrupted_append_detected']=not partial.read_bytes().endswith(b'\n')
     divergent=root/'divergent-head';divergent.write_text('2')
     checks['interrupted_checkpoint_detected']=int(divergent.read_text())!=len(log.read_text().splitlines())
-    db=root/'crash.sqlite';c=sqlite3.connect(db);c.execute('CREATE TABLE events (n INTEGER)');c.commit();c.close()
-    code="import sqlite3,sys,os;c=sqlite3.connect(sys.argv[1]);c.execute('BEGIN IMMEDIATE');c.execute('INSERT INTO events VALUES (1)');os._exit(7)"
+    db=root/'crash.sqlite';c=sqlite3.connect(db);durability.sqlite_settings(c,initialize=True);c.execute('CREATE TABLE events (n INTEGER)');c.commit();c.close()
+    code="import sqlite3,sys,os;from research.sprint_c.recovery.durability import sqlite_settings;c=sqlite3.connect(sys.argv[1]);sqlite_settings(c);c.execute('BEGIN IMMEDIATE');c.execute('INSERT INTO events VALUES (1)');os._exit(7)"
     subprocess.run([sys.executable,'-c',code,str(db)],capture_output=True)
     c=sqlite3.connect(db);checks['interrupted_sqlite_transaction_rolled_back']=c.execute('SELECT COUNT(*) FROM events').fetchone()[0]==0 and c.execute('PRAGMA integrity_check').fetchone()[0]=='ok';c.close()
     # Independent processes validate transactional single-writer / read snapshots.
-    c=sqlite3.connect(db);c.execute('PRAGMA synchronous=FULL');c.close()
-    writer="import sqlite3,sys,time;c=sqlite3.connect(sys.argv[1]);\nfor i in range(100):\n c.execute('INSERT INTO events VALUES (?)',(i,));c.commit();time.sleep(.001)"
+    # This disposable snapshot test deliberately has a reader, unlike the money
+    # owner. Allow normal SQLite reader contention here only; money timeout stays 0.
+    writer="import sqlite3,sys,time;from research.sprint_c.recovery.durability import sqlite_settings;c=sqlite3.connect(sys.argv[1]);sqlite_settings(c);c.execute('PRAGMA busy_timeout=5000');\nfor i in range(100):\n c.execute('INSERT INTO events VALUES (?)',(i,));c.commit();time.sleep(.001)"
     w=subprocess.Popen([sys.executable,'-c',writer,str(db)])
     good=True;seen=[]
     while w.poll() is None:
@@ -43,10 +45,10 @@ def validate(root,surface='hosted_disposable'):
         if len(seen)>1 and seen[-1]<seen[-2]:good=False
     checks['concurrent_writer_reader_snapshots']=good and w.returncode==0
     checks['divergent_view_detection']=digest({'nonce':nonce,'head':1})!=digest({'nonce':'other','head':1})
-    report={'version':'local-storage-checks-v1','nonce':nonce,'surface':surface,'checks':checks,
+    report={'version':'local-storage-checks-v2','filesystem':facts,'nonce':nonce,'surface':surface,'checks':checks,
         'passed':all(checks.values()),'separate_session_witness_complete':False,
         'device':root.stat().st_dev,'inode':root.stat().st_ino,'not_a_universal_durability_proof':True}
-    report['report_id']=digest(report);(root/'validation.json').write_text(json.dumps(report,indent=2)+'\n');fsync_dir(root)
+    report['report_id']=digest(report);durability.durable_text(root/'validation.json',json.dumps(report,indent=2)+'\n')
     return report
 
 
@@ -61,8 +63,8 @@ def cross(root,mode):
                 fcntl.flock(f,fcntl.LOCK_EX)
                 n=len(log.read_text().splitlines());h=int(head.read_text())
                 if n!=h:break
-                with log.open('a') as stream:stream.write(str(i)+'\n');stream.flush();os.fsync(stream.fileno())
-                with (root/'cross-head.new').open('w') as stream:stream.write(str(i));stream.flush();os.fsync(stream.fileno())
+                with log.open('a') as stream:stream.write(str(i)+'\n');stream.flush();durability.sync_file(stream.fileno())
+                with (root/'cross-head.new').open('w') as stream:stream.write(str(i));stream.flush();durability.sync_file(stream.fileno())
                 os.replace(root/'cross-head.new',head);fsync_dir(root)
             time.sleep(.02)
         success=n==h and i==500
@@ -79,33 +81,39 @@ def cross(root,mode):
             time.sleep(.01)
         value={'mode':mode,'nonce':nonce,'pid':os.getpid(),'passed':success,'observed_active_writer':observed>0,'started_ns':first,'writer_started_ns':start,'finished_ns':time.time_ns()}
     value['device']=root.stat().st_dev;value['inode']=root.stat().st_ino;value['result_id']=digest(value)
-    (root/f'cross-{mode}.json').write_text(json.dumps(value,indent=2)+'\n');fsync_dir(root);return value
+    durability.durable_text(root/f'cross-{mode}.json',json.dumps(value,indent=2)+'\n');return value
 
 
-def certify(root):
+CHECKS={'sequential_append_readback','file_directory_fsync_atomic_replace','lock_exclusion','lock_release',
+        'process_restart_readback','interrupted_append_detected','interrupted_checkpoint_detected',
+        'interrupted_sqlite_transaction_rolled_back','concurrent_writer_reader_snapshots','divergent_view_detection'}
+
+
+def witness_certificate(root):
     root=Path(root).resolve();v=json.loads((root/'validation.json').read_text());w=json.loads((root/'cross-writer.json').read_text());r=json.loads((root/'cross-reader.json').read_text())
     for obj,key in ((v,'report_id'),(w,'result_id'),(r,'result_id')):
         if digest({k:x for k,x in obj.items() if k!=key})!=obj[key]:raise ValueError('storage_report_modified')
-    if not (v['passed'] and w['passed'] and r['passed'] and r['observed_active_writer'] and w['pid']!=r['pid'] and r['started_ns']<w['finished_ns']):
+    if v.get('version')!='local-storage-checks-v2' or set(v['checks'])!=CHECKS or any(x is not True for x in v['checks'].values()):raise ValueError('required_storage_checks_missing')
+    if not (v['passed'] is True and w['passed'] is True and r['passed'] is True and r['observed_active_writer'] is True
+            and w['pid']!=r['pid'] and w['mode']=='writer' and r['mode']=='reader'
+            and r['writer_started_ns']<=r['started_ns']<w['finished_ns'] and w['iterations']==500 and w['rows']==w['head']==500):
         raise ValueError('cross_session_storage_not_verified')
-    if len({x['nonce'] for x in (v,w,r)})!=1 or len({(x['device'],x['inode']) for x in (v,w,r)})!=1:raise ValueError('divergent_storage_views')
-    if (root/'nonce').read_text()!=v['nonce'] or len((root/'cross-log').read_text().splitlines())!=500 or (root/'cross-head').read_text()!='500':raise ValueError('storage_diverged_after_probe')
-    c={'version':'local-storage-certificate-v1','validation_id':v['report_id'],'writer_id':w['result_id'],'reader_id':r['result_id'],'nonce':v['nonce'],
+    identity=(root.stat().st_dev,root.stat().st_ino)
+    if any((x['device'],x['inode'])!=identity for x in (v,w,r)) or len({x['nonce'] for x in (v,w,r)})!=1:raise ValueError('divergent_storage_views')
+    if (root/'nonce').read_text()!=v['nonce'] or (root/'cross-log').read_text().splitlines()!=[str(i) for i in range(1,501)] or (root/'cross-head').read_text()!='500':raise ValueError('storage_diverged_after_probe')
+    if v['surface']=='trusted_local_owner' and durability.local_surface(root)!=v['filesystem']:raise ValueError('local_filesystem_changed')
+    c={'version':'local-storage-certificate-v2','validation_id':v['report_id'],'writer_id':w['result_id'],'reader_id':r['result_id'],'nonce':v['nonce'],
        'surface':v['surface'],'passed':True,'owner_directory':str(root),'not_a_universal_durability_proof':True}
-    c['certificate_id']=digest(c)
-    with (root/'certificate.json').open('x') as f:f.write(json.dumps(c,indent=2)+'\n')
-    fsync_dir(root);return c
+    c['certificate_id']=digest(c);return c
+
+
+def certify(root):
+    root=Path(root).resolve();c=witness_certificate(root)
+    durability.durable_text(root/'certificate.json',json.dumps(c,indent=2)+'\n');return c
 
 
 def verify_certificate(path,require_local=True):
     path=Path(path).resolve();saved=json.loads(path.read_text())
-    if digest({k:v for k,v in saved.items() if k!='certificate_id'})!=saved['certificate_id']:raise ValueError('storage_certificate_modified')
-    if require_local and saved['surface']!='trusted_local_owner':raise ValueError('hosted_execution_forbidden')
-    # Validate all witnesses and current view without overwriting the certificate.
-    root=path.parent
-    for name,key,expected in [('validation.json','report_id',saved['validation_id']),('cross-writer.json','result_id',saved['writer_id']),('cross-reader.json','result_id',saved['reader_id'])]:
-        obj=json.loads((root/name).read_text())
-        if name=='validation.json' and (obj['device'],obj['inode'])!=(root.stat().st_dev,root.stat().st_ino):raise ValueError('validated_storage_directory_changed')
-        if obj[key]!=expected or digest({k:v for k,v in obj.items() if k!=key})!=expected or not obj['passed']:raise ValueError('storage_witness_changed')
-    if (root/'nonce').read_text()!=saved['nonce']:raise ValueError('storage_nonce_changed')
+    if require_local and saved.get('surface')!='trusted_local_owner':raise ValueError('hosted_execution_forbidden')
+    if saved!=witness_certificate(path.parent):raise ValueError('storage_certificate_or_current_view_changed')
     return saved

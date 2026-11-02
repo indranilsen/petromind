@@ -132,7 +132,8 @@ def test_interrupted_anchor_persistence_fails_closed_before_http(local,monkeypat
     with pytest.raises(ValueError):local.state()
 
 
-def test_mocked_local_continuation_uses_frozen_prompt_and_settles(tmp_path,proposal,private,monkeypatch):
+@pytest.mark.parametrize('provider_usage_valid',[True,False])
+def test_mocked_local_continuation_uses_frozen_prompt_and_settles(tmp_path,proposal,private,monkeypatch,provider_usage_valid):
     import httpx
     from test_muse_integration import abstain
     from petromind.meta_api import MetaResponsesClient
@@ -143,7 +144,7 @@ def test_mocked_local_continuation_uses_frozen_prompt_and_settles(tmp_path,propo
     (package/'sprint-c-v2/protocol.json').write_text(json.dumps(frozen))
     db=tmp_path/'money.sqlite';review=approval(proposal,'TEST FIXTURE OWNER',db)
     l=LocalLedger.initialize(db,proposal,review);l.close()
-    expected={'plan_id':'fixture','cells':[{'task_id':'c-13df','variant':'V3'}]}
+    expected={'plan_id':'fixture','scientific_protocol_id':frozen['protocol_id'],'cells':[{'task_id':'c-13df','variant':'V3'}]}
     planfile=tmp_path/'plan.json';planfile.write_text(json.dumps(expected))
     monkeypatch.setattr(wf,'gates',lambda *args:(proposal,review,{'certificate_id':'fixture'}))
     monkeypatch.setattr(wf,'plan',lambda *args:expected)
@@ -158,14 +159,25 @@ def test_mocked_local_continuation_uses_frozen_prompt_and_settles(tmp_path,propo
             assert ledger.summary()['new_unsettled_holds_usd']>0
             packet=json.loads(payload['input'][0]['content'][0]['text'])
             return httpx.Response(200,json={'id':'resp_'+uuid.uuid4().hex,'model':'muse-spark-1.3','status':'completed',
-                'usage':{'input_tokens':100,'output_tokens':100,'total_tokens':200},
+                'usage':{'input_tokens':100 if provider_usage_valid else -1,'output_tokens':100,'total_tokens':200},
                 'output':[{'type':'function_call','call_id':'submit','name':'submit_audit','arguments':json.dumps(abstain(packet))}]})
         factory=lambda **kw:MetaResponsesClient(transport=httpx.MockTransport(handler),**kw)
         return SettlingClient(protocol,ledger,task,factory=factory)
     monkeypatch.setattr(wf,'SettlingClient',create)
     result=wf.run(package,'fixture','fixture','fixture',db,planfile,tmp_path/'run',private,True)
-    assert result['status']=='PERMITTED_CELLS_FINISHED' and len(calls)==1
-    assert result['accounting']['new_unsettled_holds_usd']==0
+    assert result['status']==('PERMITTED_CELLS_FINISHED' if provider_usage_valid else 'STOPPED_NO_RETRY') and len(calls)==1
+    assert (result['accounting']['new_unsettled_holds_usd']==0)==provider_usage_valid
+    from research.sprint_c.recovery import handoff
+    monkeypatch.setattr(handoff,'propose',lambda *args:proposal)
+    monkeypatch.setattr(handoff,'verify_package',lambda *args:{})
+    l=LocalLedger(db,proposal,review)
+    try:
+        audited=handoff.audit_locked(package,tmp_path/'run',l)
+        assert audited['completed_cells']==int(provider_usage_valid) and audited['unresolved_requests']==int(not provider_usage_valid)
+        capture=tmp_path/'run/suite/c-13df-V3/result.json'
+        changed=json.loads(capture.read_text());changed['requests']=99;capture.write_text(json.dumps(changed))
+        with pytest.raises(ValueError,match='capture_result_changed'):handoff.audit_locked(package,tmp_path/'run',l)
+    finally:l.close()
 
 
 def test_reviewed_path_and_activation_prevent_directory_reset(local,proposal,tmp_path):
@@ -177,3 +189,79 @@ def test_reviewed_path_and_activation_prevent_directory_reset(local,proposal,tmp
 def test_scoring_rejects_active_owner_before_loading_private_key(local,tmp_path):
     from research.sprint_c.recovery.workflow import score
     with pytest.raises(ValueError):score(tmp_path,tmp_path,tmp_path,tmp_path/'score',local.path)
+
+
+def test_macos_sync_requires_and_uses_fullfsync(monkeypatch,tmp_path):
+    import fcntl,os
+    from research.sprint_c.recovery import durability as d
+    monkeypatch.setattr(d,'is_macos',lambda:True)
+    monkeypatch.delattr(fcntl,'F_FULLFSYNC',raising=False)
+    with (tmp_path/'sync').open('w') as f:
+        with pytest.raises(ValueError,match='fullfsync'):d.sync_file(f.fileno())
+        called=[];monkeypatch.setattr(fcntl,'F_FULLFSYNC',51,raising=False)
+        monkeypatch.setattr(fcntl,'fcntl',lambda *args:called.append(args))
+        d.sync_file(f.fileno());assert called==[(f.fileno(),51,0)]
+
+
+def test_initialization_lock_precedes_activation(tmp_path,proposal):
+    import fcntl
+    db=tmp_path/'locked.sqlite';review=approval(proposal,'FIXTURE',db)
+    with (tmp_path/'owner.lock').open('a') as f:
+        fcntl.flock(f,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        with pytest.raises(ValueError,match='single_owner'):LocalLedger.initialize(db,proposal,review)
+    assert not db.exists() and not db.with_name(db.name+'.activation.json').exists()
+
+
+def test_review_registry_cannot_move_with_package(tmp_path,proposal,monkeypatch):
+    from research.sprint_c.recovery import durability as d
+    from research.sprint_c.recovery.ledger import verify_review
+    monkeypatch.setattr(Path,'home',classmethod(lambda cls:tmp_path))
+    review=approval(proposal,'FIXTURE',tmp_path/'money.sqlite')
+    assert review['authorization_registry']==str(d.authorization_registry(proposal))
+    review['authorization_registry']=str(tmp_path/'copied-package/registry.json')
+    review['review_id']=digest({k:v for k,v in review.items() if k!='review_id'})
+    with pytest.raises(ValueError):verify_review(proposal,review)
+
+
+def test_overlap_certificate_rechecks_current_witnesses(tmp_path):
+    from research.sprint_c.recovery.handoff import storage_check
+    root=tmp_path/'storage';c=storage_check(root,False)
+    assert verify_certificate(root/'certificate.json',require_local=False)==c
+    (root/'cross-head').write_text('499')
+    with pytest.raises(ValueError,match='diverged_after'):verify_certificate(root/'certificate.json',require_local=False)
+
+
+def test_non_mac_local_certificate_fails_closed(tmp_path):
+    import sys
+    if sys.platform=='darwin':pytest.skip('Linux gate check')
+    with pytest.raises(ValueError,match='trusted_local_mac'):validate(tmp_path/'local','trusted_local_owner')
+
+
+def test_native_mac_local_surface(tmp_path):
+    import sys
+    if sys.platform!='darwin':pytest.skip('requires native macOS/APFS')
+    report=validate(tmp_path/'mac-native','trusted_local_owner')
+    assert report['passed'] and report['filesystem']['local_macos_approved']
+
+
+def test_sqlite_required_settings(local):
+    assert local.db.execute('PRAGMA synchronous').fetchone()[0]==3
+    assert local.db.execute('PRAGMA fullfsync').fetchone()[0]==1
+    assert local.db.execute('PRAGMA journal_mode').fetchone()[0]=='delete'
+
+
+def test_activation_tamper_refuses_restart(local,proposal):
+    path=local.path;review=local.review;local.close()
+    path.with_name(path.name+'.activation.json').write_text('{}')
+    with pytest.raises(ValueError,match='activation_changed'):LocalLedger(path,proposal,review)
+
+
+def test_unsafe_archive_rejected_before_extract(tmp_path):
+    import tarfile,io
+    from research.sprint_c.recovery.handoff import extract
+    from research.sprint_c.recovery.reconcile import sha
+    archive=tmp_path/'bad.tar.gz'
+    with tarfile.open(archive,'w:gz') as t:
+        m=tarfile.TarInfo('../escape');m.size=1;t.addfile(m,io.BytesIO(b'x'))
+    with pytest.raises(ValueError,match='unsafe_archive'):extract(archive,tmp_path/'extracted',sha(archive))
+    assert not (tmp_path/'escape').exists()

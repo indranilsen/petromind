@@ -13,3 +13,12 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: python -m pip install -e '.[test,agent,audit]'
       - run: python -m pytest -q
+  recovery-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[test,agent,audit]'
+      - run: python -m pytest -q tests/test_sprint_c_recovery.py research/synthetic_challenge/integration

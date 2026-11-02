@@ -10,6 +10,7 @@ from petromind.eval_protocol import digest
 from petromind.meta_api import MetaAPIError
 from research.sprint_c.accounting import validate_receipt,receipt_cost,NANO
 from .reconcile import verify_proposal
+from . import durability
 
 ZERO='0'*64
 
@@ -17,15 +18,17 @@ ZERO='0'*64
 def approval(proposal,reviewer,database):
     verify_proposal(proposal)
     if not isinstance(reviewer,str) or not reviewer.strip():raise ValueError('owner_reviewer_required')
-    r={'version':'owner-loss-bound-review-v1','proposal_id':proposal['proposal_id'],'reviewer':reviewer,
+    r={'version':'owner-loss-bound-review-v2','proposal_id':proposal['proposal_id'],'reviewer':reviewer,
        'decision':'ACCEPT_CONSERVATIVE_LOSS_BOUND_NOT_EXACT_RECOVERY','execution_surface':'trusted_local_owner',
-       'additional_money_authorized':0,'continuation_database':str(Path(database).resolve()),'continuation_output':str(Path(database).resolve().parent/'run')}
+       'additional_money_authorized':0,'authorization_registry':str(durability.authorization_registry(proposal).resolve()),'continuation_database':str(Path(database).resolve()),'continuation_output':str(Path(database).resolve().parent/'run')}
     r['review_id']=digest(r);return r
 
 
 def verify_review(proposal,review):
     verify_proposal(proposal)
     if (digest({k:v for k,v in review.items() if k!='review_id'})!=review['review_id']
+        or review.get('version')!='owner-loss-bound-review-v2'
+        or review.get('authorization_registry')!=str(durability.authorization_registry(proposal).resolve())
         or review.get('proposal_id')!=proposal['proposal_id'] or not review.get('reviewer','').strip()
         or review.get('decision')!='ACCEPT_CONSERVATIVE_LOSS_BOUND_NOT_EXACT_RECOVERY'
         or review.get('execution_surface')!='trusted_local_owner' or review.get('additional_money_authorized')!=0):
@@ -43,50 +46,45 @@ class LocalLedger:
         except BlockingIOError:
             self.owner_lock.close();raise ValueError('single_owner_already_running') from None
         self.anchors=self.path.with_name(self.path.name+'.anchors')
-        self.db=sqlite3.connect(self.path,timeout=0,isolation_level=None)
-        self.db.execute('PRAGMA synchronous=FULL');self.db.execute('PRAGMA busy_timeout=0')
-        try:self.state()
+        try:
+            self.db=sqlite3.connect(self.path,timeout=0,isolation_level=None)
+            durability.sqlite_settings(self.db)
+            activation=json.loads(self.path.with_name(self.path.name+'.activation.json').read_text())
+            if activation!={'proposal_id':proposal['proposal_id'],'review_id':review['review_id'],'database':str(self.path)}:raise ValueError('activation_changed')
+            self.state()
         except Exception:self.close();raise
 
     @classmethod
     def initialize(cls,path,proposal,review):
-        verify_review(proposal,review);path=Path(path).resolve();path.parent.mkdir(parents=True,exist_ok=True)
+        verify_review(proposal,review);path=Path(path).resolve();path.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
         if str(path)!=review.get('continuation_database'):raise ValueError('reviewed_database_path_changed')
-        if path.exists():raise FileExistsError(path)
-        activation=path.with_name(path.name+'.activation.json')
-        with activation.open('x') as f:
-            f.write(canonical({'proposal_id':proposal['proposal_id'],'review_id':review['review_id'],'database':str(path)})+'\n');f.flush();os.fsync(f.fileno())
-        fd=os.open(path,os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600);os.close(fd)
-        db=sqlite3.connect(path,isolation_level=None)
-        try:
-            db.execute('PRAGMA journal_mode=DELETE');db.execute('PRAGMA synchronous=FULL')
-            db.execute('CREATE TABLE events (sequence INTEGER PRIMARY KEY, body TEXT NOT NULL, digest TEXT NOT NULL UNIQUE)')
-            db.execute("CREATE TRIGGER no_update BEFORE UPDATE ON events BEGIN SELECT RAISE(ABORT,'append_only'); END")
-            db.execute("CREATE TRIGGER no_delete BEFORE DELETE ON events BEGIN SELECT RAISE(ABORT,'append_only'); END")
-            body={'sequence':1,'previous_hash':ZERO,'kind':'conservative_carry_forward',
-                'data':{'proposal_id':proposal['proposal_id'],'review_id':review['review_id'],
-                        'historical_held_nusd':proposal['historical_held_nusd'],
-                        'carried_sprint_c_liability_nusd':proposal['sprint_c_carried_liability_nusd']}}
-            db.execute('BEGIN IMMEDIATE');db.execute('INSERT INTO events VALUES (?,?,?)',(1,canonical(body),digest(body)));db.execute('COMMIT')
-        finally:db.close()
-        fd=os.open(path.parent,os.O_RDONLY)
-        try:os.fsync(fd)
-        finally:os.close(fd)
-        anchors=path.with_name(path.name+'.anchors');anchors.mkdir(mode=0o700)
-        cls.write_anchor(anchors,1,digest(body))
-        fd=os.open(path.parent,os.O_RDONLY)
-        try:os.fsync(fd)
-        finally:os.close(fd)
+        with (path.parent/'owner.lock').open('a') as owner:
+            try:fcntl.flock(owner,fcntl.LOCK_EX|fcntl.LOCK_NB)
+            except BlockingIOError:raise ValueError('single_owner_already_running') from None
+            if path.exists():raise FileExistsError(path)
+            activation={'proposal_id':proposal['proposal_id'],'review_id':review['review_id'],'database':str(path)}
+            durability.durable_text(path.with_name(path.name+'.activation.json'),canonical(activation)+'\n')
+            fd=os.open(path,os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600);os.close(fd)
+            db=sqlite3.connect(path,isolation_level=None)
+            try:
+                durability.sqlite_settings(db,initialize=True)
+                db.execute('CREATE TABLE events (sequence INTEGER PRIMARY KEY, body TEXT NOT NULL, digest TEXT NOT NULL UNIQUE)')
+                db.execute("CREATE TRIGGER no_update BEFORE UPDATE ON events BEGIN SELECT RAISE(ABORT,'append_only'); END")
+                db.execute("CREATE TRIGGER no_delete BEFORE DELETE ON events BEGIN SELECT RAISE(ABORT,'append_only'); END")
+                body={'sequence':1,'previous_hash':ZERO,'kind':'conservative_carry_forward',
+                    'data':{'proposal_id':proposal['proposal_id'],'review_id':review['review_id'],
+                            'historical_held_nusd':proposal['historical_held_nusd'],
+                            'carried_sprint_c_liability_nusd':proposal['sprint_c_carried_liability_nusd']}}
+                db.execute('BEGIN IMMEDIATE');db.execute('INSERT INTO events VALUES (?,?,?)',(1,canonical(body),digest(body)));db.execute('COMMIT')
+            finally:db.close()
+            durability.sync_dir(path.parent)
+            anchors=path.with_name(path.name+'.anchors');anchors.mkdir(mode=0o700)
+            cls.write_anchor(anchors,1,digest(body));durability.sync_dir(path.parent)
         return cls(path,proposal,review)
 
     @staticmethod
     def write_anchor(directory,seq,event_digest):
-        path=directory/f'{seq:06d}-{event_digest}.json'
-        with path.open('x') as f:
-            f.write(canonical({'sequence':seq,'digest':event_digest})+'\n');f.flush();os.fsync(f.fileno())
-        fd=os.open(directory,os.O_RDONLY)
-        try:os.fsync(fd)
-        finally:os.close(fd)
+        durability.durable_text(directory/f'{seq:06d}-{event_digest}.json',canonical({'sequence':seq,'digest':event_digest})+'\n')
 
     def checkpoint(self):
         seq,raw,h=self.db.execute('SELECT sequence,body,digest FROM events ORDER BY sequence DESC LIMIT 1').fetchone()
