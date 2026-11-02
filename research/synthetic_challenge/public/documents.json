@@ -1,0 +1,47 @@
+[
+  {
+    "accessed": "2026-11-02",
+    "id": "doc:ini",
+    "locator": "PARQUET_FILE_PROPERTIES; dataset 2.0.0; git blob 4c4799e80e04a9cf8b10cb3f9a23f1c487797cc9",
+    "representation": "author paraphrase; not a source quotation",
+    "scope_limitations": "Generic tag meanings only. No verified installed-well connectivity. QBS is not the production meter in this benchmark.",
+    "summary": "TPT: tree pressure and temperature. MON-CKP: pressure before production choke. JUS-CKP: pressure after choke. PDG: downhole pressure. Pressures Pa, temperatures degC. QBS measures service-pump flow, QGL gas-lift flow, both m3/s. ABER-CKP is choke opening percent.",
+    "url": "https://github.com/petrobras/3W/blob/main/dataset/dataset.ini"
+  },
+  {
+    "accessed": "2026-11-02",
+    "id": "doc:example",
+    "locator": "Figure 5 caption; version 2507.01048v1",
+    "representation": "author paraphrase; not a source quotation",
+    "scope_limitations": "One real labeled example, not a universal signature, material test, or rule for service-line hydrate. Missing PDG cannot be assumed.",
+    "summary": "A labeled production-line hydrate example shows increases at PDG and TPT and a decrease at MON-CKP.",
+    "url": "https://arxiv.org/html/2507.01048v1"
+  },
+  {
+    "accessed": "2026-11-02",
+    "id": "doc:limits",
+    "locator": "Section 2.5 limitations and Section 2.6 limitations",
+    "representation": "author paraphrase; not a source quotation",
+    "scope_limitations": "Published simulator simplification does not establish hydrate chemistry or validate this benchmark simulator.",
+    "summary": "The authors report unverified real-data tag contextualization and original units; simulated hydrate was approximated by valve closure.",
+    "url": "https://arxiv.org/html/2507.01048v1"
+  },
+  {
+    "accessed": "2026-11-02",
+    "id": "doc:mechanisms",
+    "locator": "Energy Glossary: blockage",
+    "representation": "author paraphrase; not a source quotation",
+    "scope_limitations": "A list of possible materials provides neither thresholds nor an incident-specific cause.",
+    "summary": "Hydrates, scale, wax, sand and asphaltenes can obstruct pipelines.",
+    "url": "https://glossary.slb.com/en/terms/b/blockage"
+  },
+  {
+    "accessed": "2026-11-02",
+    "id": "doc:phase",
+    "locator": "Overview and Applications",
+    "representation": "author paraphrase; not a source quotation",
+    "scope_limitations": "Risk context only. Composition, water, inhibitor concentration, local temperature and validated phase envelope are absent here.",
+    "summary": "Cold high-pressure multiphase transport presents hydrate blockage risks; simulation supplies operating envelopes.",
+    "url": "https://www.slb.com/products-and-services/delivering-digital-at-scale/software/olga/olga-solids-management/olga-hydrate-kinetics"
+  }
+]

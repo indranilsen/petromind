@@ -1,0 +1,15 @@
+{
+  "agent_entrypoint": "cases/{case_id}.json",
+  "case_count": 7,
+  "case_ids": [
+    "c-7a91",
+    "c-42e8",
+    "c-9bc4",
+    "c-13df",
+    "c-80b2",
+    "c-6f03",
+    "c-a57c"
+  ],
+  "synthetic": true,
+  "version": "synthetic-physics-v1.1"
+}

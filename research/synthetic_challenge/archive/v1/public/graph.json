@@ -1,0 +1,624 @@
+{
+  "edges": [
+    {
+      "applicable_assumptions": [],
+      "epistemic_status": "documented_engineering_fact",
+      "id": "edge:1",
+      "object": "tree",
+      "predicate": "measurement_location",
+      "provenance": "doc:ini",
+      "scope_limitations": "Generic meaning, not piping connectivity",
+      "subject": "P-TPT"
+    },
+    {
+      "applicable_assumptions": [],
+      "epistemic_status": "documented_engineering_fact",
+      "id": "edge:2",
+      "object": "choke_upstream",
+      "predicate": "measurement_location",
+      "provenance": "doc:ini",
+      "scope_limitations": "Generic meaning, not piping connectivity",
+      "subject": "P-MON-CKP"
+    },
+    {
+      "applicable_assumptions": [],
+      "epistemic_status": "documented_engineering_fact",
+      "id": "edge:3",
+      "object": "downhole",
+      "predicate": "measurement_location",
+      "provenance": "doc:ini",
+      "scope_limitations": "Generic meaning, not piping connectivity",
+      "subject": "P-PDG"
+    },
+    {
+      "applicable_assumptions": [],
+      "epistemic_status": "documented_engineering_fact",
+      "id": "edge:4",
+      "object": "service_pump",
+      "predicate": "measurement_location",
+      "provenance": "doc:ini",
+      "scope_limitations": "Generic meaning, not piping connectivity",
+      "subject": "QBS"
+    },
+    {
+      "applicable_assumptions": [
+        "M1"
+      ],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:5",
+      "object": "U",
+      "predicate": "synthetic_mapping",
+      "provenance": "model:M1",
+      "scope_limitations": "Synthetic topology only",
+      "subject": "P-TPT"
+    },
+    {
+      "applicable_assumptions": [
+        "M1"
+      ],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:6",
+      "object": "D",
+      "predicate": "synthetic_mapping",
+      "provenance": "model:M1",
+      "scope_limitations": "Synthetic topology only",
+      "subject": "P-MON-CKP"
+    },
+    {
+      "applicable_assumptions": [
+        "M1"
+      ],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:7",
+      "object": "S",
+      "predicate": "synthetic_mapping",
+      "provenance": "model:M1",
+      "scope_limitations": "Synthetic topology only",
+      "subject": "SYN-P-SEP"
+    },
+    {
+      "applicable_assumptions": [
+        "M1"
+      ],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:8",
+      "object": "L",
+      "predicate": "synthetic_mapping",
+      "provenance": "model:M1",
+      "scope_limitations": "Synthetic topology only",
+      "subject": "SYN-Q-PROD"
+    },
+    {
+      "applicable_assumptions": [
+        "M1"
+      ],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:9",
+      "object": "L",
+      "predicate": "connected_via",
+      "provenance": "model:M1",
+      "scope_limitations": "Positive flow, horizontal single phase surrogate",
+      "subject": "U"
+    },
+    {
+      "applicable_assumptions": [
+        "M1"
+      ],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:10",
+      "object": "D",
+      "predicate": "discharges_to",
+      "provenance": "model:M1",
+      "scope_limitations": "Positive flow, horizontal single phase surrogate",
+      "subject": "L"
+    },
+    {
+      "applicable_assumptions": [
+        "M1"
+      ],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:11",
+      "object": "K",
+      "predicate": "connected_via",
+      "provenance": "model:M1",
+      "scope_limitations": "Positive flow, horizontal single phase surrogate",
+      "subject": "D"
+    },
+    {
+      "applicable_assumptions": [
+        "M1"
+      ],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:12",
+      "object": "S",
+      "predicate": "discharges_to",
+      "provenance": "model:M1",
+      "scope_limitations": "Positive flow, horizontal single phase surrogate",
+      "subject": "K"
+    },
+    {
+      "applicable_assumptions": [
+        "M1"
+      ],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:13",
+      "object": "P_U-P_D=R_L*Q^2",
+      "predicate": "has_relation",
+      "provenance": "model:M1",
+      "scope_limitations": "Positive flow, horizontal single phase surrogate",
+      "subject": "L"
+    },
+    {
+      "applicable_assumptions": [
+        "M1"
+      ],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:14",
+      "object": "P_D-P_S=R_K*Q^2",
+      "predicate": "has_relation",
+      "provenance": "model:M1",
+      "scope_limitations": "Positive flow, horizontal single phase surrogate",
+      "subject": "K"
+    },
+    {
+      "applicable_assumptions": [],
+      "epistemic_status": "hypothesis_being_tested",
+      "id": "edge:15",
+      "object": "incident",
+      "predicate": "is_candidate_for",
+      "provenance": "claim:diagnosis",
+      "scope_limitations": "Candidate is not established cause",
+      "subject": "candidate:hydrate"
+    },
+    {
+      "applicable_assumptions": [],
+      "epistemic_status": "hypothesis_being_tested",
+      "id": "edge:16",
+      "object": "incident",
+      "predicate": "is_candidate_for",
+      "provenance": "claim:diagnosis",
+      "scope_limitations": "Candidate is not established cause",
+      "subject": "candidate:scale"
+    },
+    {
+      "applicable_assumptions": [],
+      "epistemic_status": "hypothesis_being_tested",
+      "id": "edge:17",
+      "object": "incident",
+      "predicate": "is_candidate_for",
+      "provenance": "claim:diagnosis",
+      "scope_limitations": "Candidate is not established cause",
+      "subject": "candidate:debris"
+    },
+    {
+      "applicable_assumptions": [],
+      "epistemic_status": "hypothesis_being_tested",
+      "id": "edge:18",
+      "object": "incident",
+      "predicate": "is_candidate_for",
+      "provenance": "claim:diagnosis",
+      "scope_limitations": "Candidate is not established cause",
+      "subject": "candidate:choke_motion"
+    },
+    {
+      "applicable_assumptions": [],
+      "epistemic_status": "hypothesis_being_tested",
+      "id": "edge:19",
+      "object": "incident",
+      "predicate": "is_candidate_for",
+      "provenance": "claim:diagnosis",
+      "scope_limitations": "Candidate is not established cause",
+      "subject": "candidate:boundary_change"
+    },
+    {
+      "applicable_assumptions": [],
+      "epistemic_status": "hypothesis_being_tested",
+      "id": "edge:20",
+      "object": "incident",
+      "predicate": "is_candidate_for",
+      "provenance": "claim:diagnosis",
+      "scope_limitations": "Candidate is not established cause",
+      "subject": "candidate:sensor_bias"
+    },
+    {
+      "applicable_assumptions": [
+        "material present and obstructing"
+      ],
+      "epistemic_status": "hypothesis_being_tested",
+      "id": "edge:21",
+      "object": "R_L",
+      "predicate": "may_raise",
+      "provenance": "doc:mechanisms",
+      "scope_limitations": "No chemistry inferred from effective resistance",
+      "subject": "candidate:hydrate"
+    },
+    {
+      "applicable_assumptions": [
+        "material present and obstructing"
+      ],
+      "epistemic_status": "hypothesis_being_tested",
+      "id": "edge:22",
+      "object": "R_L",
+      "predicate": "may_raise",
+      "provenance": "doc:mechanisms",
+      "scope_limitations": "No chemistry inferred from effective resistance",
+      "subject": "candidate:scale"
+    },
+    {
+      "applicable_assumptions": [
+        "material present and obstructing"
+      ],
+      "epistemic_status": "hypothesis_being_tested",
+      "id": "edge:23",
+      "object": "R_L",
+      "predicate": "may_raise",
+      "provenance": "doc:mechanisms",
+      "scope_limitations": "No chemistry inferred from effective resistance",
+      "subject": "candidate:debris"
+    },
+    {
+      "applicable_assumptions": [
+        "M1"
+      ],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:24",
+      "object": "R_L",
+      "predicate": "has_effective_property",
+      "provenance": "model:M1",
+      "scope_limitations": "Conditional model prediction; not a universal field signature",
+      "subject": "L"
+    },
+    {
+      "applicable_assumptions": [
+        "M1"
+      ],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:25",
+      "object": "R_K",
+      "predicate": "has_effective_property",
+      "provenance": "model:M1",
+      "scope_limitations": "Conditional model prediction; not a universal field signature",
+      "subject": "K"
+    },
+    {
+      "applicable_assumptions": [
+        "M1"
+      ],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:26",
+      "object": "R_K",
+      "predicate": "changes",
+      "provenance": "model:M1",
+      "scope_limitations": "Conditional model prediction; not a universal field signature",
+      "subject": "candidate:choke_motion"
+    },
+    {
+      "applicable_assumptions": [
+        "M1"
+      ],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:27",
+      "object": "P_S",
+      "predicate": "changes",
+      "provenance": "model:M1",
+      "scope_limitations": "Conditional model prediction; not a universal field signature",
+      "subject": "candidate:boundary_change"
+    },
+    {
+      "applicable_assumptions": [
+        "M1",
+        "R_K increases",
+        "P_R,P_S,R_s,R_L fixed"
+      ],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:28",
+      "object": "P_U up; P_D up; Q down",
+      "predicate": "steady_prediction",
+      "provenance": "model:M1",
+      "scope_limitations": "Conditional model prediction; not a universal field signature",
+      "subject": "candidate:choke_motion"
+    },
+    {
+      "applicable_assumptions": [
+        "M1",
+        "P_S increases",
+        "P_R,R_s,R_L,R_K fixed"
+      ],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:29",
+      "object": "P_U up; P_D up; Q down",
+      "predicate": "steady_prediction",
+      "provenance": "model:M1",
+      "scope_limitations": "Conditional model prediction; not a universal field signature",
+      "subject": "candidate:boundary_change"
+    },
+    {
+      "applicable_assumptions": [
+        "bias-only hypothesis",
+        "all physical parameters fixed"
+      ],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:30",
+      "object": "true Q unchanged",
+      "predicate": "predicts",
+      "provenance": "model:M1",
+      "scope_limitations": "Conditional model prediction; not a universal field signature",
+      "subject": "candidate:sensor_bias"
+    },
+    {
+      "applicable_assumptions": [
+        "M1",
+        "material obstructs L"
+      ],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:31",
+      "object": "R_L",
+      "predicate": "hypothesized_property",
+      "provenance": "model:M1",
+      "scope_limitations": "Conditional model prediction; not a universal field signature",
+      "subject": "candidate:hydrate"
+    },
+    {
+      "applicable_assumptions": [],
+      "epistemic_status": "documented_engineering_fact",
+      "id": "edge:32",
+      "object": "PDG up; TPT up; MON-CKP down",
+      "predicate": "reports_pattern",
+      "provenance": "doc:example",
+      "scope_limitations": "Single production-line example",
+      "subject": "doc:example"
+    },
+    {
+      "applicable_assumptions": [],
+      "epistemic_status": "hypothesis_being_tested",
+      "id": "edge:33",
+      "object": "local phase envelope and material evidence",
+      "predicate": "requires_unprovided_premise",
+      "provenance": "doc:phase",
+      "scope_limitations": "Feasibility is not occurrence",
+      "subject": "candidate:hydrate"
+    },
+    {
+      "applicable_assumptions": [],
+      "epistemic_status": "empirical_correlation",
+      "id": "edge:34",
+      "object": "TPT up; MON-CKP down",
+      "predicate": "resembles",
+      "provenance": "history:h17",
+      "scope_limitations": "Only two overlapping channels; synthetic analogue",
+      "subject": "history:h17"
+    },
+    {
+      "applicable_assumptions": [],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:35",
+      "object": "composition, flow, separator pressure absent",
+      "predicate": "has_gap",
+      "provenance": "history:h17",
+      "scope_limitations": "Permitted synthetic history record",
+      "subject": "history:h17"
+    },
+    {
+      "applicable_assumptions": [
+        "trusted meter",
+        "constant true flow under bias-only hypothesis"
+      ],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:36",
+      "object": "candidate:sensor_bias",
+      "predicate": "tests",
+      "provenance": "model:M1",
+      "scope_limitations": "Not a deposit composition assay",
+      "subject": "SYN-Q-PROD"
+    },
+    {
+      "applicable_assumptions": [
+        "M1"
+      ],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:37",
+      "object": "U",
+      "predicate": "observes",
+      "provenance": "model:M1",
+      "scope_limitations": "Values require a measurement receipt",
+      "subject": "measurement:P-TPT"
+    },
+    {
+      "applicable_assumptions": [
+        "M1"
+      ],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:38",
+      "object": "D",
+      "predicate": "observes",
+      "provenance": "model:M1",
+      "scope_limitations": "Values require a measurement receipt",
+      "subject": "measurement:P-MON-CKP"
+    },
+    {
+      "applicable_assumptions": [
+        "M1",
+        "other quantities fixed"
+      ],
+      "epistemic_status": "explicit_synthetic_model_assumption",
+      "id": "edge:39",
+      "object": "larger U-D pressure drop",
+      "predicate": "predicts_at_fixed_positive_Q",
+      "provenance": "model:M1",
+      "scope_limitations": "Not a material identification rule",
+      "subject": "R_L"
+    },
+    {
+      "applicable_assumptions": [],
+      "epistemic_status": "hypothesis_being_tested",
+      "id": "edge:40",
+      "object": "deposit composition assay",
+      "predicate": "has_gap",
+      "provenance": "claim:diagnosis",
+      "scope_limitations": "No actual assay supplied",
+      "subject": "claim:diagnosis"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "D",
+      "type": "equipment_or_location"
+    },
+    {
+      "id": "K",
+      "type": "equipment_or_location"
+    },
+    {
+      "id": "L",
+      "type": "equipment_or_location"
+    },
+    {
+      "id": "P-MON-CKP",
+      "type": "sensor"
+    },
+    {
+      "id": "P-PDG",
+      "type": "sensor"
+    },
+    {
+      "id": "P-TPT",
+      "type": "sensor"
+    },
+    {
+      "id": "PDG up; TPT up; MON-CKP down",
+      "type": "expectation_or_evidence_gap"
+    },
+    {
+      "id": "P_D-P_S=R_K*Q^2",
+      "type": "expectation_or_evidence_gap"
+    },
+    {
+      "id": "P_S",
+      "type": "expectation_or_evidence_gap"
+    },
+    {
+      "id": "P_U up; P_D up; Q down",
+      "type": "expectation_or_evidence_gap"
+    },
+    {
+      "id": "P_U-P_D=R_L*Q^2",
+      "type": "expectation_or_evidence_gap"
+    },
+    {
+      "id": "QBS",
+      "type": "sensor"
+    },
+    {
+      "id": "R_K",
+      "type": "expectation_or_evidence_gap"
+    },
+    {
+      "id": "R_L",
+      "type": "expectation_or_evidence_gap"
+    },
+    {
+      "id": "S",
+      "type": "equipment_or_location"
+    },
+    {
+      "id": "SYN-P-SEP",
+      "type": "sensor"
+    },
+    {
+      "id": "SYN-Q-PROD",
+      "type": "sensor"
+    },
+    {
+      "id": "TPT up; MON-CKP down",
+      "type": "expectation_or_evidence_gap"
+    },
+    {
+      "id": "U",
+      "type": "equipment_or_location"
+    },
+    {
+      "id": "candidate:boundary_change",
+      "type": "candidate_fault"
+    },
+    {
+      "id": "candidate:choke_motion",
+      "type": "candidate_fault"
+    },
+    {
+      "id": "candidate:debris",
+      "type": "candidate_fault"
+    },
+    {
+      "id": "candidate:hydrate",
+      "type": "candidate_fault"
+    },
+    {
+      "id": "candidate:scale",
+      "type": "candidate_fault"
+    },
+    {
+      "id": "candidate:sensor_bias",
+      "type": "candidate_fault"
+    },
+    {
+      "id": "choke_upstream",
+      "type": "equipment_or_location"
+    },
+    {
+      "id": "claim:diagnosis",
+      "type": "claim"
+    },
+    {
+      "id": "composition, flow, separator pressure absent",
+      "type": "expectation_or_evidence_gap"
+    },
+    {
+      "id": "deposit composition assay",
+      "type": "expectation_or_evidence_gap"
+    },
+    {
+      "id": "doc:example",
+      "type": "published_document"
+    },
+    {
+      "id": "downhole",
+      "type": "equipment_or_location"
+    },
+    {
+      "id": "history:h17",
+      "type": "historical_incident"
+    },
+    {
+      "id": "incident",
+      "type": "expectation_or_evidence_gap"
+    },
+    {
+      "id": "larger U-D pressure drop",
+      "type": "expectation_or_evidence_gap"
+    },
+    {
+      "id": "local phase envelope and material evidence",
+      "type": "expectation_or_evidence_gap"
+    },
+    {
+      "id": "measurement:P-MON-CKP",
+      "type": "observed_measurement_reference"
+    },
+    {
+      "id": "measurement:P-TPT",
+      "type": "observed_measurement_reference"
+    },
+    {
+      "id": "service_pump",
+      "type": "equipment_or_location"
+    },
+    {
+      "id": "tree",
+      "type": "equipment_or_location"
+    },
+    {
+      "id": "true Q unchanged",
+      "type": "expectation_or_evidence_gap"
+    }
+  ]
+}

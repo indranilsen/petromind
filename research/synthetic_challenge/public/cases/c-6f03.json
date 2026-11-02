@@ -1,0 +1,1413 @@
+{
+  "atomic_claims": [
+    {
+      "id": "a1",
+      "scope": "measured_observation",
+      "statement": "Tree pressure increased between endpoint windows."
+    },
+    {
+      "id": "a9",
+      "scope": "diagnostic_conclusion",
+      "statement": "Within M1, every admissible assignment with increased R_L must contain hydrate material."
+    },
+    {
+      "id": "a10",
+      "scope": "documented_comparison",
+      "statement": "Within M1, positive fixed Q implies a larger segment pressure drop if R_L increases."
+    },
+    {
+      "id": "a3",
+      "scope": "diagnostic_conclusion",
+      "statement": "Hydrate material caused this incident."
+    }
+  ],
+  "budget_policy": "Every distinct supplied or requested sensor consumes one slot, including unavailable/frozen sensors. Repeat requests are cached without a new slot. Initial sensors count. Definitions do not reveal measurements.",
+  "case_id": "c-6f03",
+  "claim": "An increase of segment L resistance is sufficient to identify hydrate rather than scale or debris.",
+  "classifier": {
+    "proposal": "Production-line hydrate",
+    "score": 0.72,
+    "status": "constructed statistical handoff; no trained classifier, no calibrated posterior"
+  },
+  "diagnostic_claim_id": "claim:diagnosis",
+  "endpoint_windows_s": [
+    [
+      0,
+      300
+    ],
+    [
+      2100,
+      2400
+    ]
+  ],
+  "evidence_budget": 5,
+  "initial_measurements": {
+    "P-MON-CKP": {
+      "absolute_error_bound": 25000,
+      "id": "measurement:P-MON-CKP",
+      "samples": [
+        {
+          "quality": "GOOD",
+          "t_s": 0,
+          "value": 5918919.31198192
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 30,
+          "value": 5911309.63111675
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 60,
+          "value": 5908148.5556333
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 90,
+          "value": 5917986.0202975
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 120,
+          "value": 5914435.78042555
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 150,
+          "value": 5905900.31475418
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 180,
+          "value": 5919994.6241475
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 210,
+          "value": 5909318.09508437
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 240,
+          "value": 5916483.58072249
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 270,
+          "value": 5928358.91844602
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 300,
+          "value": 5927665.31476164
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 330,
+          "value": 5901320.23055233
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 360,
+          "value": 5926444.96747282
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 390,
+          "value": 5916445.88663569
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 420,
+          "value": 5920220.58028566
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 450,
+          "value": 5929229.01331105
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 480,
+          "value": 5911061.88915956
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 510,
+          "value": 5923468.31760623
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 540,
+          "value": 5909993.74907868
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 570,
+          "value": 5919725.97920658
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 600,
+          "value": 5919960.38193019
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 630,
+          "value": 5760251.01480135
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 660,
+          "value": 5606386.18817083
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 690,
+          "value": 5485681.79288102
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 720,
+          "value": 5370415.51901835
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 750,
+          "value": 5274969.60566776
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 780,
+          "value": 5160899.52964995
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 810,
+          "value": 5049609.93682401
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 840,
+          "value": 4973772.78928281
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 870,
+          "value": 4875301.59387986
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 900,
+          "value": 4796219.42683819
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 930,
+          "value": 4732909.7429806
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 960,
+          "value": 4672287.90765409
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 990,
+          "value": 4603514.3774399
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1020,
+          "value": 4533378.2126583
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1050,
+          "value": 4481354.79264239
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1080,
+          "value": 4414008.24006716
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1110,
+          "value": 4349001.95762121
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1140,
+          "value": 4305533.86670585
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1170,
+          "value": 4258193.4200579
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1200,
+          "value": 4198982.99964138
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1230,
+          "value": 4204763.44205011
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1260,
+          "value": 4206298.78181772
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1290,
+          "value": 4227388.10538711
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1320,
+          "value": 4227396.46689901
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1350,
+          "value": 4228701.20496532
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1380,
+          "value": 4212403.24992657
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1410,
+          "value": 4228636.4876747
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1440,
+          "value": 4211204.84265513
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1470,
+          "value": 4205186.96718093
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1500,
+          "value": 4200541.45039665
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1530,
+          "value": 4229278.03768192
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1560,
+          "value": 4217536.95961593
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1590,
+          "value": 4225527.49071401
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1620,
+          "value": 4219081.71376992
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1650,
+          "value": 4227689.49232671
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1680,
+          "value": 4220962.20700793
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1710,
+          "value": 4223891.72623471
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1740,
+          "value": 4225221.14646589
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1770,
+          "value": 4226324.76863738
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1800,
+          "value": 4213203.32065049
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1830,
+          "value": 4203288.90779327
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1860,
+          "value": 4207705.28005529
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1890,
+          "value": 4204064.89227629
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1920,
+          "value": 4218793.95523791
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1950,
+          "value": 4210736.138749
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1980,
+          "value": 4223020.72538739
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2010,
+          "value": 4222436.65168659
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2040,
+          "value": 4229091.41569563
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2070,
+          "value": 4226785.43632822
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2100,
+          "value": 4200777.66617908
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2130,
+          "value": 4209335.17992716
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2160,
+          "value": 4220780.04547187
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2190,
+          "value": 4229237.60459543
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2220,
+          "value": 4204722.37909743
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2250,
+          "value": 4209659.85035618
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2280,
+          "value": 4211294.29908784
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2310,
+          "value": 4211581.48736818
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2340,
+          "value": 4208033.89157664
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2370,
+          "value": 4215507.36859125
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2400,
+          "value": 4209751.42704933
+        }
+      ],
+      "sensor": "P-MON-CKP",
+      "unit": "Pa"
+    },
+    "P-TPT": {
+      "absolute_error_bound": 25000,
+      "id": "measurement:P-TPT",
+      "samples": [
+        {
+          "quality": "GOOD",
+          "t_s": 0,
+          "value": 13754743.56560387
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 30,
+          "value": 13741205.43571598
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 60,
+          "value": 13739167.96346662
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 90,
+          "value": 13750723.17674249
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 120,
+          "value": 13740466.26689797
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 150,
+          "value": 13730959.05909429
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 180,
+          "value": 13740958.10008143
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 210,
+          "value": 13741867.52152296
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 240,
+          "value": 13734281.27903923
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 270,
+          "value": 13731430.76871778
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 300,
+          "value": 13754687.94458275
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 330,
+          "value": 13731884.03484921
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 360,
+          "value": 13751597.8239135
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 390,
+          "value": 13741743.14892529
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 420,
+          "value": 13732080.85066837
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 450,
+          "value": 13754228.13652254
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 480,
+          "value": 13749596.56669576
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 510,
+          "value": 13732020.20811756
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 540,
+          "value": 13738754.1953208
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 570,
+          "value": 13738010.08584668
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 600,
+          "value": 13742114.82212988
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 630,
+          "value": 13798427.76195091
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 660,
+          "value": 13902422.26377295
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 690,
+          "value": 14020246.24126118
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 720,
+          "value": 14120096.62422752
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 750,
+          "value": 14213729.62997802
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 780,
+          "value": 14317432.48966133
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 810,
+          "value": 14422376.53490445
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 840,
+          "value": 14489365.59798319
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 870,
+          "value": 14566251.11171389
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 900,
+          "value": 14658963.90292776
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 930,
+          "value": 14729452.64973581
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 960,
+          "value": 14781276.07770964
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 990,
+          "value": 14867838.63122102
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1020,
+          "value": 14918925.82213308
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1050,
+          "value": 14971481.2192959
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1080,
+          "value": 15048761.2479294
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1110,
+          "value": 15099488.75182862
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1140,
+          "value": 15149381.85067146
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1170,
+          "value": 15197752.27850731
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1200,
+          "value": 15260227.95909961
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1230,
+          "value": 15281063.61149323
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1260,
+          "value": 15282915.64712544
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1290,
+          "value": 15295341.41092039
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1320,
+          "value": 15280713.07740071
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1350,
+          "value": 15283536.78355014
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1380,
+          "value": 15295891.92548211
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1410,
+          "value": 15303541.95736465
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1440,
+          "value": 15292693.22687283
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1470,
+          "value": 15307316.68572374
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1500,
+          "value": 15307546.64772039
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1530,
+          "value": 15292500.45420823
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1560,
+          "value": 15292045.37734704
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1590,
+          "value": 15295330.35762507
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1620,
+          "value": 15293660.74648442
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1650,
+          "value": 15305251.15889556
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1680,
+          "value": 15307370.95996226
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1710,
+          "value": 15289637.31659823
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1740,
+          "value": 15304773.62964429
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1770,
+          "value": 15307822.35233067
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1800,
+          "value": 15301543.9745474
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1830,
+          "value": 15284261.48756378
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1860,
+          "value": 15288657.05874095
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1890,
+          "value": 15285798.02379889
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1920,
+          "value": 15297973.94530708
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1950,
+          "value": 15280316.74823497
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1980,
+          "value": 15291684.1879239
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2010,
+          "value": 15287733.02855812
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2040,
+          "value": 15296671.06620123
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2070,
+          "value": 15290381.97740194
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2100,
+          "value": 15300795.46172094
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2130,
+          "value": 15301121.73652198
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2160,
+          "value": 15307656.89167885
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2190,
+          "value": 15298316.75654564
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2220,
+          "value": 15280949.87353618
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2250,
+          "value": 15300562.48219176
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2280,
+          "value": 15305413.06388593
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2310,
+          "value": 15285996.39079431
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2340,
+          "value": 15283505.83887379
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2370,
+          "value": 15289140.55086493
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2400,
+          "value": 15293825.8711426
+        }
+      ],
+      "sensor": "P-TPT",
+      "unit": "Pa"
+    },
+    "T-TPT": {
+      "absolute_error_bound": 0.2,
+      "id": "measurement:T-TPT",
+      "samples": [
+        {
+          "quality": "GOOD",
+          "t_s": 0,
+          "value": 23.93387176
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 30,
+          "value": 23.9438053
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 60,
+          "value": 24.05176232
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 90,
+          "value": 24.1005198
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 120,
+          "value": 24.06376815
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 150,
+          "value": 23.97519372
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 180,
+          "value": 24.0594002
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 210,
+          "value": 23.93792106
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 240,
+          "value": 24.06662128
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 270,
+          "value": 23.95833023
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 300,
+          "value": 24.0342537
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 330,
+          "value": 23.9563705
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 360,
+          "value": 24.11079529
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 390,
+          "value": 23.89789319
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 420,
+          "value": 24.07201956
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 450,
+          "value": 24.06220144
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 480,
+          "value": 24.0847674
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 510,
+          "value": 23.90552666
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 540,
+          "value": 23.96622405
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 570,
+          "value": 23.92373955
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 600,
+          "value": 23.99937168
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 630,
+          "value": 23.95301353
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 660,
+          "value": 23.78602384
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 690,
+          "value": 23.60472236
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 720,
+          "value": 23.28377122
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 750,
+          "value": 23.04035734
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 780,
+          "value": 22.62721571
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 810,
+          "value": 22.32943153
+        },
+        {
+          "quality": "MISSING",
+          "t_s": 840,
+          "value": null
+        },
+        {
+          "quality": "MISSING",
+          "t_s": 870,
+          "value": null
+        },
+        {
+          "quality": "MISSING",
+          "t_s": 900,
+          "value": null
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 930,
+          "value": 20.42764037
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 960,
+          "value": 19.82926415
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 990,
+          "value": 19.28834174
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1020,
+          "value": 18.84288894
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1050,
+          "value": 18.22685675
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1080,
+          "value": 17.82288664
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1110,
+          "value": 17.26254353
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1140,
+          "value": 16.63618941
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1170,
+          "value": 16.14654828
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1200,
+          "value": 15.57216764
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1230,
+          "value": 14.99097173
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1260,
+          "value": 14.52302831
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1290,
+          "value": 14.06786687
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1320,
+          "value": 13.72638924
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1350,
+          "value": 13.55021453
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1380,
+          "value": 13.35874332
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1410,
+          "value": 13.0267361
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1440,
+          "value": 12.85972209
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1470,
+          "value": 12.77536096
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1500,
+          "value": 12.61080548
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1530,
+          "value": 12.43470321
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1560,
+          "value": 12.43540536
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1590,
+          "value": 12.31066938
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1620,
+          "value": 12.29283756
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1650,
+          "value": 12.20517111
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1680,
+          "value": 12.32317204
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1710,
+          "value": 12.26400771
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1740,
+          "value": 12.25054518
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1770,
+          "value": 12.03999446
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1800,
+          "value": 12.17550885
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1830,
+          "value": 12.18346379
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1860,
+          "value": 12.18517094
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1890,
+          "value": 11.97818391
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1920,
+          "value": 12.07656933
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1950,
+          "value": 11.97104773
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 1980,
+          "value": 12.02560322
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2010,
+          "value": 12.00691508
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2040,
+          "value": 12.11676626
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2070,
+          "value": 12.07163844
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2100,
+          "value": 11.97248373
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2130,
+          "value": 12.04122042
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2160,
+          "value": 11.92412228
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2190,
+          "value": 12.03829204
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2220,
+          "value": 12.06985985
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2250,
+          "value": 12.02662096
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2280,
+          "value": 12.01316172
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2310,
+          "value": 11.94517293
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2340,
+          "value": 12.05903385
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2370,
+          "value": 12.11251511
+        },
+        {
+          "quality": "GOOD",
+          "t_s": 2400,
+          "value": 12.07654672
+        }
+      ],
+      "sensor": "T-TPT",
+      "unit": "degC"
+    }
+  },
+  "initial_sensors": [
+    "P-TPT",
+    "P-MON-CKP",
+    "T-TPT"
+  ],
+  "instructions": "Cite receipt IDs returned by tools. Initial measurement IDs are already received. Query pressure/flow jointly where needed; raw timestamps must align. Distinguish material identity from effective hydraulic properties.",
+  "model": {
+    "assumptions": [
+      "Positive forward flow; no elevation head, leak, parallel path or distributed line storage.",
+      "Synthetic mapping: P-TPT=P_U; P-MON-CKP=P_D; SYN-P-SEP=P_S; SYN-Q-PROD=Q. This mapping is supplied only for this model.",
+      "Bounds include calibration bias and noise, apply simultaneously and independently; clocks synchronized. GOOD endpoints are trustworthy within stated bounds.",
+      "Temperature is a passive first-order thermal channel with external cooling; it does not predict hydrate phase or generate hydraulic resistance.",
+      "SYN-OPEN-K is a stuck telemetry channel; percent opening is not calibrated hydraulic conductance.",
+      "No verified per-well real topology, fluid composition, free-water assay, inhibitor concentration, local minimum wall temperature, hydrate envelope or deposit sample supplied."
+    ],
+    "epistemic_status": "explicit_synthetic_model_assumption",
+    "equations": [
+      "Q_in=(P_R-P_U)/R_s",
+      "C*dP_U/dt=Q_in-Q",
+      "P_U-P_D=R_L*Q^2",
+      "P_D-P_S=R_K*Q^2"
+    ],
+    "id": "model:M1",
+    "identifiability": "Positive Q and simultaneous pressures across a segment identify its effective R under M1 with uncertainty bounds. M1 has no material-to-resistance constitutive law; material identity is not a hydraulic state variable.",
+    "limits": "No gas slip, slugging, phase change, reservoir model, material chemistry, control dynamics, wave propagation or industrial validation. Do not recommend operational action from this benchmark.",
+    "material_assignments": "Hydrate, scale and debris are admissible latent obstruction labels for any positive R_L trajectory, with identical hydraulic equations; they are not chemical simulations.",
+    "scope": "This hypothetical producing-well outlet is a horizontal liquid-equivalent surrogate, not an installed Petrobras well.",
+    "topology": "supply -> linear inflow resistance -> compliant tree node U -> segment L -> node D -> choke K -> separator S. No branches or pump in L/K; same local volumetric flow Q in L and K.",
+    "units": {
+      "C": "m3/Pa",
+      "R_L,R_K": "Pa s2/m6",
+      "R_s": "Pa s/m3",
+      "flow": "m3/s local liquid-equivalent",
+      "pressure": "Pa absolute"
+    }
+  },
+  "resources": [
+    "documents.json",
+    "graph.json",
+    "history.json"
+  ],
+  "scenario": "A hypothetical producing-well outlet develops rising tree pressure and falling pressure before the production choke over 40 minutes, with cooling and an alert. Evaluate the supplied atomic propositions; do not diagnose from the alert alone.",
+  "sensor_catalog": [
+    {
+      "absolute_error_bound": 25000,
+      "availability": "available",
+      "id": "P-TPT",
+      "meaning": "Tree node U pressure",
+      "query_cost": 1,
+      "sample_period_s": 30,
+      "unit": "Pa"
+    },
+    {
+      "absolute_error_bound": 25000,
+      "availability": "available",
+      "id": "P-MON-CKP",
+      "meaning": "Node D before choke pressure",
+      "query_cost": 1,
+      "sample_period_s": 30,
+      "unit": "Pa"
+    },
+    {
+      "absolute_error_bound": 0.2,
+      "availability": "available",
+      "id": "T-TPT",
+      "meaning": "Tree temperature; not line minimum temperature",
+      "query_cost": 1,
+      "sample_period_s": 30,
+      "unit": "degC"
+    },
+    {
+      "absolute_error_bound": 2e-05,
+      "availability": "available",
+      "id": "SYN-Q-PROD",
+      "meaning": "Synthetic inline local volumetric production meter, not QBS",
+      "query_cost": 1,
+      "sample_period_s": 30,
+      "unit": "m3/s"
+    },
+    {
+      "absolute_error_bound": 15000,
+      "availability": "available",
+      "id": "SYN-P-SEP",
+      "meaning": "Synthetic separator boundary pressure",
+      "query_cost": 1,
+      "sample_period_s": 30,
+      "unit": "Pa"
+    },
+    {
+      "absolute_error_bound": 25000,
+      "availability": "unavailable",
+      "id": "P-PDG",
+      "meaning": "Generic downhole gauge; no installed channel here",
+      "query_cost": 1,
+      "sample_period_s": 30,
+      "unit": "Pa"
+    },
+    {
+      "absolute_error_bound": 2e-05,
+      "availability": "unavailable",
+      "id": "QBS",
+      "meaning": "Service-pump meter; no installed channel here",
+      "query_cost": 1,
+      "sample_period_s": 30,
+      "unit": "m3/s"
+    },
+    {
+      "absolute_error_bound": 2e-05,
+      "availability": "unavailable",
+      "id": "QGL",
+      "meaning": "Gas-lift channel; not used in this surrogate",
+      "query_cost": 1,
+      "sample_period_s": 30,
+      "unit": "m3/s"
+    },
+    {
+      "absolute_error_bound": 0,
+      "availability": "frozen",
+      "id": "SYN-OPEN-K",
+      "meaning": "Frozen opening telemetry, not calibrated to flow",
+      "query_cost": 1,
+      "sample_period_s": 30,
+      "unit": "%"
+    }
+  ],
+  "synthetic": true,
+  "time_origin": "2030-01-01T00:00:00Z",
+  "version": "synthetic-physics-v1.1"
+}
