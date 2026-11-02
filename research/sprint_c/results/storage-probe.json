@@ -1,0 +1,14 @@
+{
+  "writer_failure": {
+    "writer_iteration": 459,
+    "log_rows": 430,
+    "head": 458
+  },
+  "reader_failure": {
+    "reader_iteration": 393,
+    "log_rows": 430,
+    "head": 458
+  },
+  "paid_calls": 0,
+  "scope": "Two hosted execution sessions, one writer and one read-only monitor; both used the same advisory lock; writer fsynced append and atomic head replacement. Underlying mechanism unestablished."
+}

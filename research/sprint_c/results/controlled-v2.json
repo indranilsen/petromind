@@ -1,0 +1,967 @@
+{
+  "protocol_id": "2f0bad897b33230ef1868b3d27fe690fed02b2646db7bca16a21b7f74016c227",
+  "complete_four_way_cases": [
+    "c-7a91"
+  ],
+  "complete_four_way_count": 1,
+  "comparisons": {
+    "V1": {
+      "complete_matched_cases_only": 1,
+      "additional_correct_vs_V0": 0,
+      "fewer_incorrect_contradictions": 0,
+      "fewer_literal_failures": 0,
+      "interpretation": "Incomplete suite; descriptive matched subset only, no generalization claim."
+    },
+    "V2": {
+      "complete_matched_cases_only": 1,
+      "additional_correct_vs_V0": 1,
+      "fewer_incorrect_contradictions": 1,
+      "fewer_literal_failures": 0,
+      "interpretation": "Incomplete suite; descriptive matched subset only, no generalization claim."
+    },
+    "V3": {
+      "complete_matched_cases_only": 1,
+      "additional_correct_vs_V0": 1,
+      "fewer_incorrect_contradictions": 1,
+      "fewer_literal_failures": 0,
+      "interpretation": "Incomplete suite; descriptive matched subset only, no generalization claim."
+    }
+  },
+  "trace_projection": [
+    {
+      "case_id": "c-7a91",
+      "variant": "V0",
+      "sequence": 1,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-Q-PROD"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4031,
+      "host_event_digest": "650e3e7d5975379b428b21594f47b5cf7f0dc1254ab54592cc354a1dbb2dbdcc"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V0",
+      "sequence": 2,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-P-SEP"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4510,
+      "host_event_digest": "6b63a3f991d30af5ea778fea90899efe84ccaf0fec15ba4a39be48444fcfb53b"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V0",
+      "sequence": 3,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:phase"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:phase",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 554,
+      "host_event_digest": "2848da718de18b4c3906029fe3d2dcc07dfddb58887872d29b9eec86a3589f19"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V0",
+      "sequence": 4,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:limits"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:limits",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 491,
+      "host_event_digest": "0ee9e6ae575cecc93e652092245ec123fbbf80b10362bc3c00ecc81b55ad1207"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V0",
+      "sequence": 5,
+      "tool": "lookup_graph",
+      "request": {
+        "hops": 1,
+        "node": "candidate:hydrate"
+      },
+      "returned_edge_ids": [
+        "edge:15",
+        "edge:21",
+        "edge:31",
+        "edge:33"
+      ],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 1192,
+      "host_event_digest": "11715ac1f65786c9fe150437a1df6a444f660cb119883395bd4d181eba82e1c7"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V0",
+      "sequence": 6,
+      "tool": "lookup_graph",
+      "request": {
+        "hops": 1,
+        "node": "T-TPT"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 30,
+      "host_event_digest": "46e5a3deef091874ff8d89847f8b22947aefcd36484d7c8307bbf621c88b7a09"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V0",
+      "sequence": 7,
+      "tool": "submit_audit",
+      "request": {
+        "submission": "owner-only"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": true,
+      "error": null,
+      "result_bytes": 2887,
+      "host_event_digest": "51c57a9512e99b974deb013f34ee31af30e790cdec4042c26b28ac9e21af0438"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V1",
+      "sequence": 1,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-Q-PROD"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4031,
+      "host_event_digest": "650e3e7d5975379b428b21594f47b5cf7f0dc1254ab54592cc354a1dbb2dbdcc"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V1",
+      "sequence": 2,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-P-SEP"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4510,
+      "host_event_digest": "6b63a3f991d30af5ea778fea90899efe84ccaf0fec15ba4a39be48444fcfb53b"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V1",
+      "sequence": 3,
+      "tool": "lookup_graph",
+      "request": {
+        "hops": 1,
+        "node": "candidate:hydrate"
+      },
+      "returned_edge_ids": [
+        "edge:15",
+        "edge:21",
+        "edge:31",
+        "edge:33"
+      ],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 1192,
+      "host_event_digest": "145ec88b6c90329e3a5555f95f9f2b3faee906cf92634bb10b6b6a55cc8b8b91"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V1",
+      "sequence": 4,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:phase"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:phase",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 554,
+      "host_event_digest": "5cc6a6b8d4a75e3e3bda772baf977ea433247f813117d0445bf091d520cb2551"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V1",
+      "sequence": 5,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:limits"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:limits",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 491,
+      "host_event_digest": "64dc0b3f4d284bea394e28a1dd7a11540ff66fc6a1aa0526492b2557d140bbf1"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V1",
+      "sequence": 6,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:mechanisms"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:mechanisms",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 389,
+      "host_event_digest": "1f65f8f22fd83c361cd2876b64e7c0202235fb7f6f95ffd8a6293666b66b9cc4"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V1",
+      "sequence": 7,
+      "tool": "submit_audit",
+      "request": {
+        "submission": "owner-only"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": true,
+      "error": null,
+      "result_bytes": 3279,
+      "host_event_digest": "caad0e8cb29f141d43646bbe1dc6adb94f92e53f1fb8327856ba6c1acff98dc8"
+    },
+    {
+      "case_id": "c-6f03",
+      "variant": "V1",
+      "sequence": 1,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-Q-PROD"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4031,
+      "host_event_digest": "796dc716dde21449df5177b8cf96277af4b8e49a83e0b48a9888c4b60c18f71a"
+    },
+    {
+      "case_id": "c-6f03",
+      "variant": "V1",
+      "sequence": 2,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-P-SEP"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4510,
+      "host_event_digest": "75e9751dd5390150391c450f01d03cc4751c10efcd5ed513ee43237d3bd48f4d"
+    },
+    {
+      "case_id": "c-6f03",
+      "variant": "V1",
+      "sequence": 3,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:mechanisms"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:mechanisms",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 389,
+      "host_event_digest": "6c89be9541f2bcb814d190013bebfd50666caa9be25cd178e79da7204d4a3ea4"
+    },
+    {
+      "case_id": "c-6f03",
+      "variant": "V1",
+      "sequence": 4,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:limits"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:limits",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 491,
+      "host_event_digest": "f6823cfc33d251fc2616efac35aed1aa3981886f1287c5531f6f03946778fc14"
+    },
+    {
+      "case_id": "c-6f03",
+      "variant": "V1",
+      "sequence": 5,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:phase"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:phase",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 554,
+      "host_event_digest": "3e8438e675d0a60b2cb1b4b0e40ff4879646790bd6aa29aed5d246050ae36dec"
+    },
+    {
+      "case_id": "c-6f03",
+      "variant": "V1",
+      "sequence": 6,
+      "tool": "lookup_graph",
+      "request": {
+        "hops": 1,
+        "node": "candidate:hydrate"
+      },
+      "returned_edge_ids": [
+        "edge:15",
+        "edge:21",
+        "edge:31",
+        "edge:33"
+      ],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 1192,
+      "host_event_digest": "8e08615fe0e907df8fd96ed4a3c13e9fc639d3594be5f53f66f7510b4b0cd863"
+    },
+    {
+      "case_id": "c-6f03",
+      "variant": "V1",
+      "sequence": 7,
+      "tool": "submit_audit",
+      "request": {
+        "submission": "owner-only"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": true,
+      "error": null,
+      "result_bytes": 3127,
+      "host_event_digest": "cb158ce049ca0507cdcf157fc2e76c7b133c86e9cabe2299eba7a492d7165fa3"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V2",
+      "sequence": 1,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-Q-PROD"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4031,
+      "host_event_digest": "650e3e7d5975379b428b21594f47b5cf7f0dc1254ab54592cc354a1dbb2dbdcc"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V2",
+      "sequence": 2,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-P-SEP"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4510,
+      "host_event_digest": "6b63a3f991d30af5ea778fea90899efe84ccaf0fec15ba4a39be48444fcfb53b"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V2",
+      "sequence": 3,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:limits"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:limits",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 491,
+      "host_event_digest": "eddeb65121b6c815824f4ae04a5ebc135585b1aa8106d9f7e0ce283cbac4d042"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V2",
+      "sequence": 4,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:phase"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:phase",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 554,
+      "host_event_digest": "16a6215128f34f483041eb7479d3ededf63d25866166c88a589f068a522984f5"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V2",
+      "sequence": 5,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:mechanisms"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:mechanisms",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 389,
+      "host_event_digest": "c9f87f52194b632702dd1df50d467d439cdab2ce4b1fb28ab0fcaa81bf13e641"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V2",
+      "sequence": 6,
+      "tool": "lookup_graph",
+      "request": {
+        "hops": 1,
+        "node": "claim:diagnosis"
+      },
+      "returned_edge_ids": [
+        "edge:40"
+      ],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 284,
+      "host_event_digest": "99779d4aa6c3b2b8becb31418746cc4206546e20a5645fd476c0bed1316a7087"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V2",
+      "sequence": 7,
+      "tool": "submit_audit",
+      "request": {
+        "submission": "owner-only"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": "invalid_numeric_metric",
+      "result_bytes": 200,
+      "host_event_digest": "d9f34d055be047b23d8387aebe08eb1b4f86fe44a5958907b655c1884edd4930"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V2",
+      "sequence": 8,
+      "tool": "submit_audit",
+      "request": {
+        "submission": "owner-only"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": true,
+      "error": null,
+      "result_bytes": 3201,
+      "host_event_digest": "2764210653d1251711742feda6cf4cf7bc506bf29d303d62b2c2cc4be566c3e2"
+    },
+    {
+      "case_id": "c-6f03",
+      "variant": "V2",
+      "sequence": 1,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-Q-PROD"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4031,
+      "host_event_digest": "796dc716dde21449df5177b8cf96277af4b8e49a83e0b48a9888c4b60c18f71a"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V3",
+      "sequence": 1,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-Q-PROD"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4031,
+      "host_event_digest": "650e3e7d5975379b428b21594f47b5cf7f0dc1254ab54592cc354a1dbb2dbdcc"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V3",
+      "sequence": 2,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-P-SEP"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4510,
+      "host_event_digest": "6b63a3f991d30af5ea778fea90899efe84ccaf0fec15ba4a39be48444fcfb53b"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V3",
+      "sequence": 3,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:phase"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:phase",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 554,
+      "host_event_digest": "2848da718de18b4c3906029fe3d2dcc07dfddb58887872d29b9eec86a3589f19"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V3",
+      "sequence": 4,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:limits"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:limits",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 491,
+      "host_event_digest": "0ee9e6ae575cecc93e652092245ec123fbbf80b10362bc3c00ecc81b55ad1207"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V3",
+      "sequence": 5,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:mechanisms"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:mechanisms",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 389,
+      "host_event_digest": "7139fb3dac8fb62da278617a4493fc169166f4f0738f795b3d502d19ebc1d025"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V3",
+      "sequence": 6,
+      "tool": "lookup_graph",
+      "request": {
+        "hops": 1,
+        "node": "candidate:hydrate"
+      },
+      "returned_edge_ids": [
+        "edge:15",
+        "edge:21",
+        "edge:31",
+        "edge:33"
+      ],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 1192,
+      "host_event_digest": "831367acfae274097a103d08a0dfe57c723943ee8a88229eea794a0348e5e9e4"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V3",
+      "sequence": 7,
+      "tool": "submit_audit",
+      "request": {
+        "submission": "owner-only"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": "invalid_numeric_metric",
+      "result_bytes": 200,
+      "host_event_digest": "7c9ac4ad73c5819f265a407cc4e9095b77d17b37ea1b1d4cbfa87d78068c22cc"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "V3",
+      "sequence": 8,
+      "tool": "submit_audit",
+      "request": {
+        "submission": "owner-only"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": true,
+      "error": null,
+      "result_bytes": 3108,
+      "host_event_digest": "640f0aa92d0d644b427a650087210658d222a76c219c7c33ba5a512ba6e51c42"
+    }
+  ],
+  "accounting": {
+    "status": "BLOCKED_ACCOUNTING_INTEGRITY",
+    "checkpoint": {
+      "digest": "88ce20cd8f5c24edcaf21633c5be4339951dbd8ff4b24eb67eca3463328c6f71",
+      "policy_id": "7fdf8167cdb4b23a8fed21384a363963c5447e92933233e807e802561b3ab698",
+      "sequence": 243
+    },
+    "readable_event_count": 241,
+    "readable_final_digest": "2e569fcee057bd3bcb887d22896f9f221ff1b02e9e95903dd55ff1b5a002eabf",
+    "prefix_reservations": 121,
+    "prefix_verified_settlements": 119,
+    "prefix_settled_estimate_usd": 0.80901085,
+    "prefix_unsettled_reservations_usd": 0.2348835,
+    "complete_balance_verified": false,
+    "additional_paid_execution_permitted": false,
+    "entire_ledger_sha256": "eefd1b4ae7da840ff86e0dc7726ac5712a138a17cbef2bc720d2d752ba36810d",
+    "checkpoint_sha256": "b0c5974aefc398cfe3538ece8a75bcca7938e9fcc510a205c00bcdeb4406e5e0",
+    "cause": "Unestablished. Log and separate head checkpoint disagree; no missing records synthesized or deleted.",
+    "possible_unreadable_records": 2,
+    "prefix_amounts_are_not_full_balance": true
+  },
+  "total_http_attempts": 65,
+  "usage_estimated_cost_all_stages_usd": 0.44620285,
+  "semantic_review_status": "UNGRADED: qualified independent review unavailable",
+  "interpretation_limit": "Development reuse of seven correlated cases from one synthetic incident; one sample per cell. No population or independent generalization claim.",
+  "methods": {
+    "V0": {
+      "completed": 1,
+      "attempted": 1,
+      "planned": 7,
+      "evidence_qualified_correct": 2,
+      "atomic_count": 23,
+      "evidence_qualified_accuracy": 0.08695652173913043,
+      "raw_verdict_matches": 2,
+      "raw_verdict_accuracy": 0.08695652173913043,
+      "recall": {
+        "SUPPORTED": 0.1,
+        "NOT_ESTABLISHED": 0.09090909090909091,
+        "CONTRADICTED": 0.0
+      },
+      "macro_recall": 0.06363636363636364,
+      "literal_citation_contract_failures": 0,
+      "unreceived_citations_in_accepted_submissions": null,
+      "incorrect_CONTRADICTED": 1,
+      "reference_disagreeing_NOT_ESTABLISHED": 0,
+      "unsupported_causal_SUPPORTED": 0,
+      "blanket_abstention_cases": 0,
+      "confusion_matrix": [
+        {
+          "reference": "CONTRADICTED",
+          "submitted": "MISSING",
+          "count": 2
+        },
+        {
+          "reference": "NOT_ESTABLISHED",
+          "submitted": "CONTRADICTED",
+          "count": 1
+        },
+        {
+          "reference": "NOT_ESTABLISHED",
+          "submitted": "MISSING",
+          "count": 9
+        },
+        {
+          "reference": "NOT_ESTABLISHED",
+          "submitted": "NOT_ESTABLISHED",
+          "count": 1
+        },
+        {
+          "reference": "SUPPORTED",
+          "submitted": "MISSING",
+          "count": 9
+        },
+        {
+          "reference": "SUPPORTED",
+          "submitted": "SUPPORTED",
+          "count": 1
+        }
+      ],
+      "mechanical_points_of_29": 2.558441558441558,
+      "semantic_citation_entailment": null,
+      "missing_premise_quality": null,
+      "next_evidence_usefulness": null,
+      "full_100_point_total": null,
+      "paired_correct": 2,
+      "paired_atoms": 3,
+      "tool_counts": {
+        "query_sensor": 2,
+        "read_document": 2,
+        "lookup_graph": 2,
+        "submit_audit": 1
+      },
+      "retrieval_bytes": 2267,
+      "new_sensor_count": 2,
+      "unavailable_or_frozen_requests": 0,
+      "cache_hits": 0,
+      "validation_rejections": 0,
+      "http_attempts": 7,
+      "input_tokens": 80444,
+      "output_tokens": 4915,
+      "estimated_usage_cost_usd": 0.03919125,
+      "latency_seconds": 20.872704348999832
+    },
+    "V1": {
+      "completed": 2,
+      "attempted": 2,
+      "planned": 7,
+      "evidence_qualified_correct": 6,
+      "atomic_count": 23,
+      "evidence_qualified_accuracy": 0.2608695652173913,
+      "raw_verdict_matches": 6,
+      "raw_verdict_accuracy": 0.2608695652173913,
+      "recall": {
+        "SUPPORTED": 0.3,
+        "NOT_ESTABLISHED": 0.18181818181818182,
+        "CONTRADICTED": 0.5
+      },
+      "macro_recall": 0.32727272727272727,
+      "literal_citation_contract_failures": 0,
+      "unreceived_citations_in_accepted_submissions": null,
+      "incorrect_CONTRADICTED": 1,
+      "reference_disagreeing_NOT_ESTABLISHED": 0,
+      "unsupported_causal_SUPPORTED": 0,
+      "blanket_abstention_cases": 0,
+      "confusion_matrix": [
+        {
+          "reference": "CONTRADICTED",
+          "submitted": "CONTRADICTED",
+          "count": 1
+        },
+        {
+          "reference": "CONTRADICTED",
+          "submitted": "MISSING",
+          "count": 1
+        },
+        {
+          "reference": "NOT_ESTABLISHED",
+          "submitted": "CONTRADICTED",
+          "count": 1
+        },
+        {
+          "reference": "NOT_ESTABLISHED",
+          "submitted": "MISSING",
+          "count": 8
+        },
+        {
+          "reference": "NOT_ESTABLISHED",
+          "submitted": "NOT_ESTABLISHED",
+          "count": 2
+        },
+        {
+          "reference": "SUPPORTED",
+          "submitted": "MISSING",
+          "count": 7
+        },
+        {
+          "reference": "SUPPORTED",
+          "submitted": "SUPPORTED",
+          "count": 3
+        }
+      ],
+      "mechanical_points_of_29": 9.116883116883118,
+      "semantic_citation_entailment": null,
+      "missing_premise_quality": null,
+      "next_evidence_usefulness": null,
+      "full_100_point_total": null,
+      "paired_correct": 2,
+      "paired_atoms": 3,
+      "tool_counts": {
+        "query_sensor": 4,
+        "lookup_graph": 2,
+        "read_document": 6,
+        "submit_audit": 2
+      },
+      "retrieval_bytes": 5252,
+      "new_sensor_count": 4,
+      "unavailable_or_frozen_requests": 0,
+      "cache_hits": 0,
+      "validation_rejections": 0,
+      "http_attempts": 14,
+      "input_tokens": 165038,
+      "output_tokens": 8967,
+      "estimated_usage_cost_usd": 0.08398545,
+      "latency_seconds": 37.4948288279993
+    },
+    "V2": {
+      "completed": 1,
+      "attempted": 2,
+      "planned": 7,
+      "evidence_qualified_correct": 3,
+      "atomic_count": 23,
+      "evidence_qualified_accuracy": 0.13043478260869565,
+      "raw_verdict_matches": 3,
+      "raw_verdict_accuracy": 0.13043478260869565,
+      "recall": {
+        "SUPPORTED": 0.1,
+        "NOT_ESTABLISHED": 0.18181818181818182,
+        "CONTRADICTED": 0.0
+      },
+      "macro_recall": 0.09393939393939395,
+      "literal_citation_contract_failures": 0,
+      "unreceived_citations_in_accepted_submissions": null,
+      "incorrect_CONTRADICTED": 0,
+      "reference_disagreeing_NOT_ESTABLISHED": 0,
+      "unsupported_causal_SUPPORTED": 0,
+      "blanket_abstention_cases": 0,
+      "confusion_matrix": [
+        {
+          "reference": "CONTRADICTED",
+          "submitted": "MISSING",
+          "count": 2
+        },
+        {
+          "reference": "NOT_ESTABLISHED",
+          "submitted": "MISSING",
+          "count": 9
+        },
+        {
+          "reference": "NOT_ESTABLISHED",
+          "submitted": "NOT_ESTABLISHED",
+          "count": 2
+        },
+        {
+          "reference": "SUPPORTED",
+          "submitted": "MISSING",
+          "count": 9
+        },
+        {
+          "reference": "SUPPORTED",
+          "submitted": "SUPPORTED",
+          "count": 1
+        }
+      ],
+      "mechanical_points_of_29": 2.8073593073593077,
+      "semantic_citation_entailment": null,
+      "missing_premise_quality": null,
+      "next_evidence_usefulness": null,
+      "full_100_point_total": null,
+      "paired_correct": 3,
+      "paired_atoms": 3,
+      "tool_counts": {
+        "query_sensor": 3,
+        "read_document": 3,
+        "lookup_graph": 1,
+        "submit_audit": 2
+      },
+      "retrieval_bytes": 1718,
+      "new_sensor_count": 3,
+      "unavailable_or_frozen_requests": 0,
+      "cache_hits": 0,
+      "validation_rejections": 1,
+      "http_attempts": 11,
+      "input_tokens": 123388,
+      "output_tokens": 8260,
+      "estimated_usage_cost_usd": 0.08277860000000001,
+      "latency_seconds": 40.62736722399859
+    },
+    "V3": {
+      "completed": 1,
+      "attempted": 1,
+      "planned": 7,
+      "evidence_qualified_correct": 3,
+      "atomic_count": 23,
+      "evidence_qualified_accuracy": 0.13043478260869565,
+      "raw_verdict_matches": 3,
+      "raw_verdict_accuracy": 0.13043478260869565,
+      "recall": {
+        "SUPPORTED": 0.1,
+        "NOT_ESTABLISHED": 0.18181818181818182,
+        "CONTRADICTED": 0.0
+      },
+      "macro_recall": 0.09393939393939395,
+      "literal_citation_contract_failures": 0,
+      "unreceived_citations_in_accepted_submissions": null,
+      "incorrect_CONTRADICTED": 0,
+      "reference_disagreeing_NOT_ESTABLISHED": 0,
+      "unsupported_causal_SUPPORTED": 0,
+      "blanket_abstention_cases": 0,
+      "confusion_matrix": [
+        {
+          "reference": "CONTRADICTED",
+          "submitted": "MISSING",
+          "count": 2
+        },
+        {
+          "reference": "NOT_ESTABLISHED",
+          "submitted": "MISSING",
+          "count": 9
+        },
+        {
+          "reference": "NOT_ESTABLISHED",
+          "submitted": "NOT_ESTABLISHED",
+          "count": 2
+        },
+        {
+          "reference": "SUPPORTED",
+          "submitted": "MISSING",
+          "count": 9
+        },
+        {
+          "reference": "SUPPORTED",
+          "submitted": "SUPPORTED",
+          "count": 1
+        }
+      ],
+      "mechanical_points_of_29": 2.8073593073593077,
+      "semantic_citation_entailment": null,
+      "missing_premise_quality": null,
+      "next_evidence_usefulness": null,
+      "full_100_point_total": null,
+      "paired_correct": 3,
+      "paired_atoms": 3,
+      "tool_counts": {
+        "query_sensor": 2,
+        "read_document": 3,
+        "lookup_graph": 1,
+        "submit_audit": 2
+      },
+      "retrieval_bytes": 2626,
+      "new_sensor_count": 2,
+      "unavailable_or_frozen_requests": 0,
+      "cache_hits": 0,
+      "validation_rejections": 1,
+      "http_attempts": 8,
+      "input_tokens": 105246,
+      "output_tokens": 6664,
+      "estimated_usage_cost_usd": 0.0618739,
+      "latency_seconds": 29.030195573001038
+    }
+  },
+  "metrics_scope": "Method-wide totals include unequal attempted coverage; comparisons use the single complete four-way case only.",
+  "all_sprint_c_versions": {
+    "http_attempts": 122,
+    "captured_usage_responses": 120,
+    "known_usage_estimate_usd": 0.8139467,
+    "not_a_reconciled_balance": true
+  }
+}

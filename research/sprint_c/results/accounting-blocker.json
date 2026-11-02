@@ -1,0 +1,21 @@
+{
+  "status": "BLOCKED_ACCOUNTING_INTEGRITY",
+  "checkpoint": {
+    "digest": "88ce20cd8f5c24edcaf21633c5be4339951dbd8ff4b24eb67eca3463328c6f71",
+    "policy_id": "7fdf8167cdb4b23a8fed21384a363963c5447e92933233e807e802561b3ab698",
+    "sequence": 243
+  },
+  "readable_event_count": 241,
+  "readable_final_digest": "2e569fcee057bd3bcb887d22896f9f221ff1b02e9e95903dd55ff1b5a002eabf",
+  "prefix_reservations": 121,
+  "prefix_verified_settlements": 119,
+  "prefix_settled_estimate_usd": 0.80901085,
+  "prefix_unsettled_reservations_usd": 0.2348835,
+  "complete_balance_verified": false,
+  "additional_paid_execution_permitted": false,
+  "entire_ledger_sha256": "eefd1b4ae7da840ff86e0dc7726ac5712a138a17cbef2bc720d2d752ba36810d",
+  "checkpoint_sha256": "b0c5974aefc398cfe3538ece8a75bcca7938e9fcc510a205c00bcdeb4406e5e0",
+  "cause": "Unestablished. Log and separate head checkpoint disagree; no missing records synthesized or deleted.",
+  "possible_unreadable_records": 2,
+  "prefix_amounts_are_not_full_balance": true
+}

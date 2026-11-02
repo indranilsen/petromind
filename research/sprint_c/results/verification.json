@@ -1,0 +1,42 @@
+{
+  "freeze": {
+    "status": "passed",
+    "public_freeze_entries": 36,
+    "private_core_freeze_entries": 34,
+    "public_case_count": 7,
+    "private_vault_count": 7,
+    "within_case_payload_leak_checks": "passed; initial sensors only; no private answer fields or generator metadata",
+    "cross_case_sensor_overlap": true,
+    "required_boundary": "one packet per fresh model context, tool-mediated access only; never mount the public corpus or private archive",
+    "production_modules_unchanged": [
+      "petromind/atomic_auditor.py",
+      "petromind/reliable_auditor.py",
+      "petromind/scope_auditor.py",
+      "petromind/claim_auditor.py"
+    ],
+    "synthetic_imports_production": false,
+    "scenarios_verdicts_weights_changed": false
+  },
+  "production_and_previous_research_unchanged": true,
+  "all_tests_passed": 636,
+  "skipped": 1,
+  "targeted_tests_passed": 86,
+  "new_tests_passed": 22,
+  "offline_smoke": {
+    "status": "passed",
+    "coverage": "one accepted case; other six absent and scored as missing by unchanged suite evaluator",
+    "initial_sensor_count": 3,
+    "new_sensor_requests": 1,
+    "charged_sensors": 4,
+    "graph_edges_returned": 4,
+    "assessment_accepted": true,
+    "score_produced": true,
+    "mechanical_suite_points_of_29": 2.4978354978354975,
+    "semantic_total": null,
+    "model_requests": 0,
+    "estimated_cost_usd": 0,
+    "audit_final_digest": "0bcb7078a72cda1ed68f90cf734430de87cf38dd7bdd5b2979e2854f982de12e",
+    "private_score_sha256": "61882480eabcc86f8a87b13c5a76234a595fa34bbd189c9168c27380b3e587fa"
+  },
+  "operational_correction": "Closed transport evidence keeps full hold; no scientific prompt/case/order/settings change. Historical v1 source digest recovered exactly."
+}

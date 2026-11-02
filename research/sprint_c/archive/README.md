@@ -1,0 +1,1 @@
+Historical pre-correction Sprint C v1 source. Its files reconstruct the exact code digest in the preserved v1 protocol; not used by the active runner. V1 made 57 HTTP attempts before a connection failure. No scientific scores were used to choose the operational correction. Current scientific prompts and case order are identical.
