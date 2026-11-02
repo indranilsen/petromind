@@ -1,5 +1,10 @@
 # Sprint C: Mac execution guide
 
+**For the owner's completed eight-cell local batch and newly authorized research
+phase, use [the Phase 2 guide](../phase2/README.md).** This page preserves the
+original setup procedure; do not run its activation or runner again after Phase 2
+cutover. Existing evidence and the original approval are retained.
+
 **No paid hosted execution. No owner approval or Mac certification is inferred.**
 This is research only, under the existing $10 Sprint C authorization. Read
 [INVESTIGATION.md](INVESTIGATION.md) and [FINAL_REVIEW.md](FINAL_REVIEW.md).
