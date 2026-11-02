@@ -1,0 +1,982 @@
+{
+  "protocol_id": "6e399a5cf6967b898c34f2f3b1aef8b8747a7d63356fdaefb5c98c7d3c7a94cf",
+  "paired_complete_cases": [
+    "c-13df",
+    "c-6f03",
+    "c-80b2"
+  ],
+  "paired_complete_count": 3,
+  "suite_planned_case_count": 7,
+  "spending": {
+    "http_reservations": 64,
+    "conservative_estimated_usd_reserved": 9.8840695,
+    "remaining_conservative_session_usd": 0.11593049999999927,
+    "session_hard_estimated_usd": 10.0,
+    "actual_billed_usd": null,
+    "note": "Frozen repository prices and conservative reservations, not a provider invoice guarantee; unknown/failed responses keep full reservations."
+  },
+  "total_model_requests": 64,
+  "total_known_usage_cost_usd": 0.48093015,
+  "total_input_tokens": 782034,
+  "total_output_tokens": 45487,
+  "responses_with_usage": 64,
+  "total_cached_input_tokens": 627211,
+  "unknown_usage_http_attempts": 0,
+  "total_latency_seconds": 268.40073553599996,
+  "semantic_review_required": true,
+  "retrieval_precision_and_completeness_semantics_ungraded": true,
+  "verdict": "INCONCLUSIVE: incomplete paired suite and semantic review pending",
+  "scope": "Seven correlated synthetic tasks, one sample per variant/cell; pilot duplication not independent.",
+  "methods": {
+    "B": {
+      "attempted": 4,
+      "completed": 4,
+      "planned_cases": 7,
+      "planned_case_metrics": {
+        "correct_atoms": 10,
+        "total_atoms": 23,
+        "accuracy": 0.43478260869565216,
+        "raw_verdict_matches": 12,
+        "raw_verdict_accuracy": 0.5217391304347826,
+        "recall": {
+          "SUPPORTED": 0.4,
+          "NOT_ESTABLISHED": 0.45454545454545453,
+          "CONTRADICTED": 0.5
+        },
+        "incorrectly_supported_causal_claims": 0,
+        "correctly_rejected_unestablished": 5
+      },
+      "paired_completed_metrics": {
+        "correct_atoms": 7,
+        "total_atoms": 11,
+        "accuracy": 0.6363636363636364,
+        "raw_verdict_matches": 9,
+        "raw_verdict_accuracy": 0.8181818181818182,
+        "recall": {
+          "SUPPORTED": 0.6,
+          "NOT_ESTABLISHED": 0.6,
+          "CONTRADICTED": 1.0
+        },
+        "incorrectly_supported_causal_claims": 0,
+        "correctly_rejected_unestablished": 3
+      },
+      "mechanical_points_of_29": 14.173160173160174,
+      "semantic_points": null,
+      "total_of_100": null,
+      "unsupported_matches_count": 2,
+      "tool_counts": {
+        "tool_calls": 28,
+        "query_sensor": 8,
+        "read_document": 11,
+        "lookup_graph": 5,
+        "submit_audit": 4
+      },
+      "requests": 28,
+      "input_tokens": 340985,
+      "output_tokens": 20684,
+      "known_usage_cost_usd": 0.22858594999999998,
+      "latency_seconds": 110.144723892,
+      "retrieved_context_bytes": 10765,
+      "mean_context_bytes": 2691.25,
+      "observed_error_categories": {
+        "verdict_disagreement": 2,
+        "required_evidence_or_citation_missing": 2
+      }
+    },
+    "E": {
+      "attempted": 4,
+      "completed": 3,
+      "planned_cases": 7,
+      "planned_case_metrics": {
+        "correct_atoms": 7,
+        "total_atoms": 23,
+        "accuracy": 0.30434782608695654,
+        "raw_verdict_matches": 9,
+        "raw_verdict_accuracy": 0.391304347826087,
+        "recall": {
+          "SUPPORTED": 0.3,
+          "NOT_ESTABLISHED": 0.2727272727272727,
+          "CONTRADICTED": 0.5
+        },
+        "incorrectly_supported_causal_claims": 0,
+        "correctly_rejected_unestablished": 3
+      },
+      "paired_completed_metrics": {
+        "correct_atoms": 7,
+        "total_atoms": 11,
+        "accuracy": 0.6363636363636364,
+        "raw_verdict_matches": 9,
+        "raw_verdict_accuracy": 0.8181818181818182,
+        "recall": {
+          "SUPPORTED": 0.6,
+          "NOT_ESTABLISHED": 0.6,
+          "CONTRADICTED": 1.0
+        },
+        "incorrectly_supported_causal_claims": 0,
+        "correctly_rejected_unestablished": 3
+      },
+      "mechanical_points_of_29": 11.008658008658008,
+      "semantic_points": null,
+      "total_of_100": null,
+      "unsupported_matches_count": 2,
+      "tool_counts": {
+        "tool_calls": 22,
+        "query_sensor": 7,
+        "read_document": 8,
+        "lookup_graph": 4,
+        "submit_audit": 3
+      },
+      "requests": 22,
+      "input_tokens": 267226,
+      "output_tokens": 15980,
+      "known_usage_cost_usd": 0.1498561,
+      "latency_seconds": 93.14268224099942,
+      "retrieved_context_bytes": 17640,
+      "mean_context_bytes": 4410,
+      "observed_error_categories": {
+        "verdict_disagreement": 2,
+        "required_evidence_or_citation_missing": 2,
+        "incomplete_submission": 3
+      }
+    }
+  },
+  "trace_projection": [
+    {
+      "case_id": "c-13df",
+      "variant": "B",
+      "sequence": 1,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-Q-PROD"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4031,
+      "host_event_digest": "74ccfc4d0ce624243f8aab38a1dbec4624e3844f799f76840131b876ad818d04"
+    },
+    {
+      "case_id": "c-13df",
+      "variant": "B",
+      "sequence": 2,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-P-SEP"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4510,
+      "host_event_digest": "1c50edcc59956f3b9896fe6647a0214d89c617a00b259ffd8a6a2e42fa3a778d"
+    },
+    {
+      "case_id": "c-13df",
+      "variant": "B",
+      "sequence": 3,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:limits"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:limits",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 491,
+      "host_event_digest": "4a3ba20d7513c2d85efc68f8d1196f645e8862fff4bea7c05246a1d04385cd04"
+    },
+    {
+      "case_id": "c-13df",
+      "variant": "B",
+      "sequence": 4,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:mechanisms"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:mechanisms",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 389,
+      "host_event_digest": "b1d4bb33cbb08289f44ea1087058a13bbcaa81e2ed7a28150df138d522ba9f14"
+    },
+    {
+      "case_id": "c-13df",
+      "variant": "B",
+      "sequence": 5,
+      "tool": "lookup_graph",
+      "request": {
+        "hops": 1,
+        "node": "candidate:hydrate"
+      },
+      "returned_edge_ids": [
+        "edge:15",
+        "edge:21",
+        "edge:31",
+        "edge:33"
+      ],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 1192,
+      "host_event_digest": "6d1efb98889912189236243946cd7c92814a3797669ed11b79265cc27f20aeec"
+    },
+    {
+      "case_id": "c-13df",
+      "variant": "B",
+      "sequence": 6,
+      "tool": "lookup_graph",
+      "request": {
+        "hops": 1,
+        "node": "claim:diagnosis"
+      },
+      "returned_edge_ids": [
+        "edge:40"
+      ],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 284,
+      "host_event_digest": "59d67386401768c6d4a4b76744fd0d0237fd8b369216dd7f7b53f8709408f78a"
+    },
+    {
+      "case_id": "c-13df",
+      "variant": "B",
+      "sequence": 7,
+      "tool": "submit_audit",
+      "request": {
+        "submission_arguments": "owner-only"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": true,
+      "error": null,
+      "result_bytes": 3419,
+      "host_event_digest": "f8b0ddf24494e505d84fb6db5950e92c2e18522e09d3312a8327ea3a616e957b"
+    },
+    {
+      "case_id": "c-6f03",
+      "variant": "B",
+      "sequence": 1,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-Q-PROD"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4031,
+      "host_event_digest": "796dc716dde21449df5177b8cf96277af4b8e49a83e0b48a9888c4b60c18f71a"
+    },
+    {
+      "case_id": "c-6f03",
+      "variant": "B",
+      "sequence": 2,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-P-SEP"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4510,
+      "host_event_digest": "75e9751dd5390150391c450f01d03cc4751c10efcd5ed513ee43237d3bd48f4d"
+    },
+    {
+      "case_id": "c-6f03",
+      "variant": "B",
+      "sequence": 3,
+      "tool": "lookup_graph",
+      "request": {
+        "hops": 1,
+        "node": "R_L"
+      },
+      "returned_edge_ids": [
+        "edge:21",
+        "edge:22",
+        "edge:23",
+        "edge:24",
+        "edge:31",
+        "edge:39"
+      ],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 1810,
+      "host_event_digest": "0e87de7fb35b9a89842709e214b3053747cc729d74969d19b27e11d69aac978e"
+    },
+    {
+      "case_id": "c-6f03",
+      "variant": "B",
+      "sequence": 4,
+      "tool": "lookup_graph",
+      "request": {
+        "hops": 1,
+        "node": "candidate:hydrate"
+      },
+      "returned_edge_ids": [
+        "edge:15",
+        "edge:21",
+        "edge:31",
+        "edge:33"
+      ],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 1192,
+      "host_event_digest": "1a3aa41a32b5e95130dd89f6d1f38af31182c67aaa1dc0e20a4aa6ee372698e7"
+    },
+    {
+      "case_id": "c-6f03",
+      "variant": "B",
+      "sequence": 5,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:limits"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:limits",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 491,
+      "host_event_digest": "386a5de2fcfb362d08153667385da060245eb4574eafefcd5289f1d2f3b26ba3"
+    },
+    {
+      "case_id": "c-6f03",
+      "variant": "B",
+      "sequence": 6,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:mechanisms"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:mechanisms",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 389,
+      "host_event_digest": "c3a9f0ca65e0c6a9010d82acf24428adb7c2387e3b6da0b485f88e47df497606"
+    },
+    {
+      "case_id": "c-6f03",
+      "variant": "B",
+      "sequence": 7,
+      "tool": "submit_audit",
+      "request": {
+        "submission_arguments": "owner-only"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": true,
+      "error": null,
+      "result_bytes": 3122,
+      "host_event_digest": "45d808b201b1240505c07ddbc905819ff803bcaf8c9624932726e9fcbcfd7c75"
+    },
+    {
+      "case_id": "c-80b2",
+      "variant": "B",
+      "sequence": 1,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-Q-PROD"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4031,
+      "host_event_digest": "fd617d4f21732044b676fb1484fb8a7ee4658b939d823dfaa94d6d92f4dba914"
+    },
+    {
+      "case_id": "c-80b2",
+      "variant": "B",
+      "sequence": 2,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-P-SEP"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4510,
+      "host_event_digest": "9d6125926c4429a0ab59adb99fb18889afacc6c52a10019dbeaf5b05257c7cf8"
+    },
+    {
+      "case_id": "c-80b2",
+      "variant": "B",
+      "sequence": 3,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:example"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:example",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 467,
+      "host_event_digest": "7e595c7bd2c597033391c04ff6469e1c12e72c378fdc82e486df1b04d426ed43"
+    },
+    {
+      "case_id": "c-80b2",
+      "variant": "B",
+      "sequence": 4,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:mechanisms"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:mechanisms",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 389,
+      "host_event_digest": "87513f30d25eab315b493d7c122649d93a960bf8e453c5fc4043846b46717c1d"
+    },
+    {
+      "case_id": "c-80b2",
+      "variant": "B",
+      "sequence": 5,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:limits"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:limits",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 491,
+      "host_event_digest": "600cad598e9c0dc2310913eaac12086d2ba4cf0f5cda79d3d0c8aa82f5ce435a"
+    },
+    {
+      "case_id": "c-80b2",
+      "variant": "B",
+      "sequence": 6,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:phase"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:phase",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 554,
+      "host_event_digest": "431fd10762805361db89d38bfe6373aa1f5e361cf7cc688c86030aaed10c46a7"
+    },
+    {
+      "case_id": "c-80b2",
+      "variant": "B",
+      "sequence": 7,
+      "tool": "submit_audit",
+      "request": {
+        "submission_arguments": "owner-only"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": true,
+      "error": null,
+      "result_bytes": 3014,
+      "host_event_digest": "75494825e27ccaba5cf4c7698ff5aa919df3bf11285147e7f854cf704ab63a3b"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "B",
+      "sequence": 1,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-Q-PROD"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4031,
+      "host_event_digest": "650e3e7d5975379b428b21594f47b5cf7f0dc1254ab54592cc354a1dbb2dbdcc"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "B",
+      "sequence": 2,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-P-SEP"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4510,
+      "host_event_digest": "6b63a3f991d30af5ea778fea90899efe84ccaf0fec15ba4a39be48444fcfb53b"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "B",
+      "sequence": 3,
+      "tool": "lookup_graph",
+      "request": {
+        "hops": 1,
+        "node": "candidate:hydrate"
+      },
+      "returned_edge_ids": [
+        "edge:15",
+        "edge:21",
+        "edge:31",
+        "edge:33"
+      ],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 1192,
+      "host_event_digest": "145ec88b6c90329e3a5555f95f9f2b3faee906cf92634bb10b6b6a55cc8b8b91"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "B",
+      "sequence": 4,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:phase"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:phase",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 554,
+      "host_event_digest": "5cc6a6b8d4a75e3e3bda772baf977ea433247f813117d0445bf091d520cb2551"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "B",
+      "sequence": 5,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:limits"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:limits",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 491,
+      "host_event_digest": "64dc0b3f4d284bea394e28a1dd7a11540ff66fc6a1aa0526492b2557d140bbf1"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "B",
+      "sequence": 6,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:mechanisms"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:mechanisms",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 389,
+      "host_event_digest": "1f65f8f22fd83c361cd2876b64e7c0202235fb7f6f95ffd8a6293666b66b9cc4"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "B",
+      "sequence": 7,
+      "tool": "submit_audit",
+      "request": {
+        "submission_arguments": "owner-only"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": true,
+      "error": null,
+      "result_bytes": 3377,
+      "host_event_digest": "fa88294aa8b96636ac3164fcaf65c8687708ba223912ee6320345c67ddd52ab1"
+    },
+    {
+      "case_id": "c-13df",
+      "variant": "E",
+      "sequence": 1,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-Q-PROD"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4031,
+      "host_event_digest": "74ccfc4d0ce624243f8aab38a1dbec4624e3844f799f76840131b876ad818d04"
+    },
+    {
+      "case_id": "c-13df",
+      "variant": "E",
+      "sequence": 2,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-P-SEP"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4510,
+      "host_event_digest": "1c50edcc59956f3b9896fe6647a0214d89c617a00b259ffd8a6a2e42fa3a778d"
+    },
+    {
+      "case_id": "c-13df",
+      "variant": "E",
+      "sequence": 3,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:limits"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:limits",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 491,
+      "host_event_digest": "4a3ba20d7513c2d85efc68f8d1196f645e8862fff4bea7c05246a1d04385cd04"
+    },
+    {
+      "case_id": "c-13df",
+      "variant": "E",
+      "sequence": 4,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:mechanisms"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:mechanisms",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 389,
+      "host_event_digest": "b1d4bb33cbb08289f44ea1087058a13bbcaa81e2ed7a28150df138d522ba9f14"
+    },
+    {
+      "case_id": "c-13df",
+      "variant": "E",
+      "sequence": 5,
+      "tool": "lookup_graph",
+      "request": {
+        "hops": 2,
+        "node": "R_L"
+      },
+      "returned_edge_ids": [
+        "edge:21",
+        "edge:22",
+        "edge:23",
+        "edge:24",
+        "edge:31",
+        "edge:39",
+        "edge:8",
+        "edge:9",
+        "edge:10",
+        "edge:13",
+        "edge:15",
+        "edge:16",
+        "edge:17",
+        "edge:33"
+      ],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 3900,
+      "host_event_digest": "baa0bee925f350e6d8a245dad5bd906c6d9ec6b41fff19c6eeeec184eef43e89"
+    },
+    {
+      "case_id": "c-13df",
+      "variant": "E",
+      "sequence": 6,
+      "tool": "lookup_graph",
+      "request": {
+        "hops": 2,
+        "node": "candidate:sensor_bias"
+      },
+      "returned_edge_ids": [
+        "edge:20",
+        "edge:30",
+        "edge:36",
+        "edge:8",
+        "edge:15",
+        "edge:16",
+        "edge:17",
+        "edge:18",
+        "edge:19"
+      ],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 2508,
+      "host_event_digest": "6dcce4d28b4ce47a37c0420ca59c2dc4055ad76a35b6a8014e381438084b2522"
+    },
+    {
+      "case_id": "c-13df",
+      "variant": "E",
+      "sequence": 7,
+      "tool": "submit_audit",
+      "request": {
+        "submission_arguments": "owner-only"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": true,
+      "error": null,
+      "result_bytes": 3820,
+      "host_event_digest": "8d297d4e345dc602e4b5e63146e8f598b8c357bd1a9aa1cad27578b322baeeda"
+    },
+    {
+      "case_id": "c-6f03",
+      "variant": "E",
+      "sequence": 1,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-Q-PROD"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4031,
+      "host_event_digest": "796dc716dde21449df5177b8cf96277af4b8e49a83e0b48a9888c4b60c18f71a"
+    },
+    {
+      "case_id": "c-6f03",
+      "variant": "E",
+      "sequence": 2,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-P-SEP"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4510,
+      "host_event_digest": "75e9751dd5390150391c450f01d03cc4751c10efcd5ed513ee43237d3bd48f4d"
+    },
+    {
+      "case_id": "c-6f03",
+      "variant": "E",
+      "sequence": 3,
+      "tool": "lookup_graph",
+      "request": {
+        "hops": 2,
+        "node": "R_L"
+      },
+      "returned_edge_ids": [
+        "edge:21",
+        "edge:22",
+        "edge:23",
+        "edge:24",
+        "edge:31",
+        "edge:39",
+        "edge:8",
+        "edge:9",
+        "edge:10",
+        "edge:13",
+        "edge:15",
+        "edge:16",
+        "edge:17",
+        "edge:33"
+      ],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 3900,
+      "host_event_digest": "0b8ad3ac7eccd228a7a7bccbb8a2fa68b1c5bb9bbde91cc1af0a349d96fa9674"
+    },
+    {
+      "case_id": "c-6f03",
+      "variant": "E",
+      "sequence": 4,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:mechanisms"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:mechanisms",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 389,
+      "host_event_digest": "f1069905450edae6099f71d045df5ac10a9f03a2e53f7b113b700c7a255797d6"
+    },
+    {
+      "case_id": "c-6f03",
+      "variant": "E",
+      "sequence": 5,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:limits"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:limits",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 491,
+      "host_event_digest": "cfc519375e6116aa4db04fe93ecfb3e5ae8124b262c6592a821324cc77409f61"
+    },
+    {
+      "case_id": "c-6f03",
+      "variant": "E",
+      "sequence": 6,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:phase"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:phase",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 554,
+      "host_event_digest": "eec73e17d6c0382bfffbd4d7cbb5a8ffc277c93978cb2454609c189054aed6fa"
+    },
+    {
+      "case_id": "c-6f03",
+      "variant": "E",
+      "sequence": 7,
+      "tool": "submit_audit",
+      "request": {
+        "submission_arguments": "owner-only"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": true,
+      "error": null,
+      "result_bytes": 3100,
+      "host_event_digest": "ba0caa91a56859cc03350a3308939c5b9fd22e7cdbe50f3a4f616861752e4c97"
+    },
+    {
+      "case_id": "c-80b2",
+      "variant": "E",
+      "sequence": 1,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-Q-PROD"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4031,
+      "host_event_digest": "fd617d4f21732044b676fb1484fb8a7ee4658b939d823dfaa94d6d92f4dba914"
+    },
+    {
+      "case_id": "c-80b2",
+      "variant": "E",
+      "sequence": 2,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-P-SEP"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4510,
+      "host_event_digest": "9d6125926c4429a0ab59adb99fb18889afacc6c52a10019dbeaf5b05257c7cf8"
+    },
+    {
+      "case_id": "c-80b2",
+      "variant": "E",
+      "sequence": 3,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:example"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:example",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 467,
+      "host_event_digest": "7e595c7bd2c597033391c04ff6469e1c12e72c378fdc82e486df1b04d426ed43"
+    },
+    {
+      "case_id": "c-80b2",
+      "variant": "E",
+      "sequence": 4,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:mechanisms"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:mechanisms",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 389,
+      "host_event_digest": "87513f30d25eab315b493d7c122649d93a960bf8e453c5fc4043846b46717c1d"
+    },
+    {
+      "case_id": "c-80b2",
+      "variant": "E",
+      "sequence": 5,
+      "tool": "read_document",
+      "request": {
+        "id": "doc:limits"
+      },
+      "returned_edge_ids": [],
+      "document_id": "doc:limits",
+      "accepted": false,
+      "error": null,
+      "result_bytes": 491,
+      "host_event_digest": "600cad598e9c0dc2310913eaac12086d2ba4cf0f5cda79d3d0c8aa82f5ce435a"
+    },
+    {
+      "case_id": "c-80b2",
+      "variant": "E",
+      "sequence": 6,
+      "tool": "lookup_graph",
+      "request": {
+        "hops": 2,
+        "node": "candidate:hydrate"
+      },
+      "returned_edge_ids": [
+        "edge:15",
+        "edge:21",
+        "edge:31",
+        "edge:33",
+        "edge:16",
+        "edge:17",
+        "edge:18",
+        "edge:19",
+        "edge:20",
+        "edge:22",
+        "edge:23",
+        "edge:24",
+        "edge:39"
+      ],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 3671,
+      "host_event_digest": "ba6dc128e7cecae00110d7b02e58e4dd39859dd051f93b742dc067eca1f23576"
+    },
+    {
+      "case_id": "c-80b2",
+      "variant": "E",
+      "sequence": 7,
+      "tool": "submit_audit",
+      "request": {
+        "submission_arguments": "owner-only"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": true,
+      "error": null,
+      "result_bytes": 2724,
+      "host_event_digest": "210bfbed09d2ba2f4ad0cf6a4bae5bf65a3f8a2bb59c27a07820cc271ee4809e"
+    },
+    {
+      "case_id": "c-7a91",
+      "variant": "E",
+      "sequence": 1,
+      "tool": "query_sensor",
+      "request": {
+        "sensor": "SYN-Q-PROD"
+      },
+      "returned_edge_ids": [],
+      "document_id": null,
+      "accepted": false,
+      "error": null,
+      "result_bytes": 4031,
+      "host_event_digest": "650e3e7d5975379b428b21594f47b5cf7f0dc1254ab54592cc354a1dbb2dbdcc"
+    }
+  ]
+}

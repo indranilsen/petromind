@@ -1,0 +1,51 @@
+{
+  "freeze": {
+    "status": "passed",
+    "public_freeze_entries": 36,
+    "private_core_freeze_entries": 34,
+    "public_case_count": 7,
+    "private_vault_count": 7,
+    "within_case_payload_leak_checks": "passed; initial sensors only; no private answer fields or generator metadata",
+    "cross_case_sensor_overlap": true,
+    "required_boundary": "one packet per fresh model context, tool-mediated access only; never mount the public corpus or private archive",
+    "production_modules_unchanged": [
+      "petromind/atomic_auditor.py",
+      "petromind/reliable_auditor.py",
+      "petromind/scope_auditor.py",
+      "petromind/claim_auditor.py"
+    ],
+    "synthetic_imports_production": false,
+    "scenarios_verdicts_weights_changed": false
+  },
+  "offline_smoke": {
+    "status": "passed",
+    "coverage": "one accepted case; other six absent and scored as missing by unchanged suite evaluator",
+    "initial_sensor_count": 3,
+    "new_sensor_requests": 1,
+    "charged_sensors": 4,
+    "graph_edges_returned": 4,
+    "assessment_accepted": true,
+    "score_produced": true,
+    "mechanical_suite_points_of_29": 2.4978354978354975,
+    "semantic_total": null,
+    "model_requests": 0,
+    "estimated_cost_usd": 0,
+    "audit_final_digest": "0bcb7078a72cda1ed68f90cf734430de87cf38dd7bdd5b2979e2854f982de12e",
+    "private_score_sha256": "61882480eabcc86f8a87b13c5a76234a595fa34bbd189c9168c27380b3e587fa"
+  },
+  "test_suite": {
+    "passed": 614,
+    "skipped": 1,
+    "exit_code": 0
+  },
+  "targeted_research_suite": {
+    "passed": 65,
+    "exit_code": 0
+  },
+  "private_physics_tests": 6,
+  "offline_mechanical_baseline_points": 29,
+  "semantic_total": null,
+  "benchmark_changed": false,
+  "production_changed": false,
+  "archive_sha256": "10f06578af1255e92bad13d1f4c8735c24c1f3d4f2e1947ad5cde3d45b5e5294"
+}
