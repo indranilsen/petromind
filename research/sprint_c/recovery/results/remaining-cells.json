@@ -1,0 +1,123 @@
+{
+  "version": "local-remaining-frozen-cells-v1",
+  "scientific_protocol_id": "2f0bad897b33230ef1868b3d27fe690fed02b2646db7bca16a21b7f74016c227",
+  "cells": [
+    {
+      "task_id": "c-6f03",
+      "variant": "V3"
+    },
+    {
+      "task_id": "c-6f03",
+      "variant": "V0"
+    },
+    {
+      "task_id": "c-a57c",
+      "variant": "V2"
+    },
+    {
+      "task_id": "c-a57c",
+      "variant": "V3"
+    },
+    {
+      "task_id": "c-a57c",
+      "variant": "V0"
+    },
+    {
+      "task_id": "c-a57c",
+      "variant": "V1"
+    },
+    {
+      "task_id": "c-13df",
+      "variant": "V3"
+    },
+    {
+      "task_id": "c-13df",
+      "variant": "V0"
+    },
+    {
+      "task_id": "c-13df",
+      "variant": "V1"
+    },
+    {
+      "task_id": "c-13df",
+      "variant": "V2"
+    },
+    {
+      "task_id": "c-42e8",
+      "variant": "V0"
+    },
+    {
+      "task_id": "c-42e8",
+      "variant": "V1"
+    },
+    {
+      "task_id": "c-42e8",
+      "variant": "V2"
+    },
+    {
+      "task_id": "c-42e8",
+      "variant": "V3"
+    },
+    {
+      "task_id": "c-80b2",
+      "variant": "V1"
+    },
+    {
+      "task_id": "c-80b2",
+      "variant": "V2"
+    },
+    {
+      "task_id": "c-80b2",
+      "variant": "V3"
+    },
+    {
+      "task_id": "c-80b2",
+      "variant": "V0"
+    },
+    {
+      "task_id": "c-9bc4",
+      "variant": "V2"
+    },
+    {
+      "task_id": "c-9bc4",
+      "variant": "V3"
+    },
+    {
+      "task_id": "c-9bc4",
+      "variant": "V0"
+    },
+    {
+      "task_id": "c-9bc4",
+      "variant": "V1"
+    }
+  ],
+  "excluded_original_attempts": [
+    [
+      "c-6f03",
+      "V1"
+    ],
+    [
+      "c-6f03",
+      "V2"
+    ],
+    [
+      "c-7a91",
+      "V0"
+    ],
+    [
+      "c-7a91",
+      "V1"
+    ],
+    [
+      "c-7a91",
+      "V2"
+    ],
+    [
+      "c-7a91",
+      "V3"
+    ]
+  ],
+  "scientific_inputs_digest": "f5e69ceb021778c4e1fa35e617caaed3c83b2e934ca591c45e84e1abd49a58f1",
+  "same_cell_retries": 0,
+  "plan_id": "cd01310923d9fc8a766d64f0cbd9bc11db032a60c5235e57500b45e49adfca5e"
+}

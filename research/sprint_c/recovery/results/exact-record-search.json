@@ -1,0 +1,34 @@
+{
+  "copies_examined": [
+    {
+      "copy": "complete-original-and-sprint-c-ledger",
+      "events": 241,
+      "head_sequence": 243,
+      "log_sha256": "eefd1b4ae7da840ff86e0dc7726ac5712a138a17cbef2bc720d2d752ba36810d",
+      "head_sha256": "b0c5974aefc398cfe3538ece8a75bcca7938e9fcc510a205c00bcdeb4406e5e0"
+    },
+    {
+      "copy": "complete-original-and-sprint-c-ledger",
+      "events": 241,
+      "head_sequence": 243,
+      "log_sha256": "eefd1b4ae7da840ff86e0dc7726ac5712a138a17cbef2bc720d2d752ba36810d",
+      "head_sha256": "b0c5974aefc398cfe3538ece8a75bcca7938e9fcc510a205c00bcdeb4406e5e0"
+    },
+    {
+      "copy": "complete-original-and-sprint-c-ledger",
+      "events": 241,
+      "head_sequence": 243,
+      "log_sha256": "eefd1b4ae7da840ff86e0dc7726ac5712a138a17cbef2bc720d2d752ba36810d",
+      "head_sha256": "b0c5974aefc398cfe3538ece8a75bcca7938e9fcc510a205c00bcdeb4406e5e0"
+    },
+    {
+      "copy": "sprint-c-original-ledger-forensic-v1",
+      "events": 241,
+      "head_sequence": 243,
+      "log_sha256": "eefd1b4ae7da840ff86e0dc7726ac5712a138a17cbef2bc720d2d752ba36810d",
+      "head_sha256": "b0c5974aefc398cfe3538ece8a75bcca7938e9fcc510a205c00bcdeb4406e5e0"
+    }
+  ],
+  "exact_missing_records_found": false,
+  "scope": "Known independently preserved owner package/extractions; no provider billing record access."
+}

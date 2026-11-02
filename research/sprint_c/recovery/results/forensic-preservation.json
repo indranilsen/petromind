@@ -1,0 +1,15 @@
+{
+  "source_archive_sha256": "329633ea62644929c0511d1e7495e97f8a0f14bdf7aa4408f5221d1f8066eff4",
+  "archive_manifest_entries_verified": 136,
+  "ledger_files": {
+    "authorization-v2.json": "5aa78b4c3d475a8e7c9ad8edfd5e97afeab347fc9ce5b77fefc1356439ebdff0",
+    "lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "reservations.jsonl": "39e90e0b6145b144421abc8d08bd2a5fd7fe0d43153376357d8cbf707cc81947",
+    "session.json": "2faf69608cb7ff0fc87b34ad4af6d29f752b95b7d992efda5454d76f0cde6474",
+    "sprint-c-accounting-v1/authorization.json": "a8ed1cb344cd347802ed27344ef7082f6f9a1e5442e8e5a08f3e099498bc9b67",
+    "sprint-c-accounting-v1/events.jsonl": "eefd1b4ae7da840ff86e0dc7726ac5712a138a17cbef2bc720d2d752ba36810d",
+    "sprint-c-accounting-v1/head.json": "b0c5974aefc398cfe3538ece8a75bcca7938e9fcc510a205c00bcdeb4406e5e0",
+    "sprint-c-accounting-v1/operational-policy-v2.json": "43d7c9719147fd59ceab5a3b703d15447a20d794e6c3a1fa5d3e6738f7ca55a8"
+  },
+  "original_path_availability": "Earlier scratch root unavailable; recovered exact owner-preserved saved archive instead."
+}

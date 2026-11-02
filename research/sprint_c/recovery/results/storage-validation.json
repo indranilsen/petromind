@@ -1,0 +1,78 @@
+{
+  "validation.json": {
+    "version": "local-storage-checks-v1",
+    "nonce": "2551a6166fc50fc108fc022b79d205617d956f47a729bb24",
+    "surface": "hosted_disposable",
+    "checks": {
+      "sequential_append_readback": true,
+      "file_directory_fsync_atomic_replace": true,
+      "lock_exclusion": true,
+      "lock_release": true,
+      "process_restart_readback": true,
+      "interrupted_append_detected": true,
+      "interrupted_checkpoint_detected": true,
+      "interrupted_sqlite_transaction_rolled_back": true,
+      "concurrent_writer_reader_snapshots": true,
+      "divergent_view_detection": true
+    },
+    "passed": true,
+    "separate_session_witness_complete": false,
+    "device": 27,
+    "inode": 3939538,
+    "not_a_universal_durability_proof": true,
+    "report_id": "4f79e5578825f18923d2bf29859513eda7a2cb66901e2c5bb98e741c6e42c1e6"
+  },
+  "cross-writer.json": {
+    "mode": "writer",
+    "nonce": "2551a6166fc50fc108fc022b79d205617d956f47a729bb24",
+    "pid": 37,
+    "passed": true,
+    "iterations": 500,
+    "rows": 500,
+    "head": 500,
+    "finished_ns": 1793649534548546036,
+    "device": 27,
+    "inode": 3939538,
+    "result_id": "98a34abb34f6c1df82a304a3c099b3cb893389475409dbbb90c704e3249502c6"
+  },
+  "cross-reader.json": {
+    "mode": "reader",
+    "nonce": "2551a6166fc50fc108fc022b79d205617d956f47a729bb24",
+    "pid": 5,
+    "passed": true,
+    "observed_active_writer": true,
+    "started_ns": 1793649528497882176,
+    "writer_started_ns": 1793649523322047336,
+    "finished_ns": 1793649534048514184,
+    "device": 27,
+    "inode": 3939538,
+    "result_id": "cee590ac0ab358d4b3ff4c10bfe9e0b1e6d3559f190ced83a95794d9207abffd"
+  },
+  "status": "FINITE_HOSTED_PROBE_PASSED_NOT_HOSTED_EXECUTION_APPROVAL",
+  "namespace_observations": [
+    {
+      "label": "a",
+      "namespaces": {
+        "mnt": "mnt:[4026532414]",
+        "pid": "pid:[4026532416]",
+        "user": "user:[4026532359]"
+      },
+      "device": 27,
+      "inode": 3939538,
+      "boot_id_hash": "b7036f0143df684eff689f5425e779a60d6a924c5c1bd17cf0ff4e89adcd7b09"
+    },
+    {
+      "label": "b",
+      "namespaces": {
+        "mnt": "mnt:[4026532344]",
+        "pid": "pid:[4026532346]",
+        "user": "user:[4026532275]"
+      },
+      "device": 27,
+      "inode": 3939538,
+      "boot_id_hash": "b7036f0143df684eff689f5425e779a60d6a924c5c1bd17cf0ff4e89adcd7b09"
+    }
+  ],
+  "prior_failures_preserved": true,
+  "hosted_paid_execution_permitted": false
+}

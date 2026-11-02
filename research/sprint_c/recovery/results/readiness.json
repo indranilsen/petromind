@@ -1,0 +1,18 @@
+{
+  "decision": "BLOCKED",
+  "additional_paid_API_calls_this_update": 0,
+  "exact_missing_event_recovery": false,
+  "conservative_proposal_id": "b51a6501e191516e2fbf7324b00680a48e1ed2e5ad9ac59ac5fee6ef7f2fcd11",
+  "owner_review_received": false,
+  "owner_local_storage_certificate_received": false,
+  "hosted_execution_permitted": false,
+  "conditional_carry_liability_usd": 4.73195485,
+  "conditional_C_capacity_after_owner_review_usd": 5.26804515,
+  "historical_PR33_reservations_held_usd": 9.8840695,
+  "local_workflow_tested_with_mock_HTTP": true,
+  "permitted_originally_unattempted_cells": 22,
+  "failed_and_completed_cells_replay_permitted": false,
+  "scientific_results_changed": false,
+  "independent_semantic_review": "pending/ungraded",
+  "required_next_step": "Owner reviews exact conservative loss proposal and validates a trusted local filesystem before activating the one registered continuation journal."
+}
