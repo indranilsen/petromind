@@ -1124,6 +1124,36 @@ function navigate(page, push = true) {
   renderPlatform();
   window.scrollTo(0, 0);
 }
+function renderClassifierCandidates(ranked) {
+  // Display-only ranking of the supplied scores; never refit or recalibrate them.
+  const usable = ranked.filter(
+    (p) => Number.isFinite(p.probability) && p.probability >= 0,
+  );
+  $("classifierRanking").hidden =
+    usable.length < 2 || usable[0].probability <= 0;
+  const maximum = usable[0]?.probability || 1;
+  $("classifierCandidates").replaceChildren(
+    ...usable.slice(0, 3).map((candidate, i) => {
+      const row = el("li");
+      const label =
+        PublicInvestigation.faultNames[candidate.fault_type] ||
+        `Fault category ${candidate.fault_type}`;
+      row.dataset.fault = candidate.fault_type;
+      row.dataset.score = candidate.probability;
+      row.append(
+        el("span", String(i + 1).padStart(2, "0"), "candidate-rank"),
+        el("span", label, "candidate-name"),
+      );
+      const bar = el("span", undefined, "candidate-track"),
+        fill = el("span");
+      bar.setAttribute("aria-hidden", "true");
+      fill.style.width = `${(100 * candidate.probability) / maximum}%`;
+      bar.append(fill);
+      row.append(bar);
+      return row;
+    }),
+  );
+}
 function renderPlatform() {
   if (!cases.length) return;
   if (execution === "saved" && !c().saved_investigation) execution = "captured";
@@ -1144,9 +1174,13 @@ function renderPlatform() {
   $("scenarioSelect").disabled = liveBusy;
   $("executionSelect").disabled = liveBusy;
   $("executionSelect").value = execution;
-  $("executionSelect").querySelector('[value="live"]').disabled =
-    !status.live_enabled;
+  const liveOption = $("executionSelect").querySelector('[value="live"]');
+  liveOption.disabled = !status.live_enabled;
+  liveOption.textContent = status.live_enabled
+    ? "Run live investigation"
+    : "Run live investigation · not enabled";
   $("savedExecution").disabled = !c().saved_investigation;
+  $("savedExecution").hidden = !c().saved_investigation;
   $("syntheticNotice").hidden = !synthetic;
   $("historicalWorkspace").hidden = synthetic;
   $("consoleView").hidden = workspaceView !== "operator";
@@ -1167,16 +1201,19 @@ function renderPlatform() {
     point = monitoringPoint();
   $("checkpointAlert").hidden = history ? !anomalyReached() : !ready;
   $("alertEyebrow").textContent = history
-    ? "▲ PREFIX-ONLY ANOMALY ALERT"
-    : "▲ DEMO INVESTIGATION CHECKPOINT";
+    ? "MEASUREMENT ALERT"
+    : "MEASUREMENT REVIEW";
   $("checkpointTitle").textContent = history
     ? "Diagnostic alert triggered"
     : c().replay.mode !== "endpoints"
       ? "Diagnostic window complete"
       : "Captured comparison complete";
   $("checkpointExplanation").textContent = history
-    ? "Both pressures deviated by at least 6 robust reference scales for 30 seconds. This heuristic detects change, not a fault or confirmed cause. The reference is not certified normal."
-    : "Retrospective review of complete-window summaries. This is a demo checkpoint, not a historical alarm or early prediction.";
+    ? "Both monitored pressures moved unusually far from their earlier measured reference. Something changed; this alert does not identify the failure cause."
+    : "The recorded pressure comparison is ready for investigation. This review checkpoint is not a recorded operational alarm.";
+  $("alertRuleDetails").textContent = history
+    ? "The recorded detector flagged both pressures after deviations of at least 6 robust reference scales persisted for 30 seconds. The measured reference is not certified normal; this is a demonstration heuristic, not a validated industrial alarm."
+    : "This demonstration uses completion of the captured measurement window as its review checkpoint, not a historical operational alarm or early prediction.";
   const diagnosticCount = Math.max(
     0,
     Math.min(600, index - (c().replay.workflow.checkpoint.index - 599) + 1),
@@ -1186,12 +1223,12 @@ function renderPlatform() {
     : anomalyReached()
       ? "Accumulating diagnostic evidence"
       : point.state === "warmup"
-        ? "Observing a reference prefix"
+        ? "Building a measurement reference"
         : "Monitoring sensor measurements";
   $("monitoringExplanation").textContent = !history
     ? "Play or scrub the recorded measurements. The saved diagnosis becomes available only at the end-of-evidence checkpoint."
     : anomalyReached()
-      ? `Alert recorded. Original diagnostic observations: ${diagnosticCount} of 600. The saved classifier and Muse summaries remain unavailable until this original window is complete; they are not recomputed at the alert.`
+      ? `Alert recorded. Collecting the diagnosis evidence: ${diagnosticCount} of 600 recorded observations. The saved diagnosis stays hidden until its complete measurement window is available.`
       : point.state === "warmup"
         ? "The first five recorded minutes form a measured reference. Earlier operation is not automatically normal or safe. No fault prediction is shown."
         : point.state === "reference_unavailable"
@@ -1201,6 +1238,8 @@ function renderPlatform() {
             : index === c().replay.workflow.positions - 1
               ? "No sustained two-pressure deviation alert was detected in this replay. No fault diagnosis was triggered."
               : "Monitoring recorded pressures against the earlier measured reference. Sustained deviation can trigger an anomaly alert; it does not identify the cause.";
+  $("investigationNext").hidden = !ready;
+  $("handoffDetails").hidden = !ready;
   $("executionControl").hidden = !ready;
   $("capabilityDetails").hidden = !ready;
   $("runBadge").hidden = !ready;
@@ -1230,14 +1269,18 @@ function renderPlatform() {
   const predicted = c().packet.baseline.prediction;
   const fault =
     PublicInvestigation.faultNames[predicted] || `Fault category ${predicted}`;
-  $("cause").textContent = `Suspected failure: ${fault}`;
+  $("cause").replaceChildren(
+    el("span", "Suspected failure:", "cause-label"),
+    el("strong", fault, "cause-name"),
+  );
   const ranked = (c().packet.baseline.probabilities || [])
     .filter((p) => p.represented_in_fit)
     .sort((a, b) => b.probability - a.probability);
   $("classifierStatement").textContent =
     ranked.length && ranked[0].fault_type === predicted
-      ? `The statistical classifier ranked ${fault.toLowerCase()} highest among its trained categories. Its score is not a calibrated likelihood.`
-      : `The statistical classifier predicted ${fault.toLowerCase()}. This is a suspected category, not an established physical cause.`;
+      ? "The statistical classifier compared this measurement pattern with patterns learned from training data and ranked this failure highest. It is a ranked statistical hypothesis, not proof or a calibrated probability."
+      : "The statistical classifier compared measured features with patterns learned from training data. This prediction is a statistical hypothesis, not proof or a calibrated probability.";
+  renderClassifierCandidates(ranked);
   $("classifierFeatures").textContent =
     `${c().classifier_context?.model || "Statistical evidence model"}: ${(c().classifier_context?.features || []).join(", ")}. No per-sensor feature importance is recorded.`;
   $("classifierInputs").textContent =
@@ -1251,8 +1294,26 @@ function renderPlatform() {
     ...["P-PDG", "P-TPT"].map((sensor) => {
       const summary = c().observations[sensor],
         li = el("li");
+      li.dataset.direction = !summary?.available
+        ? "missing"
+        : summary.delta > 0
+          ? "up"
+          : summary.delta < 0
+            ? "down"
+            : "stable";
       li.append(
-        el("strong", `${names[sensor]} · ${sensor}`),
+        el("strong", names[sensor]),
+        el(
+          "b",
+          !summary?.available
+            ? "— Unavailable"
+            : summary.delta > 0
+              ? "↑ Increased"
+              : summary.delta < 0
+                ? "↓ Decreased"
+                : "→ No endpoint change",
+          "measurement-direction",
+        ),
         el(
           "span",
           summary?.available
@@ -1262,7 +1323,7 @@ function renderPlatform() {
         el(
           "small",
           summary?.available
-            ? `Recorded endpoint change: ${value(sensor, summary.delta)} · ${summary.count} valid samples`
+            ? `Change from first to last valid reading: ${value(sensor, summary.delta)}`
             : "Unavailable evidence, not a zero measurement",
         ),
       );
@@ -1280,13 +1341,18 @@ function renderPlatform() {
         : `${status.capabilities?.new_sensor_queries ? "Live v3" : "Live v2"} · explicit API execution`;
   $("runInstruction").textContent =
     execution !== "live"
-      ? "This replays genuine captured activity, not a new API call. Advance records to inspect what happened."
+      ? execution === "saved"
+        ? "Replay: plays a verified saved Muse investigation automatically. No new model call."
+        : "Replay: plays a previously captured Muse investigation automatically. No new model call."
       : status.live_enabled
-        ? `Explicit action uses the Meta API. Fresh protocol limits: ${status.live_limits?.estimated_usd ?? 2} USD estimated, ${status.live_limits?.requests ?? 12} requests and ${status.live_limits?.output_tokens ?? 49152} output tokens globally; Python enforces remaining reservations.`
+        ? `Live: runs a fresh Muse investigation with the enabled model and tools. Clicking Investigate uses the paid API within the prepared $${status.live_limits?.estimated_usd ?? 2} estimated cap.`
         : "Live is disabled. Prepare a fresh live protocol and restart with --enable-live; no API calls occur in replay.";
   $("capabilityText").textContent = status.capabilities?.new_sensor_queries
     ? "Live v3 adds request_sensor: at most two additional summaries, after lookup of their documented generic location. Initial and new sensors share five queries; missing queries count and cached repeats are free. No raw playback enters Muse. History remains the initial training-only snapshot; no exact well topology is available. Captured runs remain unchanged."
     : "Live evidence auditing exposes lookup_knowledge, search_history and submit_audit. Three inherited summaries count toward five queries. Extra sensors require a fresh active-sensor protocol and verified raw dataset. No exact well topology is available. History uses initial evidence only.";
+  if (status.live_enabled)
+    $("capabilityText").textContent +=
+      ` Prepared global limits: $${status.live_limits?.estimated_usd ?? 2} estimated, ${status.live_limits?.requests ?? 12} requests, ${status.live_limits?.output_tokens ?? 49152} output tokens. Python enforces remaining reservations.`;
   $("nextScene").hidden = !ready;
   $("nextScene").disabled =
     liveBusy || (execution === "live" && !status.live_enabled && r.phase !== 2);
@@ -2329,7 +2395,11 @@ function buildTechKnowledge() {
     );
     if (fact) {
       panel.append(
-        el("code", fact.caption_summary || `${fact.subject} → ${fact.relation} → ${fact.object}`),
+        el(
+          "code",
+          fact.caption_summary ||
+            `${fact.subject} → ${fact.relation} → ${fact.object}`,
+        ),
         el("p", fact.scope.replaceAll("_", " "), "tech-caption"),
         el("p", fact.locator, "tech-caption"),
       );
@@ -2624,6 +2694,8 @@ window.onpopstate = () =>
   );
 $("caseSelect").onchange = () => {
   resetPlayback();
+  $("handoffDetails").open = false;
+  $("capabilityDetails").open = false;
   current = Number($("caseSelect").value);
   index = 0;
   workspaceView = "operator";

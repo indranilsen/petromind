@@ -55,7 +55,7 @@ def main():
                     ready = case["replay"]["workflow"]["checkpoint"]["index"]
                     page.locator("#slider").fill(str(ready))
                     assert (
-                        "STATISTICAL MACHINE-LEARNING CLASSIFIER"
+                        "Statistical classifier result"
                         in page.locator("#diagnosisCard").inner_text()
                     )
                     assert (

@@ -153,19 +153,6 @@
           <button id="operatorView" class="tab active">Operator Console</button
           ><button id="insideView" class="tab">Inside Muse</button>
         </div>
-        <label id="executionControl" hidden
-          >EXECUTION<select id="executionSelect">
-            <option value="captured">
-              Original captured investigation · v1
-            </option>
-            <option value="saved" id="savedExecution" disabled>
-              Saved verified v5 investigation
-            </option>
-            <option value="live">Live Muse API · paid</option>
-          </select></label
-        ><span id="runBadge" class="badge"
-          >Captured replay · not a new call</span
-        >
       </div>
       <div id="syntheticNotice" class="notice" hidden>
         <h2>Synthetic challenge is not enabled.</h2>
@@ -370,79 +357,161 @@
             </p>
           </main>
           <aside class="operator-panel">
-            <section
-              id="checkpointAlert"
-              class="checkpoint-alert"
-              hidden
-              role="status"
-            >
-              <p id="alertEyebrow" class="eyebrow">
-                ▲ DEMO INVESTIGATION CHECKPOINT
-              </p>
-              <h3 id="checkpointTitle">Investigation checkpoint reached</h3>
-              <p id="checkpointExplanation"></p>
-            </section>
             <div id="investigationHypothesis" hidden>
               <p class="eyebrow">STATISTICAL HYPOTHESIS</p>
               <h2 id="activeHypothesis"></h2>
             </div>
-            <section id="diagnosisCard" hidden>
-              <p class="eyebrow">STATISTICAL MACHINE-LEARNING CLASSIFIER</p>
-              <h2 id="cause"></h2>
-              <p id="classifierStatement"></p>
-              <p id="definition"></p>
-              <p class="fine-print">
-                Observations from the original 600-sample diagnostic window:
-              </p>
-              <ul id="diagnosisObservations" class="diagnosis-comparisons"></ul>
-              <details>
-                <summary>Model inputs and limitations</summary>
-                <p id="classifierFeatures"></p>
-                <p id="classifierInputs"></p>
-                <p>
-                  Detected anomaly ≠ predicted fault ≠ verified physical cause.
-                  No per-sensor importance or calibrated likelihood is supplied.
+            <div id="classifierHandoff" class="classifier-handoff">
+              <section
+                id="checkpointAlert"
+                class="checkpoint-alert handoff-block handoff-alert"
+                hidden
+                role="status"
+                aria-labelledby="checkpointTitle"
+              >
+                <p id="alertEyebrow" class="handoff-kicker">
+                  MEASUREMENT ALERT
                 </p>
+                <h3 id="checkpointTitle">Diagnostic alert triggered</h3>
+                <p id="checkpointExplanation"></p>
+              </section>
+              <section
+                id="diagnosisCard"
+                class="handoff-block handoff-classifier"
+                hidden
+                aria-labelledby="classifierTitle"
+              >
+                <p class="handoff-kicker">STATISTICAL / MACHINE LEARNING</p>
+                <h3 id="classifierTitle">Statistical classifier result</h3>
+                <h2 id="cause"></h2>
+                <p id="definition"></p>
+                <p id="classifierStatement"></p>
+                <div
+                  id="classifierRanking"
+                  class="classifier-ranking"
+                  aria-labelledby="classifierRankingTitle"
+                >
+                  <h4 id="classifierRankingTitle">Highest-ranked candidates</h4>
+                  <ol id="classifierCandidates"></ol>
+                  <p class="handoff-caption">
+                    Relative model scores, not calibrated probabilities.
+                  </p>
+                </div>
+                <h4 class="handoff-observation-title">
+                  Observed pressure changes
+                </h4>
+                <ul
+                  id="diagnosisObservations"
+                  class="diagnosis-comparisons"
+                ></ul>
+              </section>
+              <section
+                id="investigationNext"
+                class="handoff-block handoff-next"
+                hidden
+                aria-labelledby="investigationNextTitle"
+              >
+                <p class="handoff-kicker">
+                  NEXT / REASONING-BASED INVESTIGATION
+                </p>
+                <h3 id="investigationNextTitle">
+                  Does the evidence justify the cause?
+                </h3>
+                <p id="plausibility" class="handoff-boundary"></p>
+                <p class="muse-role">
+                  Muse Spark checks the reasoning behind the diagnosis. It
+                  reviews measurements, engineering documentation and historical
+                  comparisons to assess what is supported, what is not
+                  established, and what evidence is still needed.
+                </p>
+                <label id="executionControl" hidden
+                  >Investigation mode<select id="executionSelect">
+                    <option value="captured">
+                      Replay captured investigation
+                    </option>
+                    <option value="saved" id="savedExecution" disabled>
+                      Replay verified saved investigation
+                    </option>
+                    <option value="live">Run live investigation</option>
+                  </select></label
+                >
+                <p id="runInstruction" class="handoff-caption" hidden></p>
+                <button id="nextScene" class="primary" hidden>
+                  Investigate with Muse Spark
+                </button>
+              </section>
+              <details
+                id="handoffDetails"
+                class="handoff-block handoff-details"
+                hidden
+              >
+                <summary>
+                  Details · claim, model and investigation scope
+                </summary>
+                <div class="handoff-detail-body">
+                  <h4>Constructed claim being audited</h4>
+                  <p id="claimSummary"></p>
+                  <p class="fine-print">
+                    This is a constructed claim for the audit, not a causal
+                    explanation produced by the statistical classifier.
+                  </p>
+                  <h4>Model inputs and limitations</h4>
+                  <p id="classifierFeatures"></p>
+                  <p id="classifierInputs"></p>
+                  <p class="fine-print">
+                    Observed pressure changes are shown for investigation, not
+                    as feature importance. An anomaly is not a predicted fault,
+                    and a predicted fault is not a verified cause.
+                  </p>
+                  <h4>Alert and measurement window</h4>
+                  <p id="alertRuleDetails"></p>
+                  <p class="fine-print">
+                    The saved classification is revealed only after its full
+                    diagnostic evidence window is available. It is not an early
+                    prediction made at the alert.
+                  </p>
+                  <details
+                    id="capabilityDetails"
+                    class="capability-details"
+                    hidden
+                  >
+                    <summary>Tools, scope and spending limits</summary>
+                    <p id="capabilityText"></p>
+                    <p>
+                      Public tool requests/results only. No private reasoning
+                      transcript. A disconnected browser does not cancel an
+                      already started capped run. No automatic retry or replay
+                      substitution.
+                    </p>
+                  </details>
+                  <h4>Investigation record</h4>
+                  <span id="runBadge" class="badge"
+                    >Captured replay · not a new call</span
+                  >
+                  <p id="executionNote" class="fine-print" hidden></p>
+                  <button id="inspectDetails" class="quiet" hidden>
+                    Explore original captured evidence ↗
+                  </button>
+                </div>
               </details>
-              <p id="plausibility"></p>
-              <details>
-                <summary>Constructed claim being audited</summary>
-                <p id="claimSummary"></p>
-              </details>
-            </section>
+            </div>
             <section id="preDiagnosis">
               <p class="eyebrow">BEGIN WITH MEASUREMENTS</p>
               <h2 id="monitoringHeading">Monitoring sensor measurements</h2>
               <p id="monitoringExplanation">
                 Play or scrub the recorded measurements. The diagnosis becomes
-                available at the marked end-of-evidence checkpoint.
+                available when the marked measurement window is complete.
               </p>
             </section>
-            <p id="executionNote" class="fine-print" hidden></p>
-            <button id="nextScene" class="primary" hidden>
-              Investigate with Muse Spark
-            </button>
-            <p id="runInstruction" class="fine-print" hidden></p>
             <section id="activityPanel" hidden>
               <div id="operatorResult"></div>
               <p class="fine-print">
                 The synchronized investigation conversation is in Inside Muse.
               </p>
             </section>
-            <button id="inspectDetails" class="quiet" hidden>
-              Explore original captured evidence ↗</button
-            ><button id="back" class="quiet" hidden>
+            <button id="back" class="quiet" hidden>
               Restart captured replay
             </button>
-            <details id="capabilityDetails" class="capability-details" hidden>
-              <summary>Tools, scope and spending limits</summary>
-              <p id="capabilityText"></p>
-              <p>
-                Public tool requests/results only. No private reasoning
-                transcript. A disconnected browser does not cancel an already
-                started capped run. No automatic retry or replay substitution.
-              </p>
-            </details>
           </aside>
         </div>
         <section id="insidePanel" hidden>
@@ -856,12 +925,18 @@
             </details>
           </aside>
         </div>
-        <div class="tech-verdict-key" aria-label="Finding status key, not additional findings">
+        <div
+          class="tech-verdict-key"
+          aria-label="Finding status key, not additional findings"
+        >
           <span class="tech-verdict supported">SUPPORTED</span>
           <span class="tech-verdict unestablished">NOT ESTABLISHED</span>
           <span class="tech-verdict contradicted">CONTRADICTED</span>
         </div>
-        <p class="tech-caption">Status key: contradiction requires contrary evidence. Missing support alone is not a contradiction.</p>
+        <p class="tech-caption">
+          Status key: contradiction requires contrary evidence. Missing support
+          alone is not a contradiction.
+        </p>
         <div class="tech-logic">
           <article>
             <span class="tech-index">SUFFICIENCY</span>

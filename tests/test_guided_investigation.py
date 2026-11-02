@@ -99,7 +99,7 @@ def test_manual_next_buttons_are_removed_and_public_module_is_packaged():
     assert 'id="nextRecord"' not in html and 'id="graphAdvance"' not in html
     assert 'id="capturePause"' in html and 'id="captureSkip"' in html
     assert 'src="/investigation.js"' in html
-    assert "STATISTICAL MACHINE-LEARNING CLASSIFIER" in html
+    assert 'id="classifierTitle"' in html and "Statistical classifier result" in html
 
 
 def test_scope_groups_preserve_actual_public_v4_result_without_regrading():
