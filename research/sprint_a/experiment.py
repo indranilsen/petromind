@@ -525,6 +525,48 @@ def summarize_rows(rows):
     return result
 
 
+def paired_comparisons(rows):
+    """Descriptive matched-task comparisons only; no independent-sample p-values."""
+    indexed = {(r["task_id"], r["variant"]): r for r in rows}
+    tasks = sorted({r["task_id"] for r in rows})
+    pairs = []
+    for left, right in [
+        ("A_sensor", "B_knowledge"),
+        ("B_knowledge", "C_history"),
+        ("B_knowledge", "E_connected"),
+        *[("deterministic", v) for v in VARIANTS],
+    ]:
+        deltas = []
+        left_only = right_only = 0
+        for task in tasks:
+            if (task, left) not in indexed or (task, right) not in indexed:
+                continue
+            a, b = indexed[task, left], indexed[task, right]
+            sa = [s for s in a["scores"] if s["scorable"]]
+            sb = [s for s in b["scores"] if s["scorable"]]
+            if not sa or len(sa) != len(sb):
+                continue
+            ac = sum(s["correct"] for s in sa) / len(sa)
+            bc = sum(s["correct"] for s in sb) / len(sb)
+            deltas.append(bc - ac)
+            left_only += ac > bc
+            right_only += bc > ac
+        pairs.append(
+            {
+                "left": left,
+                "right": right,
+                "paired_tasks": len(deltas),
+                "right_minus_left_accuracy": sum(deltas) / len(deltas)
+                if deltas
+                else None,
+                "tasks_left_better": left_only,
+                "tasks_right_better": right_only,
+                "limitation": "Constructed tasks are correlated within incidents; one stochastic run per method cannot establish causal graph benefit.",
+            }
+        )
+    return pairs
+
+
 def retrieval_probe(data):
     """One fixed public-proposition query, not simulated model query selection."""
     probes = []
@@ -637,6 +679,7 @@ def report(out, protocol, data, ledger):
         "protocol_id": protocol["protocol_id"],
         "retrieval_probe": retrieval_probe(data),
         "summary": full_summary,
+        "paired_comparisons": paired_comparisons(baselines + rows),
         "pilot_summary": pilot_summary,
         "controls": controls,
         "spending": ledger.summary(),

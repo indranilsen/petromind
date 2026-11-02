@@ -2,7 +2,7 @@
 
 This is an isolated, removable research package, not a hackathon UI redesign or
 production model change. Read [the forensic report](FORENSICS.md) first and
-[the actual offline receipt](results/offline-v1.json) for measured results.
+[the actual offline receipt](results/offline-v2.json) for measured results.
 
 ## What ran
 
@@ -152,7 +152,7 @@ python -m pytest tests/test_research_sprint_a.py -q
 python -m pytest -q
 ```
 
-Actual execution here: **32 research tests passed; full suite 581 passed,
+Actual execution here: **33 research tests passed; full suite 582 passed,
 1 opt-in browser test skipped**. Tests cover partition/label isolation,
 provenance, exact quotes, scope/contra evidence, original median ranking behavior,
 source-only connected paths, tool ablations, sensor/cache/missing budgets,
@@ -161,3 +161,8 @@ pre-HTTP cap refusal, immutable references and mocked five-condition execution.
 No Home/Demo/Technology, production Python source or frozen experimental artifact
 was changed. This research lives outside `petromind/`, preserving the production
 source digest used by existing protocols.
+
+The initial unpaid v1 receipt is preserved. A fresh v2 protocol adds paired-report
+code with unchanged cases, references, prompt and tools; no frozen file is edited
+in place. Both preparations share the same $5 session ledger and used zero API
+requests. All paired model deltas remain null until actual matched runs exist.

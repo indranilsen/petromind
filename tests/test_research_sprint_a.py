@@ -604,3 +604,36 @@ def test_cap_refusal_precedes_http_even_with_a_valid_client(
         assert client.requests == 0 and len(ledger.rows()) == 0
     finally:
         client.close()
+
+
+def test_paired_comparisons_count_failures_and_do_not_invent_missing_pairs():
+    from research.sprint_a.experiment import paired_comparisons
+
+    rows = []
+    for task, left, right in [
+        ("a", True, False),
+        ("b", False, True),
+        ("c", False, True),
+    ]:
+        for variant, correct in [("B_knowledge", left), ("E_connected", right)]:
+            rows.append(
+                {
+                    "task_id": task,
+                    "variant": variant,
+                    "status": "completed" if correct else "failed",
+                    "scores": [{"scorable": True, "correct": correct}],
+                }
+            )
+    r = next(
+        r
+        for r in paired_comparisons(rows)
+        if r["right"] == "E_connected" and r["left"] == "B_knowledge"
+    )
+    assert (
+        r["paired_tasks"] == 3
+        and r["tasks_left_better"] == 1
+        and r["tasks_right_better"] == 2
+    )
+    assert r["right_minus_left_accuracy"] == pytest.approx(1 / 3)
+    missing = next(r for r in paired_comparisons(rows) if r["left"] == "A_sensor")
+    assert missing["paired_tasks"] == 0 and missing["right_minus_left_accuracy"] is None
