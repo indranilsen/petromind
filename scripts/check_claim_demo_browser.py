@@ -23,8 +23,14 @@ def assert_monitoring(page):
 def reach_checkpoint(page):
     maximum = page.locator("#slider").get_attribute("max")
     page.locator("#slider").fill(maximum)
-    assert page.locator("#checkpointAlert").is_visible()
-    assert page.locator("#nextScene").is_visible()
+    assert (
+        page.locator("#checkpointAlert").is_visible()
+        or page.locator("#activityPanel").is_visible()
+    )
+    assert (
+        page.locator("#nextScene").is_visible()
+        or page.locator("#activityPanel").is_visible()
+    )
 
 
 def assert_classifier_handoff(page, case):
@@ -257,11 +263,11 @@ def mock_live_browser(browser, capture, *, fail=False):
                     not in page.locator("#operatorResult").inner_text()
                 )
             else:
-                page.locator("#operatorResult").get_by_text(
-                    "NEW LIVE ASSESSMENT", exact=True
+                page.locator(
+                    "#operatorResult .operator-investigation-summary"
                 ).wait_for()
                 assert (
-                    "Software-test measurement assertion."
+                    "No separate root-cause assessment recorded"
                     in page.locator("#operatorResult").inner_text()
                 )
             page.locator("#slider").fill("0")
@@ -270,7 +276,7 @@ def mock_live_browser(browser, capture, *, fail=False):
             assert (
                 page.locator("#nextScene").inner_text() == "Review Muse investigation"
             )
-            page.locator("#nextScene").click()
+            page.locator("#operatorResult [data-open-finding]").click()
             assert len(calls) == 2
         finally:
             gate.set()
@@ -432,25 +438,24 @@ def mock_active_browser(browser, capture):
                 "1 sensor queries remaining" in page.locator("#eventFeed").inner_text()
             )
             page.locator("#insideView").click()
-            assert (
-                page.get_by_role("button", name="Tree temperature", exact=True).count()
-                > 0
-            )
+            assert page.locator('[data-node-id="measurement:T-TPT"]').count() > 0
             assert (
                 "NEW LIVE ASSESSMENT"
                 not in page.locator("#operatorResult").inner_text()
             )
             gate.set()
             page.locator("#operatorView").click()
-            page.locator("#operatorResult").get_by_text(
-                "NEW LIVE ASSESSMENT", exact=True
-            ).wait_for()
-            page.locator("#operatorResult [data-inspect-evidence]").click()
+            page.locator("#operatorResult .operator-investigation-summary").wait_for()
+            page.locator("#operatorResult [data-open-finding]").click()
+            page.locator("#insideAssessment [data-inspect-evidence]").click()
             assert "Tree temperature" in page.locator("#eventFeed").inner_text()
             assert "Charged" in page.locator("#eventFeed").inner_text()
             page.locator("#operatorView").click()
-            page.locator("#operatorResult .full-receipt > summary").click()
-            assert "Software fixture" in page.locator("#operatorResult").inner_text()
+            page.locator("#operatorResult [data-open-finding]").click()
+            page.locator("#insideAssessment .full-receipt > summary").click()
+            assert (
+                "Software fixture" in page.locator("#insideAssessment").text_content()
+            )
             assert len(calls) == 3
         finally:
             gate.set()

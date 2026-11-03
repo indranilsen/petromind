@@ -304,7 +304,7 @@ def test_saved_browser_progression_and_graph(saved, monkeypatch):
                     ):
                         assert page.locator("#insideAssessment").inner_text() == ""
                 assert (
-                    "not verified" in page.locator("#insideAssessment").text_content()
+                    "Root cause not established" in page.locator("#insideAssessment").text_content()
                 )
                 assert page.locator("#insideAssessment details").count() > 0
                 page.locator("#insideAssessment [data-inspect-evidence]").click()
@@ -353,6 +353,8 @@ def test_saved_browser_progression_and_graph(saved, monkeypatch):
                     in page.locator("#insideAssessment").text_content()
                 )
                 page.locator("#operatorView").click()
+                if not page.locator("#handoffDetails").evaluate("e=>e.open"):
+                    page.locator("#handoffDetails > summary").click()
                 page.locator("#executionSelect").select_option("captured")
                 page.locator("#nextScene").click()
                 page.locator("#captureSkip").click()

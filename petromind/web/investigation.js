@@ -503,10 +503,139 @@
             : "This reports the accepted model finding, not independent verification of physical correctness.",
     };
   }
+  function operatorConclusion(events) {
+    const summary = conclusion(events);
+    if (!summary) return null;
+    const result = completedResult(events),
+      received = events.find((e) => e.kind === "evidence_received") || {};
+    const mechanism = events
+      .flatMap((e) => e.facts || [])
+      .find(
+        (f) =>
+          f.subject === `fault:${received.hypothesis}` &&
+          f.relation === "described_as" &&
+          f.object === "hydrate_obstruction",
+      );
+    const suspected =
+      mechanism && /hydrate/i.test(summary.fault)
+        ? summary.fault + " obstruction"
+        : summary.fault;
+    const statusLabel = {
+      supported: "Root cause supported within the assessed claim’s scope",
+      unverified: "Root cause not established",
+      contradicted: "Specific causal claim contradicted",
+      claim_contradicted: "Assessed claim contradicted; root cause not settled",
+      not_recorded: "No separate root-cause assessment recorded",
+    }[summary.status];
+    const rootVerdict = {
+      supported: "SUPPORTED WITHIN SCOPE",
+      unverified: "NOT ESTABLISHED",
+      contradicted: "CAUSAL CLAIM CONTRADICTED",
+      claim_contradicted: "CLAIM CONTRADICTED",
+      not_recorded: "NOT SEPARATELY ASSESSED",
+    }[summary.status];
+    const causal = result.findings.filter(
+      (f) =>
+        f.scope === "diagnostic_conclusion" ||
+        (!f.scope && ["unsupported", "hypothesis"].includes(f.basis)),
+    );
+    const causalGaps = causal
+      .filter((f) => f.missing_premise)
+      .map((f) => f.missing_premise);
+    const text = causalGaps.join(" ");
+    const discrimination =
+      /discrimin|specific|sufficien|exclud|alternativ|distinguish/i.test(text);
+    const necessity = /necess|always|universal/i.test(text);
+    const context = /per.well|context|topolog|applicab|location/i.test(text);
+    const requirements = [];
+    if (discrimination)
+      requirements.push(
+        "Evidence distinguishing the suspected cause from other faults with similar measurements.",
+      );
+    if (context)
+      requirements.push(
+        "Evidence connecting this measurement pattern to the suspected cause in the applicable well context.",
+      );
+    if (necessity)
+      requirements.push(
+        "An applicable engineering rule supporting the claimed necessary relationship.",
+      );
+    if (!requirements.length)
+      requirements.push(...summary.uncertain.slice(0, 2));
+    const requests = result.findings.flatMap((f) => {
+      const n = f.next_evidence;
+      if (typeof n === "string")
+        return n ? [{ text: n, kind: "legacy_request" }] : [];
+      return n && n.kind !== "none"
+        ? [{ text: n.purpose || "", kind: n.kind, target: n.target }].filter(
+            (x) => x.text,
+          )
+        : [];
+    });
+    const noTest = requests.some(
+      (n) =>
+        n.kind === "no_verified_discriminating_test" ||
+        /no verified.*(?:test|basis)/i.test(n.text),
+    );
+    const comparisons = summary.confirmed.filter(
+      (f) =>
+        f.scope === "documented_comparison" ||
+        (!f.scope && f.basis === "documented"),
+    );
+    const explanation =
+      summary.status === "unverified"
+        ? `${summary.measured.length ? "The measurement changes are supported. " : ""}${comparisons.length ? "Muse also supported a comparison with documented engineering context. " : ""}The evidence does not establish the suspected explanation as the cause. Not established does not mean disproven or ruled out.`
+        : summary.status === "supported"
+          ? "The accepted findings support the causal claim within its stated scope. Independent verification of physical correctness is still required."
+          : summary.status === "contradicted" ||
+              summary.status === "claim_contradicted"
+            ? "The evidence contradicts the assessed claim. This does not automatically rule out every version of the suspected fault."
+            : "The assessment supports only the findings shown below; it does not contain a separate root-cause assessment.";
+    return {
+      ...summary,
+      suspected,
+      statusLabel,
+      rootVerdict,
+      explanation,
+      comparisons,
+      nextPlan: {
+        question: discrimination
+          ? "Can the observed measurement pattern be distinguished from patterns produced by other faults?"
+          : necessity
+            ? "Does the proposed fault necessarily produce this pattern in the applicable context?"
+            : `What evidence is needed to assess ${suspected.toLowerCase()} as the cause?`,
+        requirements,
+        requests,
+        limitation: noTest
+          ? "The investigation did not identify a verified test that can conclusively distinguish these causes."
+          : requests.length
+            ? "The assessment requests additional evidence but does not supply a verified procedure for distinguishing these causes."
+            : "No next-evidence recommendation or verified discriminating test was supplied.",
+        noTest,
+      },
+    };
+  }
+  function findingEvidence(events, index) {
+    const result = completedResult(events),
+      f = result?.findings[index];
+    if (!f) return { available: false, citations: [], unresolved: [] };
+    const full = graph(events),
+      ids = new Set(full.nodes.map((n) => n.id));
+    const citations = (f.citations || []).filter((id) => ids.has(id));
+    return {
+      available: citations.length > 0 || ids.has("gap:" + index),
+      citations,
+      unresolved: (f.citations || []).filter((id) => !ids.has(id)),
+      gap: ids.has("gap:" + index),
+      finding: f,
+    };
+  }
   const api = {
     graph,
     completedResult,
     conclusion,
+    operatorConclusion,
+    findingEvidence,
     assessmentSections,
     focusedGraph,
     takeaway,
