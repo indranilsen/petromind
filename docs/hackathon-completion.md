@@ -155,3 +155,11 @@ four-card arrangement with the causal boundary and action alongside the classifi
 | ![Before: synthetic handoff](images/hackathon-completion/before-fixture-handoff.png) | ![After: synthetic handoff](images/hackathon-completion/after-fixture-handoff.png) |
 
 ![Mobile findings: synthetic UI fixture](images/hackathon-completion/after-fixture-mobile-findings.png)
+
+## Final findings refinement
+
+The completion payoff is now a prominent, evidence-derived conclusion followed
+by classifier-versus-Muse and confirmed/uncertain/next-evidence summaries. The
+original assessment is expandable and the evidence workspace folds below the
+result at completion. See [final findings design and current verification](final-findings-ux.md).
+The updated suite passed **635 tests and 14 subtests**, including Chromium.

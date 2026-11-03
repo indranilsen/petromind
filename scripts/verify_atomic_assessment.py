@@ -73,7 +73,11 @@ def main():
                         """({assessment, mode}) => {
                         execution = 'captured'; workspaceView = 'inside';
                         const r = investigation(); r.phase = 2; r.playing = false;
-                        r.events = []; r.cursor = 0; r.row = {output: assessment};
+                        r.events = [
+                          {kind:'evidence_received',hypothesis:c().packet.baseline.prediction,observations:c().observations},
+                          {kind:'tool_result',tool:'submit_audit',assessment},
+                          {kind:'completion',status:'completed',reason:'offline_ui_fixture_only'}
+                        ]; r.cursor = r.events.length; r.row = null;
                         renderPlatform();
                         let banner = document.getElementById('offlineFixtureBanner');
                         if (!banner) {banner = document.createElement('div'); banner.id = 'offlineFixtureBanner'; document.body.append(banner);}
@@ -97,6 +101,7 @@ def main():
                         root.locator('[data-scope="causal"] .scoped-finding').count()
                         == 1
                     )
+                    root.locator(".full-receipt > summary").click()
                     assert (
                         "Legacy recorded label" in root.inner_text()
                         if mode == "recorded-v4"
@@ -121,7 +126,7 @@ def main():
                     )
                     # Compare immutable displayed input rather than a computed regrade.
                     assert (
-                        page.evaluate("() => investigation().row.output") == assessment
+                        page.evaluate("() => PublicInvestigation.completedResult(visibleEvents())") == assessment
                     )
                 page.close()
             browser.close()

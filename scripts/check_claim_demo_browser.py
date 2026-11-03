@@ -445,11 +445,11 @@ def mock_active_browser(browser, capture):
             page.locator("#operatorResult").get_by_text(
                 "NEW LIVE ASSESSMENT", exact=True
             ).wait_for()
+            page.locator("#operatorResult [data-inspect-evidence]").click()
+            assert "Tree temperature" in page.locator("#eventFeed").inner_text()
+            assert "Charged" in page.locator("#eventFeed").inner_text()
+            page.locator("#operatorView").click()
             page.locator("#operatorResult .full-receipt > summary").click()
-            assert (
-                "Tree temperature (charged)"
-                in page.locator("#operatorResult").inner_text()
-            )
             assert "Software fixture" in page.locator("#operatorResult").inner_text()
             assert len(calls) == 3
         finally:
@@ -620,7 +620,9 @@ def raw_widget_browser(browser, url, payload):
         assert page.locator("#slider").input_value() == position
         assert "Viewer only" in page.locator('[data-sensor="T-TPT"]').inner_text()
         page.locator(".sensor-hit.tree").click()
-        assert page.locator("#sensorDialog .chart-line").get_attribute("d").count("M") >= 2
+        assert (
+            page.locator("#sensorDialog .chart-line").get_attribute("d").count("M") >= 2
+        )
     finally:
         page.close()
     # Run the exhaustive verifier against an EXPLICITLY CONSTRUCTED route fixture.
@@ -810,6 +812,7 @@ def main():
                 page.locator("#insideView").click()
                 assert page.locator(".evidence-node").count() == 5
                 page.locator("#captureSkip").click()
+                page.locator("#insideAssessment [data-inspect-evidence]").click()
                 assert page.locator(".evidence-node").count() <= 10
                 if not page.locator("#graphPanel").evaluate("e=>e.open"):
                     page.locator("#graphPanel>summary").click()

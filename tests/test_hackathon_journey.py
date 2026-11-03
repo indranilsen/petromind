@@ -118,7 +118,7 @@ def test_guided_journey_preserves_replay_and_evidence_gates(saved):
                 )
                 assert (
                     "PARTIALLY SUPPORTED"
-                    in page.locator("#insideAssessment").inner_text()
+                    in page.locator("#insideAssessment").text_content()
                 )
                 assert page.locator("#insideAssessment .full-receipt").count() == 1
                 page.locator("#journeyAction").click()

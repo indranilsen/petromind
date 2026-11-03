@@ -5371,3 +5371,155 @@ select {
 #pressureOverview {
   scroll-margin-top: 100px;
 }
+
+/* The final finding is the payoff; the evidence workspace is secondary. */
+#insidePanel[data-completed="true"] .graph-heading,
+#insidePanel[data-completed="true"] #investigationActivity {
+  display: none;
+}
+#insidePanel[data-completed="true"] .investigation-columns {
+  grid-template-columns: 1fr;
+}
+#insidePanel[data-completed="true"] .evidence-column {
+  position: static;
+}
+#completionEvidence {
+  margin: 24px 0;
+  scroll-margin-top: 190px;
+}
+#completionEvidence > summary {
+  padding: 18px 20px;
+  background: #122b35;
+  border: 1px solid #3d626a;
+  border-radius: 12px;
+  cursor: pointer;
+  color: #bdeedb;
+  font-weight: 650;
+}
+#completionEvidence > summary[hidden] {
+  display: none;
+}
+#insideAssessment:empty {
+  display: none;
+}
+#insideAssessment:not(:empty) {
+  border: 0;
+  padding-top: 0;
+  margin-top: 20px;
+}
+.final-conclusion {
+  padding: 24px 28px;
+  border: 1px solid #689c8e;
+  border-left: 5px solid #a6ebd4;
+  border-radius: 14px;
+  background: #142f35;
+}
+#insideAssessment .final-conclusion h3,
+.final-conclusion h3 {
+  font-size: 36px;
+  line-height: 1.17;
+  letter-spacing: -0.025em;
+  margin: 10px 0 7px;
+}
+.conclusion-cause {
+  font-size: 26px;
+  font-weight: 650;
+  line-height: 1.3;
+  color: #f0d19a;
+  margin: 8px 0;
+}
+.conclusion-boundary {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #bed1d4;
+  margin: 12px 0 0;
+}
+.result-comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 16px 0;
+}
+.result-comparison > section {
+  padding: 16px 20px;
+  border: 1px solid #304e59;
+  background: #10242e;
+  border-radius: 12px;
+}
+.result-comparison h4,
+.result-summary h4 {
+  margin: 0 0 9px;
+  font-size: 14px;
+  color: #bce8d9;
+}
+.result-comparison strong {
+  font-size: 17px;
+  line-height: 1.4;
+}
+.result-comparison p {
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 8px 0 0;
+  color: #b4c8cd;
+}
+.result-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 16px 0;
+}
+.result-summary section {
+  min-width: 0;
+  border: 1px solid #304e59;
+  border-radius: 12px;
+  padding: 18px;
+  background: #10242e;
+}
+.result-summary p {
+  font-size: 13px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  margin: 8px 0;
+}
+.result-summary small {
+  color: #a9bfc6;
+  line-height: 1.5;
+  font-size: 11px;
+}
+[data-inspect-evidence] {
+  margin: 4px 0 8px;
+}
+.full-receipt {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.full-receipt pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 11px;
+}
+#insidePanel[data-completed="true"] .investigation-feed {
+  margin-top: 20px;
+}
+@media (max-width: 740px) {
+  .final-conclusion {
+    padding: 18px;
+  }
+  #insideAssessment .final-conclusion h3 {
+    font-size: 28px;
+  }
+  .conclusion-cause {
+    font-size: 23px;
+  }
+  .result-summary,
+  .result-comparison {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .result-comparison > section {
+    padding: 14px 18px;
+  }
+  #completionEvidence {
+    scroll-margin-top: 215px;
+  }
+}

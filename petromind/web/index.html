@@ -575,72 +575,80 @@
             class="investigation-activity"
             role="status"
           ></p>
-          <section
-            id="investigationBrief"
-            class="investigation-brief"
-            aria-label="Investigation evidence so far"
-          >
-            <div>
-              <p class="eyebrow">THE QUESTION UNDER REVIEW</p>
-              <p id="investigationQuestion"></p>
-            </div>
-            <div>
-              <p class="eyebrow">EVIDENCE RECEIVED SO FAR</p>
-              <p id="investigationEvidence"></p>
-              <small
-                >Counts reflect revealed records, including repeated returns. A
-                lookup is context, not proof of cause.</small
-              >
-            </div>
-          </section>
-          <div class="investigation-columns">
+          <div id="insideAssessment" aria-live="polite"></div>
+          <details id="completionEvidence" open>
+            <summary id="completionEvidenceTitle" hidden>
+              Inspect supporting evidence · sources, map and recorded activity
+            </summary>
             <section
-              class="conversation-column"
-              aria-label="Public investigation conversation"
+              id="investigationBrief"
+              class="investigation-brief"
+              aria-label="Investigation evidence so far"
             >
-              <ol
-                id="eventFeed"
-                class="investigation-feed"
-                aria-live="polite"
-                aria-relevant="additions"
-              ></ol>
-              <div id="insideAssessment"></div>
+              <div>
+                <p class="eyebrow">THE QUESTION UNDER REVIEW</p>
+                <p id="investigationQuestion"></p>
+              </div>
+              <div>
+                <p class="eyebrow">EVIDENCE RECEIVED SO FAR</p>
+                <p id="investigationEvidence"></p>
+                <small
+                  >Counts reflect revealed records, including repeated returns.
+                  A lookup is context, not proof of cause.</small
+                >
+              </div>
             </section>
-            <details id="graphPanel" class="evidence-column" open>
-              <summary>Evidence map · inspect returned sources</summary>
-              <p id="insidePending" class="notice">
-                Review the recorded measurements to the checkpoint before the
-                diagnosis and investigation are available.
-              </p>
-              <div id="graphLegend" class="graph-legend">
-                <span>◇ Statistical hypothesis</span
-                ><span>● Measured summary</span><span>▧ Documented fact</span
-                ><span>▣ Generic equipment / returned entity</span
-                ><span>◌ Empirical analogue</span
-                ><span>□ Model assessment / gap</span
-                ><span>! Python validation</span>
-              </div>
-              <button id="graphToggle" class="quiet">Show all evidence</button>
-              <p id="graphFocusNote" class="fine-print"></p>
-              <div class="graph-scroll">
-                <svg
-                  id="evidenceGraph"
-                  role="img"
-                  aria-label="Interactive evidence graph"
-                ></svg>
-              </div>
-              <div id="graphNodeList" class="graph-node-list"></div>
-              <p class="fine-print">
-                Source-scoped topic lookup, not installed-well topology
-                traversal. Solid: documented triple. Dashed: empirical overlap.
-                Dotted: citation or public assessment, not causal proof.
-              </p>
+            <div class="investigation-columns">
               <section
-                id="physicalHypotheses"
-                class="physical-hypotheses"
-              ></section>
-            </details>
-          </div>
+                class="conversation-column"
+                aria-label="Public investigation conversation"
+              >
+                <ol
+                  id="eventFeed"
+                  class="investigation-feed"
+                  aria-live="polite"
+                  aria-relevant="additions"
+                ></ol>
+              </section>
+              <details id="graphPanel" class="evidence-column" open>
+                <summary>Evidence map · inspect returned sources</summary>
+                <p id="insidePending" class="notice">
+                  Review the recorded measurements to the checkpoint before the
+                  diagnosis and investigation are available.
+                </p>
+                <div id="graphLegend" class="graph-legend">
+                  <span>◇ Statistical hypothesis</span
+                  ><span>● Measured summary</span><span>▧ Documented fact</span
+                  ><span>▣ Generic equipment / returned entity</span
+                  ><span>◌ Empirical analogue</span
+                  ><span>□ Model assessment / gap</span
+                  ><span>! Python validation</span>
+                </div>
+                <button id="graphToggle" class="quiet">
+                  Show all evidence
+                </button>
+                <p id="graphFocusNote" class="fine-print"></p>
+                <div class="graph-scroll">
+                  <svg
+                    id="evidenceGraph"
+                    role="img"
+                    aria-label="Interactive evidence graph"
+                  ></svg>
+                </div>
+                <div id="graphNodeList" class="graph-node-list"></div>
+                <p class="fine-print">
+                  Source-scoped topic lookup, not installed-well topology
+                  traversal. Solid: documented triple. Dashed: empirical
+                  overlap. Dotted: citation or public assessment, not causal
+                  proof.
+                </p>
+                <section
+                  id="physicalHypotheses"
+                  class="physical-hypotheses"
+                ></section>
+              </details>
+            </div>
+          </details>
         </section>
       </div>
     </section>

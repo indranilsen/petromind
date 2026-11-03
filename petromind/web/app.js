@@ -785,9 +785,7 @@ function transitionWorkflow(stage) {
 function journeyState() {
   const r = investigation(),
     events = visibleEvents();
-  const done =
-    r.phase === 2 &&
-    events.some((e) => e.kind === "completion" && e.status === "completed");
+  const done = r.phase === 2 && !!PublicInvestigation.completedResult(events);
   if (done) return 4;
   if (checkpointReached()) return r.phase === 2 ? 3 : 2;
   return anomalyReached() ? 1 : 0;
@@ -853,7 +851,9 @@ function renderJourney() {
       renderPlatform();
       $("pressureOverview").scrollIntoView({
         block: "center",
-        behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+        behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "instant"
+          : "smooth",
       });
       return;
     }
@@ -867,7 +867,9 @@ function renderJourney() {
       renderPlatform();
       $("classifierHandoff").scrollIntoView({
         block: "start",
-        behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+        behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "instant"
+          : "smooth",
       });
     } else {
       workspaceView =
@@ -878,7 +880,12 @@ function renderJourney() {
         : workspaceView === "inside"
           ? $("insidePanel")
           : $("consoleView")
-      ).scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+      ).scrollIntoView({
+        block: "start",
+        behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "instant"
+          : "smooth",
+      });
     }
   };
   $("journeySeekNote").hidden = ready;
@@ -1065,7 +1072,7 @@ function renderConversation() {
   $("investigationEvidence").textContent =
     `${observations.size} sensor summaries · ${facts.length} source facts · ${matches.length} historical comparisons`;
   const feed = $("eventFeed"),
-    owner = `${c().id}:${execution}`;
+    owner = `${c().id}:${execution}:${!!PublicInvestigation.completedResult(events)}`;
   if (feed.dataset.owner !== owner) {
     feed.replaceChildren();
     feed.dataset.owner = owner;
@@ -1186,7 +1193,11 @@ function renderConversation() {
           `Python validation: ${e.validation.code} · ${e.validation.field}. ${e.validation.instruction || e.validation.correction || ""}`,
         ),
       );
-    if (e.assessment) {
+    if (e.assessment && !PublicInvestigation.completedResult(events)) {
+      li.append(
+        el("p", "Assessment submitted; awaiting execution completion."),
+      );
+    } else if (e.assessment) {
       li.append(
         el("h3", "Assessment received"),
         el(
@@ -1569,306 +1580,57 @@ function renderPlatform() {
   $("back").textContent = "Restart replay";
   $("activityPanel").hidden = !ready || r.phase !== 2;
   renderConversation();
-  const result =
-    r.row?.output || visibleEvents().findLast((e) => e.assessment)?.assessment;
+  const events = visibleEvents(),
+    result = PublicInvestigation.completedResult(events);
+  const finished = !!result;
+  const previouslyFinished = $("insidePanel").dataset.completed === "true";
+  $("insidePanel").dataset.completed = String(finished);
+  $("completionEvidenceTitle").hidden = !finished;
+  if (finished && !previouslyFinished) $("completionEvidence").open = false;
+  if (!finished) $("completionEvidence").open = true;
   const box = $("operatorResult");
   box.replaceChildren();
-  if (ready && r.error)
+  const completion = events.findLast((e) => e.kind === "completion");
+  const stopped =
+    r.error ||
+    (!result && completion && (completion.reason || completion.status));
+  if (ready && stopped)
     box.append(
       el("h3", "Investigation stopped · no completed audit"),
       el(
         "p",
-        {
-          model_output_token_limit:
-            "Muse reached its response limit before submitting. No conclusion is substituted.",
-          sensor_budget_exhausted: "The five-sensor budget is exhausted.",
-          live_precondition_failed:
-            "Check the fresh protocol, exported key, verified dataset and remaining cost cap.",
-        }[r.error] ||
-          `Stopped: ${r.error}. No captured result was substituted.`,
+        stopped === "model_output_token_limit"
+          ? "Muse reached its response limit before completing the assessment. No conclusion is substituted."
+          : "The investigation did not complete. No diagnosis or recorded replay was substituted.",
       ),
+      el("p", `Recorded execution status: ${stopped}`, "fine-print"),
     );
-  if (ready && result) {
-    box.append(
-      el(
-        "div",
-        `${execution === "live" ? "NEW LIVE" : execution === "saved" ? "SAVED v5" : "ORIGINAL CAPTURED"} ASSESSMENT`,
-        "eyebrow",
-      ),
-      el("h3", "Muse Spark assessment"),
-      el(
-        "p",
-        {
-          SUPPORTED: "Supported within the claim’s stated scope.",
-          PARTIALLY_SUPPORTED:
-            "Part of the claim is supported. The full claim is not established.",
-          NOT_ESTABLISHED:
-            "The supplied evidence does not establish the claim.",
-          CONTRADICTED: "The supplied evidence contradicts the claim.",
-        }[result.verdict] || result.verdict,
-        "key-finding",
-      ),
-      el(
-        "p",
-        `Recorded verdict: ${result.verdict.replaceAll("_", " ")}`,
-        "fine-print",
-      ),
-    );
-    const keyFinding =
-      result.findings.find((f) =>
-        ["NOT_ESTABLISHED", "PARTIALLY_SUPPORTED", "CONTRADICTED"].includes(
-          f.verdict,
-        ),
-      ) || result.findings[result.findings.length - 1];
-    const takeaway = el("div", undefined, "assessment-takeaway");
-    const takeawayParts = PublicInvestigation.takeaway(result);
-    if (takeawayParts.length)
-      takeaway.append(el("small", "Summary of recorded findings", "eyebrow"));
-    for (const part of takeawayParts) {
-      const line = el("p", `${part.count} ${part.text}.`);
-      line.dataset.kind = part.kind;
-      takeaway.append(line);
-    }
-    if (takeaway.children.length) box.append(takeaway);
-    box.append(
-      el(
-        "p",
-        "How to read this evidence (editorial): a pattern can fit an example without uniquely identifying its cause. Whether a fault always produces that pattern is a separate question. Neither is proved by similarity alone.",
-        "scope-explanation",
-      ),
-    );
-    const scopeNote = el(
-      "p",
-      "Presentation guide: support for a measurement or example comparison is not proof of its physical cause. Recorded findings and verdicts below are unchanged.",
-      "fine-print",
-    );
-    box.append(scopeNote);
-    const sections = PublicInvestigation.assessmentSections(result);
-    for (const [key, title, description] of [
-      [
-        "measured",
-        "What the sensors establish",
-        "Measured findings apply to the supplied summaries, not an inferred cause.",
-      ],
-      [
-        "documented",
-        "What the documentation establishes",
-        "An example comparison applies only to the features actually checked. A production-line example is not proof of service-line hydrate.",
-      ],
-      [
-        "causal",
-        "What remains unknown about root cause",
-        "A plausible explanation needs applicable discriminating evidence. Missing evidence is not a contradiction.",
-      ],
-      [
-        "other",
-        "Other recorded findings",
-        "These older findings have no declared atomic scope; they have not been regraded.",
-      ],
-    ]) {
-      if (key === "other" && !sections[key].length) continue;
-      const section = el("section", undefined, "assessment-scope");
-      section.dataset.scope = key;
-      section.append(el("h4", title), el("p", description, "fine-print"));
-      if (!sections[key].length)
-        section.append(
-          el(
-            "p",
-            "No separate finding was recorded for this scope.",
-            "fine-print",
-          ),
-        );
-      for (const f of sections[key]) {
-        const item = el("div", undefined, "scoped-finding");
-        item.dataset.verdict = f.verdict;
-        item.append(
-          el(
-            "span",
-            `Recorded verdict: ${f.verdict.replaceAll("_", " ")}`,
-            "scope-verdict",
-          ),
-        );
-        if (
-          f.scope === "diagnostic_conclusion" &&
-          f.verdict === "PARTIALLY_SUPPORTED"
-        )
-          item.append(
-            el(
-              "p",
-              "Legacy recorded label — not regraded. Partial support for the composite claim must not be read as partial proof of this cause.",
-              "scope-gap",
-            ),
-          );
-        item.append(el("p", `Claim assessed: ${f.statement}`));
-        const exact = el("details");
-        exact.append(
-          el("summary", "Why · citations · missing premise"),
-          el("p", f.justification),
-          el("p", `Citations: ${f.citations.join(", ") || "None"}`),
-        );
-        if (f.next_evidence)
-          exact.append(
-            el(
-              "p",
-              `Next evidence: ${typeof f.next_evidence === "string" ? f.next_evidence : f.next_evidence.purpose || "None requested"}`,
-            ),
-          );
-        item.append(exact);
-        if (f.missing_premise)
-          exact.append(
-            el("p", `Missing premise: ${f.missing_premise}`, "scope-gap"),
-          );
-        const focus = el("button", "Show this evidence", "quiet");
-        focus.dataset.findingIndex = result.findings.indexOf(f);
-        focus.onclick = () => {
-          selectedFinding = "finding:" + result.findings.indexOf(f);
-          showAllEvidence = false;
-          renderEvidenceGraph();
-          $("graphPanel").open = true;
-        };
-        item.append(focus);
-        section.append(item);
-      }
-      box.append(section);
-    }
-    if (keyFinding?.next_evidence) {
-      const n = keyFinding.next_evidence;
-      box.append(
-        el("h4", "What to verify next"),
-        el(
-          "p",
-          typeof n === "string"
-            ? n
-            : `${n.target ? n.target + ": " : ""}${n.purpose || "No additional evidence requested for this scope."}`,
-        ),
-      );
-    }
-    if (execution !== "live" && keyFinding?.next_evidence)
-      box.append(
-        el(
-          "p",
-          "Editorial scope: this is a captured recommendation, not a supplied procedure. No verified fault-discriminating test is available in this package.",
-          "fine-print",
-        ),
-      );
-    const events = visibleEvents(),
-      received = events.find((e) => e.kind === "evidence_received");
-    const requested = events.filter(
-      (e) => e.tool === "request_sensor" && e.summary,
-    );
-    const facts = events.flatMap((e) => e.facts || []),
-      matches = events.flatMap((e) => e.matches || []);
-    const brief = el("dl", undefined, "operator-brief");
-    brief.append(
-      el("dt", "Classifier hypothesis"),
-      el("dd", `${fault} · statistical prediction, not proven cause`),
-      el("dt", "Evidence Muse inspected"),
-      el(
-        "dd",
-        Object.keys(received?.observations || {})
-          .map(
-            (s) =>
-              `${names[s] || s}${received.observations[s].available ? "" : " (unavailable)"}`,
-          )
-          .join(", "),
-      ),
-      el("dt", "Additional measurements"),
-      el(
-        "dd",
-        requested.length
-          ? requested
-              .map(
-                (e) =>
-                  `${names[e.sensor] || e.sensor}${e.cached ? " (cached)" : " (charged)"}${e.summary.available ? "" : " · unavailable"}`,
-              )
-              .join(", ")
-          : "None requested. Viewer playback did not add evidence.",
-      ),
-      el("dt", "Retrieved context"),
-      el(
-        "dd",
-        `${facts.length} returned source facts; ${matches.length} training analogues${matches.length ? " (overlap: " + matches.map((m) => m.shared_sensors).join(", ") + " sensors)" : ""}. Similarity does not prove cause.`,
-      ),
-    );
-    const locators = [...new Set(facts.map((f) => f.locator).filter(Boolean))];
-    if (locators.length)
-      brief.append(
-        el("dt", "Document sections actually returned"),
-        el("dd", locators.join("; ")),
-      );
-    const supported = result.findings.filter((f) => f.verdict === "SUPPORTED");
-    if (supported.length)
-      brief.append(
-        el("dt", "Supported at the stated scope"),
-        el(
-          "dd",
-          supported
-            .slice(0, 2)
-            .map((f) => f.statement)
-            .join(" "),
-        ),
-      );
-    const receipt = el("details", undefined, "full-receipt");
-    receipt.append(
-      el(
-        "summary",
-        "Full investigation receipt · exact findings and source references",
-      ),
-      brief,
-    );
-    for (const f of result.findings) {
-      const d = el("details");
-      d.append(
-        el("summary", `${f.verdict}: ${f.statement}`),
-        el("p", f.justification),
-        el(
-          "p",
-          `Missing: ${f.missing_premise || "None stated for this scope"}`,
-        ),
-        el(
-          "p",
-          `Next evidence: ${typeof f.next_evidence === "string" ? f.next_evidence : JSON.stringify(f.next_evidence)}`,
-        ),
-        el("p", `Received citation IDs: ${f.citations.join(", ") || "None"}`),
-      );
-      receipt.append(d);
-    }
-    box.append(receipt);
-    if (execution !== "live") {
-      const follow = el("details");
-      follow.append(
-        el("summary", "Next-evidence requests · editorial source review"),
-      );
-      for (const action of c().reviewed_actions)
-        follow.append(el("p", action.target), el("p", action.status));
-      follow.append(
-        el(
-          "p",
-          "These are editorial requests, not newly generated Muse findings or a verified discriminating test.",
-        ),
-      );
-      box.append(follow);
-    }
-    box.append(
-      el(
-        "p",
-        "Public Muse findings; Python validates numbers/structure, not physical entailment. Independent engineering review pending.",
-        "fine-print",
-      ),
-    );
-  }
+  if (ready && result) renderFinalFinding(box, result, events);
   $("insideAssessment").replaceChildren();
-  if (ready && (result || r.error)) {
+  if (ready && (result || stopped)) {
     const copy = box.cloneNode(true);
     copy.removeAttribute("id");
     for (const button of copy.querySelectorAll("[data-finding-index]"))
       button.onclick = () => {
         selectedFinding = "finding:" + button.dataset.findingIndex;
         showAllEvidence = false;
+        $("completionEvidence").open = true;
         renderEvidenceGraph();
         $("graphPanel").open = true;
+        $("graphPanel").scrollIntoView({ block: "start" });
       };
     $("insideAssessment").append(copy);
+  }
+  for (const root of [box, $("insideAssessment")]) {
+    root.onclick = (event) => {
+      const button = event.target.closest("[data-inspect-evidence]");
+      if (!button) return;
+      workspaceView = "inside";
+      $("completionEvidence").open = true;
+      $("graphPanel").open = true;
+      renderPlatform();
+      $("completionEvidence").scrollIntoView({ block: "start" });
+    };
   }
   $("inspectDetails").hidden = !ready || !result;
   renderTelemetry();
@@ -1879,6 +1641,210 @@ function renderPlatform() {
     document
       .querySelector(`[data-sensor="${focusSensor}"]`)
       ?.classList.add("evidence-focus");
+}
+function renderFinalFinding(box, result, events) {
+  const summary = PublicInvestigation.conclusion(events);
+  const mode =
+    execution === "live"
+      ? "NEW LIVE"
+      : execution === "saved"
+        ? "SAVED v5"
+        : "ORIGINAL CAPTURED";
+  const hero = el("section", undefined, "final-conclusion");
+  hero.dataset.causeStatus = summary.status;
+  hero.append(
+    el("p", `${mode} ASSESSMENT`, "eyebrow"),
+    el("h3", summary.headline),
+    el("p", summary.cause, "conclusion-cause"),
+  );
+  hero.append(el("p", summary.caveat, "conclusion-boundary"));
+  box.append(hero);
+  const comparison = el("div", undefined, "result-comparison");
+  const classifier = el("section"),
+    muse = el("section");
+  classifier.append(
+    el("h4", "Statistical classifier"),
+    el("strong", summary.fault),
+    el("p", "Preliminary statistical hypothesis — not proof of cause."),
+  );
+  muse.append(
+    el("h4", "Muse investigation"),
+    el("strong", summary.cause),
+    el("p", "The findings below report what the received evidence supports."),
+  );
+  comparison.append(classifier, muse);
+  box.append(comparison);
+  const parts = el("div", undefined, "result-summary");
+  function part(title, key) {
+    const section = el("section");
+    section.dataset.resultPart = key;
+    section.append(el("h4", title));
+    parts.append(section);
+    return section;
+  }
+  const confirmed = part("What we confirmed", "confirmed");
+  if (summary.measured.length) {
+    for (const m of summary.measured)
+      confirmed.append(
+        el(
+          "p",
+          `${names[m.sensor] || m.sensor}: ${value(m.sensor, m.summary.first)} → ${value(m.sensor, m.summary.last)} (change ${value(m.sensor, m.summary.delta)}).`,
+          "confirmed-measurement",
+        ),
+      );
+  }
+  const other = summary.confirmed.filter(
+    (f) =>
+      !(
+        f.scope === "measured_observation" ||
+        (!f.scope && f.basis === "measurement")
+      ),
+  );
+  for (const f of other.slice(0, 2)) confirmed.append(el("p", f.statement));
+  if (!summary.measured.length && !other.length)
+    confirmed.append(
+      el(
+        "p",
+        summary.confirmed[0]?.statement ||
+          "No supported observation was separately recorded.",
+      ),
+    );
+  const uncertain = part("What remains uncertain", "uncertain");
+  if (summary.uncertain.length) {
+    uncertain.append(
+      el(
+        "p",
+        summary.status === "unverified"
+          ? `The supplied evidence does not establish ${summary.fault.toLowerCase()} as the cause of these readings. The missing link is evidence connecting the observed pattern to this specific cause.`
+          : "The recorded evidence leaves limits on what this finding establishes. A matching example does not independently identify the cause.",
+      ),
+    );
+    const gaps = el("details");
+    gaps.append(el("summary", "Read the recorded evidence gap"));
+    for (const gap of summary.uncertain) gaps.append(el("p", gap));
+    uncertain.append(gaps);
+  }
+  if (!summary.uncertain.length)
+    uncertain.append(
+      el(
+        "p",
+        summary.status === "supported"
+          ? "No missing premise was recorded for that scoped causal finding. Independent physical verification is still not supplied."
+          : "No separate causal gap was recorded. Read the claim's exact scope before drawing a root-cause conclusion.",
+      ),
+    );
+  const next = part("What would help next", "next");
+  const targets = summary.next.slice(0, 1);
+  for (const n of targets)
+    next.append(
+      el(
+        "p",
+        n.replace(/\b(fault|event) (\d+)\b/gi, (match, kind, id) =>
+          PublicInvestigation.faultNames[id]
+            ? `${PublicInvestigation.faultNames[id].toLowerCase()} (${kind.toLowerCase()} ${id})`
+            : match,
+        ),
+      ),
+    );
+  if (!targets.length)
+    next.append(
+      el(
+        "p",
+        "No additional evidence requirement was recorded. No new investigation step has been invented.",
+      ),
+    );
+  else
+    next.append(
+      el(
+        "small",
+        "Recorded evidence requests, not a validated field procedure or newly observed data.",
+      ),
+    );
+  box.append(parts);
+  const inspect = el("button", "Inspect supporting evidence →", "primary");
+  inspect.dataset.inspectEvidence = "true";
+  box.append(inspect);
+  const receipt = el("details", undefined, "full-receipt");
+  receipt.append(
+    el(
+      "summary",
+      "Original assessment · exact verdicts, findings and citation receipts",
+    ),
+    el("p", `Recorded verdict: ${result.verdict.replaceAll("_", " ")}`),
+    el(
+      "p",
+      `Contract: ${result.contract_version || "Not specified"}. This presentation does not regrade or modify it.`,
+    ),
+  );
+  const groups = PublicInvestigation.assessmentSections(result);
+  for (const [key, title] of [
+    ["measured", "Recorded sensor findings"],
+    ["documented", "Recorded source comparisons"],
+    ["causal", "Recorded causal claims"],
+    ["other", "Other original findings (no declared scope)"],
+  ]) {
+    if (!groups[key].length) continue;
+    const group = el("section", undefined, "assessment-scope");
+    group.dataset.scope = key;
+    group.append(el("h4", title));
+    for (const f of groups[key]) {
+      const item = el("article", undefined, "scoped-finding");
+      item.dataset.verdict = f.verdict;
+      item.append(
+        el("h4", `Recorded verdict: ${f.verdict.replaceAll("_", " ")}`),
+        el("p", `Claim assessed: ${f.statement}`),
+      );
+      for (const premise of f.premises || []) item.append(el("p", premise));
+      item.append(
+        el("p", f.justification || ""),
+        el("p", `Citations: ${(f.citations || []).join(", ") || "None"}`),
+        el("p", `Missing premise: ${f.missing_premise || "None recorded"}`),
+        el(
+          "p",
+          `Next evidence: ${typeof f.next_evidence === "string" ? f.next_evidence : JSON.stringify(f.next_evidence || null)}`,
+        ),
+      );
+      if (
+        f.scope === "diagnostic_conclusion" &&
+        f.verdict === "PARTIALLY_SUPPORTED"
+      )
+        item.append(
+          el(
+            "p",
+            "Legacy recorded label — not regraded. This is not partial proof of cause.",
+            "scope-gap",
+          ),
+        );
+      const button = el("button", "Show this evidence", "quiet");
+      button.dataset.findingIndex = result.findings.indexOf(f);
+      button.onclick = () => {
+        workspaceView = "inside";
+        $("completionEvidence").open = true;
+        selectedFinding = "finding:" + result.findings.indexOf(f);
+        showAllEvidence = false;
+        renderPlatform();
+        $("graphPanel").open = true;
+        $("graphPanel").scrollIntoView({ block: "start" });
+      };
+      item.append(button);
+      group.append(item);
+    }
+    receipt.append(group);
+  }
+  receipt.append(el("details", undefined, "raw-assessment"));
+  const raw = receipt.lastElementChild;
+  raw.append(
+    el("summary", "Full accepted public output (unchanged JSON)"),
+    el("pre", JSON.stringify(result, null, 2)),
+  );
+  box.append(
+    receipt,
+    el(
+      "p",
+      "Recorded model findings; source integrity and numeric checks do not certify physical correctness. Independent engineering review pending.",
+      "fine-print",
+    ),
+  );
 }
 function beginInvestigation() {
   if (!checkpointReached() || synthetic || liveBusy) return;
@@ -2011,7 +1977,12 @@ function inspectNode(node) {
   $("nodeDialog").showModal();
 }
 function renderEvidenceGraph() {
-  const events = visibleEvents(),
+  const received = visibleEvents();
+  const events = PublicInvestigation.completedResult(received)
+      ? received
+      : received.map((e) =>
+          e.assessment ? { ...e, assessment: undefined } : e,
+        ),
     full = PublicInvestigation.graph(events),
     projection = showAllEvidence
       ? full
@@ -2023,7 +1994,9 @@ function renderEvidenceGraph() {
     nodes = new Map(projection.nodes.map((n) => [n.id, n]));
   const graph = $("evidenceGraph"),
     active = selectedEvidenceEvent ?? events.length - 1;
-  const mobile = matchMedia("(max-width: 740px)").matches;
+  const mobile =
+    matchMedia("(max-width: 740px)").matches ||
+    (showAllEvidence && graph.parentElement.clientWidth < 1196);
   const columns = mobile ? 1 : showAllEvidence ? 5 : 3,
     available = graph.parentElement.clientWidth || 600,
     nodeWidth =
