@@ -8,12 +8,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from research.semantic_review.workflow import (
+    assemble,
     bundle,
     compare,
     finalize,
     prepare,
     read,
     validate_form,
+    validate_item,
+    verify,
 )
 
 
@@ -36,10 +39,33 @@ def main():
         s.add_argument("--out", type=Path, required=True)
         if name == "finalize":
             s.add_argument("--adjudication", type=Path, required=True)
+    s = sub.add_parser("verify")
+    s.add_argument("--bundle", type=Path, required=True)
+    s.add_argument("--packets", type=Path, required=True)
+    s.add_argument("--expected-sha256", required=True)
+    s.add_argument("--receipt", type=Path, required=True)
+    s = sub.add_parser("validate-item")
+    s.add_argument("--bundle", type=Path, required=True)
+    s.add_argument("--form", type=Path, required=True)
+    s.add_argument("--role", choices=["R-A", "R-B"], required=True)
+    s = sub.add_parser("assemble")
+    s.add_argument("--bundle", type=Path, required=True)
+    s.add_argument("--role", choices=["R-A", "R-B"], required=True)
+    s.add_argument("--items", type=Path, required=True)
+    s.add_argument("--attestation", type=Path, required=True)
+    s.add_argument("--out", type=Path, required=True)
     a = p.parse_args()
     try:
         if a.command == "prepare":
             result = prepare(a.packets, a.out, a.expected_sha256)
+        elif a.command == "verify":
+            result = verify(a.bundle, a.packets, a.expected_sha256, a.receipt)
+        elif a.command == "assemble":
+            result = assemble(a.bundle, a.role, a.items, a.attestation, a.out)
+        elif a.command == "validate-item":
+            m, packets = bundle(a.bundle)
+            validate_item(read(a.form), m, packets, a.role)
+            result = {"status": "completed_item_validated", "api_requests": 0}
         elif a.command == "validate":
             m, packets = bundle(a.bundle)
             rows = validate_form(read(a.form), m, packets, a.role)
@@ -54,7 +80,15 @@ def main():
             result = finalize(a.bundle, a.a, a.b, a.adjudication, a.out)
         print(json.dumps(result, sort_keys=True))
         return 0
-    except (ValueError, OSError, KeyError, TypeError, IndexError, AttributeError) as e:
+    except (
+        ValueError,
+        OSError,
+        KeyError,
+        TypeError,
+        IndexError,
+        AttributeError,
+        RecursionError,
+    ) as e:
         code = (
             str(e)
             if isinstance(e, ValueError) and str(e).replace("_", "").isalnum()

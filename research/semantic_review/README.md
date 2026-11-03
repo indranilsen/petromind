@@ -21,13 +21,27 @@ contradictions on some matched subsets, **not demonstrated semantic entailment**
 V3's extra advantage over V1 did not consistently replicate. This handbook does
 not tell reviewers those identities or outcomes.
 
-The private 70-packet export is **not available as a standalone file in this
-workspace**. No private evaluator archive, key, sensor vault or unblinding map
-was requested/read. Actual packet projection has therefore not been certified
-here. Tests use 70 clearly labeled software fixtures; they are not independent
-human grades. The owner needs only its already verified packet export and its
-existing file commitment to run the preparation. Do not regenerate packets,
-score outputs or random review IDs from the execution journal.
+## Integration-readiness update
+
+The actual **70-packet** export was securely accessed from the owner's preserved
+snapshot. Only its blinded packet member, score-index metadata and manifest
+commitments were opened. No answer key, hidden sensor vault, reference scores or
+unblinding map was read/extracted. The selected export has 64 accepted submissions
+and six noncompleted packets. An older 42-packet export was identified and not used.
+
+Both score-export and outer snapshot commitments match the packet file.
+Exact custody hashes and storage paths are retained only in the private owner receipts.
+All initial evidence, **434 returned tool results**, **228 atomic propositions**
+and final accepted submissions were preserved in both derived reviewer bundles.
+No semantic scores were created. See `VALIDATION.md` for the actual checks and
+limitations; `OWNER_RUNBOOK_MACOS.md` is the shortest owner handoff.
+
+The review-only contract is now **sprint-c-human-semantic-review-v2**. It adds
+accepted-result consistency checks, preservation verification, readable packet
+summaries, optional per-packet forms and stricter custody checks. Frozen scoring
+weights, definitions and original study artifacts are unchanged. Do not migrate
+any in-progress v1 review: retain its pinned code and original bundle. V2 requires
+a fresh output directory before distribution, never an in-place rewrite.
 
 ## Files
 
@@ -36,7 +50,7 @@ score outputs or random review IDs from the execution journal.
 - `RUBRIC_MAPPING.md`: all frozen points, diagnostic-question mapping and penalties.
 - `FROZEN_RUBRIC.md`: exact original public rubric snapshot. Git blob
   `39c559ec0686ef00a7c936142485d75b0ee32780` is verified before preparation.
-- `workflow.py` + `scripts/semantic_review.py`: projection, blank forms,
+- `workflow.py` + `scripts/semantic_review.py`: projection, preservation verification, blank forms,
   completeness checks, Cohen's kappa, disagreements, adjudication and process seal.
 
 No real packet or completed form belongs in Git. Preserve all output in private
@@ -125,8 +139,8 @@ cannot certify compatibility with all private packets.
 
 Give reviewer A **only** `$SPRINT_C_REVIEW_OUT/R-A/` and reviewer B **only**
 `$SPRINT_C_REVIEW_OUT/R-B/`. Each contains 70 readable Markdown packets,
-`packets.json`, the handbook/mapping/frozen rubric and its own blank
-`review-form.json`. Do not distribute the sibling folder or `owner/` manifest,
+`packets.json`, the handbook/mapping/frozen rubric, `PACKET_INDEX.md`, its own blank
+`review-form.json`, 70 individual `item-NNN.json` forms and a blank human attestation. Do not distribute the sibling folder or `owner/` manifest,
 raw study archive, model prompts, key, scores or unblinding map. Use an approved
 private channel; this tool sends nothing.
 
@@ -162,7 +176,7 @@ reference answers, mechanical scores or results reports. Independent assessment
 is complete before this discussion. Do not let reviewers retroactively overwrite
 independent grades to make agreement look better.
 
-The adjudicator may choose either rating or a third admissible rating, but must
+The adjudicator must also check equal-grade narratives for material scientific disagreements and attest `equal_grade_narratives_checked`; matching numeric grades do not establish agreement in meaning. Record material same-grade prose disagreements in `narrative_notes`, which are preserved in the sealed adjudication. The adjudicator may choose either rating or a third admissible rating, but must
 resolve every conflicting grade/interpretation/flag or penalty event with a
 receipt pointer and rationale. No automatic averaging or half-credit compromise.
 Review penalty event identity carefully; semantically duplicate errors must count
@@ -222,11 +236,13 @@ instead of inventing totals where inputs are missing. An additional owner bridge
 needs that answer-free import contract; no private answer key is needed merely
 to prepare/distribute/collect this review.
 
-## Validation here
+## Validation and owner workflow
 
-Run `python -m unittest discover -s tests -p test_semantic_review_workflow.py -v`.
-Software fixtures exercise 70-packet projection, independent randomized forms,
-leak/duplicate/hash checks, receipt references, incomplete reviews, N/A, kappa,
-adjudication and immutable seals. No human semantic judgments or actual 70-packet
-validation are claimed by those tests. The full repository suite was not restored
-in this pruned workspace; only this standalone workflow is executed/tested here.
+See [VALIDATION.md](VALIDATION.md) for exact regression counts, real-export
+compatibility and unresolved limitations. The reproducible `verify` command writes
+an owner-only, hash-bound preservation receipt without filling any grades.
+
+See [OWNER_RUNBOOK_MACOS.md](OWNER_RUNBOOK_MACOS.md) for preparation, verification,
+private distribution, batch item forms, collection, agreement, adjudication and
+sealing. Reviewers must receive only their assigned reviewer folder, never this
+owner-facing runbook, validation results, study results or PR discussion.

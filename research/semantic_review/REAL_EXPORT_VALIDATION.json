@@ -1,0 +1,34 @@
+{
+  "version": "sprint-c-human-semantic-review-v2",
+  "status": "committed_export_compatibility_verified",
+  "packets": 70,
+  "unique_original_blind_ids": 70,
+  "accepted_submissions": 64,
+  "no_final_submission": 6,
+  "atomic_propositions": 228,
+  "received_tool_results": 434,
+  "source_identical_after_validation": true,
+  "reviewer_bundles": {
+    "R-A": {
+      "packets": 70,
+      "markdown_packets": 70,
+      "blank_item_forms": 70,
+      "all_received_results_and_accepted_submissions_preserved": true
+    },
+    "R-B": {
+      "packets": 70,
+      "markdown_packets": 70,
+      "blank_item_forms": 70,
+      "all_received_results_and_accepted_submissions_preserved": true
+    }
+  },
+  "api_requests": 0,
+  "unblinding_map_read": false,
+  "human_semantic_reviews_created": false,
+  "limitations": [
+    "Uses the owner's prior file commitment; does not independently authenticate the dataset or rerun host hash-chain certification.",
+    "Schema/text leak screening and preserved evidence do not guarantee perfect stylistic blinding. Owner must inspect before distribution.",
+    "No semantic scores, physical certification or independent human judgments are produced."
+  ],
+  "privacy_note": "Aggregate compatibility receipt only. Exact source-file commitments, blind IDs, assignments, judgments and private custody/storage metadata remain in private owner receipts."
+}

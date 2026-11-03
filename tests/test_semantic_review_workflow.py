@@ -38,6 +38,12 @@ class WorkflowTests(unittest.TestCase):
                         "statement": atom["statement"],
                         "verdict": "SUPPORTED",
                         "citations": ["model:M1"],
+                        "scope": "measured_observation",
+                        "premises": ["SOFTWARE FIXTURE ONLY"],
+                        "basis": "documented",
+                        "justification": "SOFTWARE FIXTURE ONLY",
+                        "missing_premise": "",
+                        "next_evidence": {"kind": "none", "target": "", "purpose": ""},
                     }
                 ],
             }
@@ -85,6 +91,21 @@ class WorkflowTests(unittest.TestCase):
                     "semantic_grades": None,
                 }
             )
+        for packet in packets:
+            if packet["submission"] is not None:
+                packet["received_tool_evidence"].append(
+                    {
+                        "sequence": 3,
+                        "tool": "submit_audit",
+                        "arguments": copy.deepcopy(packet["submission"]),
+                        "result": {
+                            "accepted": True,
+                            "assessment": copy.deepcopy(packet["submission"]),
+                        },
+                        "previous": "c" * 64,
+                        "digest": "d" * 64,
+                    }
+                )
         self.packets = packets
         self.save(self.source, packets)
         self.before = self.source.read_bytes()
@@ -181,8 +202,7 @@ class WorkflowTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "identity_leak"):
                 w.project(packet)
         packet = copy.deepcopy(self.packets[0])
-        packet["submission"]["findings"][0]["statement"] = "V2 result"
-        packet["propositions"][0]["submitted_finding"] = None
+        packet["public_packet"]["instructions"] = "V2 result"
         with self.assertRaisesRegex(ValueError, "unblinding"):
             w.project(packet)
 
@@ -402,6 +422,308 @@ class WorkflowTests(unittest.TestCase):
         x.write_text('{"a":1,"a":2}')
         with self.assertRaisesRegex(ValueError, "duplicate_json"):
             w.read(x)
+
+    def test_accepted_result_must_match_final_and_exist_once(self):
+        for operation in ("mismatch", "missing", "duplicate", "unknown_field"):
+            p = copy.deepcopy(self.packets[0])
+            if operation == "mismatch":
+                p["received_tool_evidence"][-1]["result"]["assessment"]["verdict"] = (
+                    "NOT_ESTABLISHED"
+                )
+            if operation == "missing":
+                p["received_tool_evidence"].pop()
+            if operation == "duplicate":
+                extra = copy.deepcopy(p["received_tool_evidence"][-1])
+                extra["sequence"] = 4
+                p["received_tool_evidence"].append(extra)
+            if operation == "unknown_field":
+                p["received_tool_evidence"][-1]["result"]["new_metadata"] = "unknown"
+            with self.subTest(operation=operation), self.assertRaises(ValueError):
+                w.project(p)
+
+    def test_all_returned_results_are_preserved(self):
+        p = self.packets[0]
+        q = w.project(p)
+        self.assertEqual(
+            [e["result"] for e in p["received_tool_evidence"]],
+            [e["result"] for e in q["events"]],
+        )
+        self.assertEqual(q["submission"], p["submission"])
+
+    def test_unexpected_finding_and_numeric_fields_refused(self):
+        for kind in ("finding", "numeric"):
+            p = copy.deepcopy(self.packets[0])
+            if kind == "finding":
+                p["submission"]["findings"][0]["new_metadata"] = "unknown"
+            else:
+                p["submission"]["numeric_observations"] = [
+                    {"sensor": "X", "metric": "t_s:0", "value": 1, "new_metadata": True}
+                ]
+            with (
+                self.subTest(kind=kind),
+                self.assertRaisesRegex(ValueError, "contract"),
+            ):
+                w.project(p)
+
+    def test_reordered_events_and_sensitive_key_aliases_refused(self):
+        p = copy.deepcopy(self.packets[0])
+        p["received_tool_evidence"].reverse()
+        with self.assertRaisesRegex(ValueError, "event_sequence"):
+            w.project(p)
+        for key in (
+            "API-Key",
+            "Authorization",
+            "accessToken",
+            "VARIANT_ID",
+            "reference-label",
+        ):
+            p = copy.deepcopy(self.packets[0])
+            p["public_packet"]["model"][key] = "sentinel"
+            with (
+                self.subTest(key=key),
+                self.assertRaisesRegex(ValueError, "identity_leak"),
+            ):
+                w.project(p)
+
+    def test_verification_receipt_is_reproducible_and_contains_no_grades(self):
+        self.prep()
+        digest = w.sha(self.source.read_bytes())
+        r = w.verify(self.bundle, self.source, digest, self.root / "receipt-a.json")
+        w.verify(self.bundle, self.source, digest, self.root / "receipt-b.json")
+        self.assertEqual(
+            (self.root / "receipt-a.json").read_bytes(),
+            (self.root / "receipt-b.json").read_bytes(),
+        )
+        self.assertEqual(r["packets"], 70)
+        self.assertEqual(r["accepted_submissions"], 69)
+        self.assertFalse(r["human_semantic_reviews_created"])
+        self.assertEqual(self.before, self.source.read_bytes())
+        with self.assertRaises(FileExistsError):
+            w.verify(self.bundle, self.source, digest, self.root / "receipt-a.json")
+
+    def test_bundle_manifest_paths_coverage_and_symlinks_refused(self):
+        self.prep()
+        mp = self.bundle / "owner/manifest.json"
+        original = w.read(mp)
+        for mode in ("traversal", "missing", "weights"):
+            m = copy.deepcopy(original)
+            if mode == "traversal":
+                m["distributed_sha256"]["../outside.json"] = "0" * 64
+            if mode == "missing":
+                del m["distributed_sha256"]["R-A/packets.json"]
+            if mode == "weights":
+                m["weights"]["document_scope"] = 100
+            self.save(mp, m)
+            with self.subTest(mode=mode), self.assertRaises(ValueError):
+                w.bundle(self.bundle)
+        self.save(mp, original)
+        leaf = self.bundle / "R-A/packets.json"
+        raw = leaf.read_bytes()
+        leaf.unlink()
+        target = self.root / "outside.json"
+        target.write_bytes(raw)
+        leaf.symlink_to(target)
+        with self.assertRaisesRegex(ValueError, "symlink"):
+            w.bundle(self.bundle)
+
+    def test_individual_items_assemble_only_complete_human_forms(self):
+        self.prep()
+        manifest, packets = w.bundle(self.bundle)
+        form = self.completed("R-A")
+        folder = self.root / "human-items"
+        folder.mkdir()
+        for n, row in enumerate(form["reviews"], 1):
+            item = {
+                "version": w.VERSION,
+                "bundle_id": manifest["bundle_id"],
+                "reviewer_code": "R-A",
+                "review": row,
+            }
+            self.save(folder / f"item-{n:03d}.json", item)
+        att = self.root / "attestation.json"
+        self.save(att, form["attestation"])
+        result = w.assemble(
+            self.bundle, "R-A", folder, att, self.root / "assembled.json"
+        )
+        self.assertEqual(result["reviews"], 70)
+        w.validate_form(w.read(self.root / "assembled.json"), manifest, packets, "R-A")
+        with self.assertRaisesRegex(ValueError, "identity"):
+            w.assemble(self.bundle, "R-B", folder, att, self.root / "wrong.json")
+        item = w.read(folder / "item-002.json")
+        self.save(folder / "item-001.json", item)
+        with self.assertRaisesRegex(ValueError, "coverage"):
+            w.assemble(self.bundle, "R-A", folder, att, self.root / "dupe.json")
+        (folder / "item-070.json").unlink()
+        with self.assertRaisesRegex(ValueError, "coverage"):
+            w.assemble(self.bundle, "R-A", folder, att, self.root / "missing.json")
+
+    def test_noncompleted_packet_is_unmistakable_in_readable_copy(self):
+        packet = w.project(self.packets[-1])
+        md = w.render_packet(packet)
+        self.assertIn("NO FINAL SUBMISSION", md)
+        self.assertIn("Governing public model and assumptions", md)
+        self.assertIn("Tool receipt index", md)
+        self.assertIn("Complete packet", md)
+        self.assertNotIn("ACCEPTED FINAL SUBMISSION", md)
+
+    def test_failed_output_is_not_overwritten_on_restart(self):
+        self.bundle.mkdir()
+        sentinel = self.bundle / "partial"
+        sentinel.write_text("KEEP")
+        with self.assertRaisesRegex(ValueError, "fresh_output"):
+            self.prep()
+        self.assertEqual(sentinel.read_text(), "KEEP")
+        self.assertEqual(self.before, self.source.read_bytes())
+
+    def test_source_file_is_pinned_in_one_read(self):
+        original = Path.read_bytes
+        reads = []
+
+        def counted(path):
+            if path == self.source:
+                reads.append(path)
+            return original(path)
+
+        with patch.object(Path, "read_bytes", counted):
+            w.source_packets(self.source, w.sha(self.before))
+        self.assertEqual(len(reads), 1)
+
+    def test_readable_packet_retains_full_received_content(self):
+        packet = w.project(self.packets[0])
+        md = w.render_packet(packet)
+        self.assertIn(w.fenced(packet), md)
+        self.assertIn("Propositions and submitted findings", md)
+        self.assertIn("Initial measurements actually received", md)
+        self.assertNotIn("DO_NOT_DISTRIBUTE_REJECTED_BODY", md)
+
+    def test_unknown_error_payload_is_never_silently_discarded(self):
+        p = copy.deepcopy(self.packets[-1])
+        p["received_tool_evidence"].append(
+            {
+                "sequence": 3,
+                "tool": "new_tool",
+                "arguments": {},
+                "result": {
+                    "error": "unsupported",
+                    "new_scientific_context": "MUST NOT STRIP",
+                },
+                "previous": "x",
+                "digest": "y",
+            }
+        )
+        with self.assertRaisesRegex(ValueError, "owner_review"):
+            w.project(p)
+
+    def test_equal_grade_narratives_need_human_check(self):
+        _a, _b, pa, pb = self.forms()
+        cmp = self.root / "cmp"
+        w.compare(self.bundle, pa, pb, cmp)
+        ad = w.read(cmp / "adjudication.template.json")
+        ad["attestation"] = {k: True for k in ad["attestation"]}
+        ad["attestation"]["equal_grade_narratives_checked"] = False
+        target = self.root / "ad.json"
+        self.save(target, ad)
+        with self.assertRaisesRegex(ValueError, "adjudication_required"):
+            w.finalize(self.bundle, pa, pb, target, self.root / "final")
+
+    def test_adjudicated_and_independent_verdict_counts_are_distinct(self):
+        _a, b, pa, pb = self.forms()
+        row = next(r for r in b["reviews"] if r["status"] == "HAS_SUBMISSION")
+        row["atoms"][0]["preferred_verdict"] = "NOT_ESTABLISHED"
+        self.save(pb, b)
+        cmp = self.root / "cmp"
+        w.compare(self.bundle, pa, pb, cmp)
+        ad = w.read(cmp / "adjudication.template.json")
+        ad["attestation"] = {k: True for k in ad["attestation"]}
+        ad["resolutions"][0].update(
+            value="SUPPORTED",
+            evidence_refs=["initial:/model/id"],
+            rationale="SOFTWARE FIXTURE ONLY",
+        )
+        target = self.root / "ad.json"
+        self.save(target, ad)
+        w.finalize(self.bundle, pa, pb, target, self.root / "final")
+        report = w.read(self.root / "final/semantic-report.json")
+        self.assertEqual(report["independent_verdict_counts"]["R-A"]["SUPPORTED"], 69)
+        self.assertEqual(report["independent_verdict_counts"]["R-B"]["SUPPORTED"], 68)
+        self.assertEqual(report["adjudicated_verdict_counts"]["SUPPORTED"], 69)
+
+    def test_cli_failure_does_not_echo_private_payload(self):
+        import contextlib
+        import io
+        import runpy
+        import sys
+
+        bad = self.root / "bad.json"
+        bad.write_text('{"PRIVATE_SENTINEL":"DO_NOT_ECHO"}')
+        output = io.StringIO()
+        argv = [
+            "semantic_review.py",
+            "prepare",
+            "--packets",
+            str(bad),
+            "--expected-sha256",
+            w.sha(bad.read_bytes()),
+            "--out",
+            str(self.root / "out"),
+        ]
+        with (
+            patch.object(sys, "argv", argv),
+            contextlib.redirect_stdout(output),
+            self.assertRaises(SystemExit) as end,
+        ):
+            runpy.run_path("scripts/semantic_review.py", run_name="__main__")
+        self.assertEqual(end.exception.code, 2)
+        self.assertNotIn("PRIVATE_SENTINEL", output.getvalue())
+        self.assertNotIn("DO_NOT_ECHO", output.getvalue())
+        self.assertEqual(json.loads(output.getvalue())["api_requests"], 0)
+
+    def test_equal_grade_narrative_notes_are_sealed(self):
+        _a, _b, pa, pb = self.forms()
+        cmp = self.root / "cmp"
+        w.compare(self.bundle, pa, pb, cmp)
+        ad = w.read(cmp / "adjudication.template.json")
+        ad["attestation"] = {k: True for k in ad["attestation"]}
+        rid = w.read(pa)["reviews"][0]["review_id"]
+        ad["narrative_notes"] = [
+            {
+                "review_id": rid,
+                "evidence_refs": ["initial:/model/id"],
+                "rationale": "SOFTWARE FIXTURE: equal grade, clarified scope.",
+            }
+        ]
+        target = self.root / "ad.json"
+        self.save(target, ad)
+        w.finalize(self.bundle, pa, pb, target, self.root / "final")
+        self.assertEqual(
+            w.read(self.root / "final/adjudication.json")["narrative_notes"],
+            ad["narrative_notes"],
+        )
+        self.assertEqual(
+            w.read(self.root / "final/semantic-report.json")[
+                "adjudicator_narrative_notes"
+            ],
+            1,
+        )
+
+    def test_equal_grade_note_cannot_cite_unreceived_evidence(self):
+        _a, _b, pa, pb = self.forms()
+        cmp = self.root / "cmp"
+        w.compare(self.bundle, pa, pb, cmp)
+        ad = w.read(cmp / "adjudication.template.json")
+        ad["attestation"] = {k: True for k in ad["attestation"]}
+        rid = w.read(pa)["reviews"][0]["review_id"]
+        ad["narrative_notes"] = [
+            {
+                "review_id": rid,
+                "evidence_refs": ["initial:/hidden_sensor"],
+                "rationale": "SOFTWARE FIXTURE",
+            }
+        ]
+        target = self.root / "ad.json"
+        self.save(target, ad)
+        with self.assertRaisesRegex(ValueError, "not_received"):
+            w.finalize(self.bundle, pa, pb, target, self.root / "final")
 
 
 if __name__ == "__main__":

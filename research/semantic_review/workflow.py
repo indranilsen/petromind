@@ -15,7 +15,7 @@ import secrets
 from collections import Counter
 from pathlib import Path
 
-VERSION = "sprint-c-human-semantic-review-v1"
+VERSION = "sprint-c-human-semantic-review-v2"
 RUBRIC_BLOB = "39c559ec0686ef00a7c936142485d75b0ee32780"
 WEIGHTS = {
     "citation_entailment": 4,
@@ -86,6 +86,13 @@ FORBIDDEN = {
     "reference_answers",
     "expected",
     "private_metadata",
+    "variant_id",
+    "intervention_id",
+    "access_token",
+    "client_secret",
+    "private_key",
+    "reference_label",
+    "expected_label",
 }
 ROOT = Path(__file__).parent
 
@@ -104,7 +111,9 @@ def fail(code):
     raise ValueError(code)
 
 
-def read(path):
+def parse(raw):
+    """Parse a single pinned byte snapshot; reject duplicate keys/nonfinite values."""
+
     def unique(pairs):
         out = {}
         for key, value in pairs:
@@ -113,7 +122,6 @@ def read(path):
             out[key] = value
         return out
 
-    raw = Path(path).read_bytes()
     if len(raw) > 150_000_000:
         fail("input_too_large")
     return json.loads(
@@ -121,16 +129,35 @@ def read(path):
     )
 
 
+def read(path):
+    return parse(Path(path).read_bytes())
+
+
+def source_packets(source, expected_hash, count=70):
+    raw = Path(source).read_bytes()
+    if not re.fullmatch("[0-9a-f]{64}", expected_hash) or sha(raw) != expected_hash:
+        fail("packet_file_commitment_mismatch")
+    packets = parse(raw)
+    if not isinstance(packets, list) or len(packets) != count:
+        fail("expected_packet_count_mismatch")
+    projected = [project(p) for p in packets]
+    if len({p["review_id"] for p in projected}) != count:
+        fail("duplicate_blind_ids")
+    return packets, projected
+
+
 def write(path, value):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("x") as stream:
+    with path.open("x", encoding="utf-8") as stream:
         stream.write(json.dumps(value, indent=2, allow_nan=False) + "\n")
 
 
 def scan(value):
     if isinstance(value, dict):
-        if FORBIDDEN & set(value):
+        normalized = {re.sub(r"[^a-z0-9]", "", str(k).lower()) for k in value}
+        forbidden = {re.sub(r"[^a-z0-9]", "", k) for k in FORBIDDEN}
+        if normalized & forbidden:
             fail("possible_key_or_identity_leak")
         for v in value.values():
             scan(v)
@@ -183,6 +210,31 @@ def project(packet):
     fs = [] if final is None else final["findings"]
     if not isinstance(fs, list):
         fail("invalid_findings")
+    if final is not None:
+        keys = {
+            "statement",
+            "scope",
+            "premises",
+            "basis",
+            "verdict",
+            "citations",
+            "missing_premise",
+            "next_evidence",
+            "justification",
+        }
+        if len(fs) != len(atoms) or any(
+            not isinstance(f, dict) or set(f) != keys for f in fs
+        ):
+            fail("unexpected_atomic_finding_contract")
+        if any(not isinstance(f["statement"], str) for f in fs) or {
+            f["statement"] for f in fs
+        } != {a["statement"] for a in atoms}:
+            fail("finding_atomic_coverage_mismatch")
+        if not isinstance(final["numeric_observations"], list) or any(
+            not isinstance(n, dict) or set(n) != {"sensor", "metric", "value"}
+            for n in final["numeric_observations"]
+        ):
+            fail("unexpected_numeric_observation_contract")
     for atom, prop in zip(atoms, props):
         if set(prop) != {
             "atomic_proposition",
@@ -223,7 +275,12 @@ def project(packet):
         }:
             fail("unexpected_evidence_event_contract")
         seq = event["sequence"]
-        if type(seq) is not int or seq < 1 or seq in seen:
+        if (
+            type(seq) is not int
+            or seq < 1
+            or seq in seen
+            or (seen and seq <= max(seen))
+        ):
             fail("duplicate_or_invalid_event_sequence")
         seen.add(seq)
         # Preserve all legitimate returned evidence verbatim. Never export rejected args.
@@ -231,17 +288,21 @@ def project(packet):
             result = event["result"]
             if not isinstance(result, dict):
                 fail("unexpected_submission_event")
-            safe = {
-                k: result[k]
-                for k in (
-                    "error",
-                    "field",
-                    "correction",
-                    "repairs_remaining",
-                    "accepted",
-                )
-                if k in result
-            }
+            if set(result) == {"accepted", "assessment"}:
+                if (
+                    result["accepted"] is not True
+                    or final is None
+                    or result["assessment"] != final
+                ):
+                    fail("accepted_submission_mismatch")
+            elif "error" not in result or not set(result) <= {
+                "error",
+                "field",
+                "correction",
+                "repairs_remaining",
+            }:
+                fail("unexpected_submission_result_fields")
+            safe = copy.deepcopy(result)
             events.append(
                 {
                     "sequence": seq,
@@ -253,10 +314,9 @@ def project(packet):
         elif event["tool"] in allowed:
             args = event["arguments"]
             if not isinstance(args, dict) or set(args) != allowed[event["tool"]]:
-                if (
-                    not isinstance(event["result"], dict)
-                    or "error" not in event["result"]
-                ):
+                if not isinstance(event["result"], dict) or set(event["result"]) != {
+                    "error"
+                }:
                     fail("unexpected_tool_arguments")
                 args = {}
             events.append(
@@ -268,6 +328,8 @@ def project(packet):
                 }
             )
         elif isinstance(event["result"], dict) and "error" in event["result"]:
+            if set(event["result"]) != {"error"}:
+                fail("unexpected_error_result_fields_require_owner_review")
             events.append(
                 {
                     "sequence": seq,
@@ -278,15 +340,219 @@ def project(packet):
             )
         else:
             fail("unexpected_tool_requires_owner_review")
+    accepted = [
+        e
+        for e in events
+        if e["tool"] == "submission_validation" and e["result"].get("accepted") is True
+    ]
+    if len(accepted) != int(final is not None):
+        fail("final_submission_acceptance_receipt_missing_or_duplicated")
     result = {
         "review_id": rid,
         "initial": copy.deepcopy(public),
         "events": copy.deepcopy(events),
         "submission": copy.deepcopy(final),
-        "projection_notice": "Derived review copy. Host hashes/execution metadata omitted; rejected submission arguments withheld. Evidence results and final assessment preserved. No new activity.",
+        "projection_notice": "Derived review copy. Host hashes/execution metadata omitted; rejected submission arguments withheld. All returned evidence and accepted assessment results preserved. Rejected arguments are not scientific premises; validation feedback is retained. No new activity.",
     }
     scan(result)
     return result
+
+
+def fenced(value):
+    body = json.dumps(value, indent=2, ensure_ascii=True)
+    fence = "`" * max(3, max((len(x) for x in re.findall(r"`+", body)), default=0) + 1)
+    return fence + "json\n" + body + "\n" + fence + "\n"
+
+
+def render_packet(packet):
+    """Readable navigation only; retain the complete received-evidence projection."""
+    text = f"# Blinded packet {packet['review_id']}\n\n"
+    text += "Use only received evidence. Investigator instructions are not reviewer instructions.\n\n"
+    final = packet["submission"]
+    text += "## Assessment status\n\n"
+    text += (
+        "**NO FINAL SUBMISSION.** Tool evidence exists, but no accepted final assessment was captured. Do not grade nonexistent prose or call this abstention.\n\n"
+        if final is None
+        else "**ACCEPTED FINAL SUBMISSION.** Assess the atomic findings independently, not only the overall verdict.\n\n"
+    )
+    text += "## Propositions and submitted findings\n\n"
+    for atom in packet["initial"]["atomic_claims"]:
+        finding = next(
+            (
+                f
+                for f in (final["findings"] if final else [])
+                if f.get("statement") == atom["statement"]
+            ),
+            None,
+        )
+        text += fenced({"proposition": atom, "submitted_finding": finding}) + "\n"
+    text += (
+        "## Governing public model and assumptions\n\n"
+        + fenced(packet["initial"]["model"])
+        + "\n"
+    )
+    text += (
+        "## Initial measurements actually received\n\n"
+        + fenced(packet["initial"]["initial_measurements"])
+        + "\n"
+    )
+    text += "## Tool receipt index\n\n"
+    text += (
+        "\n".join(
+            f"- Sequence {e['sequence']}: {e['tool']} — reference `event:{e['sequence']}:/result`"
+            for e in packet["events"]
+        )
+        + "\n\n"
+    )
+    text += "## Complete packet — authoritative received content\n\n" + fenced(packet)
+    return text
+
+
+def validate_item(value, manifest, packets, role):
+    if (
+        not isinstance(value, dict)
+        or set(value) != {"version", "bundle_id", "reviewer_code", "review"}
+        or value["version"] != VERSION
+        or value["bundle_id"] != manifest["bundle_id"]
+        or value["reviewer_code"] != role
+    ):
+        fail("item_identity_or_contract_mismatch")
+    row = value["review"]
+    if not isinstance(row, dict) or row.get("review_id") not in packets:
+        fail("unknown_item_review_id")
+    validate_row(row, packets[row["review_id"]])
+    return row
+
+
+def assemble(root, role, items, attestation, out):
+    """Collect human-completed per-packet items; never supplies judgments."""
+    manifest, packets = bundle(root)
+    paths = sorted(Path(items).glob("item-*.json"))
+    if len(paths) != len(packets):
+        fail("complete_unique_review_coverage_required")
+    rows = [validate_item(read(path), manifest, packets, role) for path in paths]
+    form = {
+        "version": VERSION,
+        "bundle_id": manifest["bundle_id"],
+        "reviewer_code": role,
+        "attestation": read(attestation),
+        "reviews": rows,
+    }
+    validate_form(form, manifest, packets, role)
+    write(out, form)
+    return {"status": "human_items_assembled", "reviews": len(rows), "api_requests": 0}
+
+
+def expected_distributed_paths(count):
+    names = {
+        "packets.json",
+        "review-form.json",
+        "human-attestation.json",
+        "PACKET_INDEX.md",
+        "REVIEWER_HANDBOOK.md",
+        "RUBRIC_MAPPING.md",
+        "FROZEN_RUBRIC.md",
+    }
+    names |= {f"packet-{i:03d}.md" for i in range(1, count + 1)}
+    names |= {f"item-{i:03d}.json" for i in range(1, count + 1)}
+    return {role + "/" + name for role in ("R-A", "R-B") for name in names}
+
+
+def verify(root, source, expected_hash, receipt):
+    """Owner-only compatibility receipt; no grades, key, map or model calls."""
+    raw, projected = source_packets(source, expected_hash)
+    manifest, packets = bundle(root)
+    if (
+        manifest["source_packet_sha256"] != expected_hash
+        or {p["review_id"]: sha(p) for p in projected} != manifest["packet_hashes"]
+    ):
+        fail("projection_differs_from_original_committed_packets")
+    source_by_id = {p["review_id"]: p for p in raw}
+    roles = {}
+    for role in ("R-A", "R-B"):
+        folder = Path(root) / role
+        ordered = list(projected)
+        random.Random(sha(manifest["assignment_seed"] + role)).shuffle(ordered)
+        if read(folder / "packets.json") != ordered:
+            fail("reviewer_packet_order_or_content_changed")
+        form = read(folder / "review-form.json")
+        expected_form = {
+            "version": VERSION,
+            "bundle_id": manifest["bundle_id"],
+            "reviewer_code": role,
+            "attestation": {
+                k: False
+                for k in (
+                    "qualified_independent_human",
+                    "no_key_or_variant_access",
+                    "no_other_review_access",
+                    "not_ai_generated",
+                )
+            },
+            "reviews": [row_template(p) for p in ordered],
+        }
+        if (
+            form != expected_form
+            or read(folder / "human-attestation.json") != expected_form["attestation"]
+        ):
+            fail("blank_form_or_attestation_changed")
+        for i, p in enumerate(ordered, 1):
+            if (folder / f"packet-{i:03d}.md").read_text(
+                encoding="utf-8"
+            ) != render_packet(p):
+                fail("readable_packet_content_changed")
+            expected_item = {
+                "version": VERSION,
+                "bundle_id": manifest["bundle_id"],
+                "reviewer_code": role,
+                "review": row_template(p),
+            }
+            if read(folder / f"item-{i:03d}.json") != expected_item:
+                fail("blank_item_changed")
+            original = source_by_id[p["review_id"]]
+            if (
+                p["initial"] != original["public_packet"]
+                or p["submission"] != original["submission"]
+            ):
+                fail("scientific_evidence_changed")
+            for e, received in zip(p["events"], original["received_tool_evidence"]):
+                if e["result"] != received["result"]:
+                    fail("returned_evidence_changed")
+        roles[role] = {
+            "packets": len(ordered),
+            "markdown_packets": len(ordered),
+            "blank_item_forms": len(ordered),
+            "all_received_results_and_accepted_submissions_preserved": True,
+        }
+    result = {
+        "version": VERSION,
+        "status": "committed_export_compatibility_verified",
+        "api_requests": 0,
+        "bundle_id": manifest["bundle_id"],
+        "packet_file_sha256": expected_hash,
+        "implementation_sha256": manifest["implementation_sha256"],
+        "packets": len(raw),
+        "unique_original_blind_ids": len(packets),
+        "accepted_submissions": sum(p["submission"] is not None for p in raw),
+        "no_final_submission": sum(p["submission"] is None for p in raw),
+        "atomic_propositions": sum(len(p["propositions"]) for p in raw),
+        "received_tool_results": sum(len(p["received_tool_evidence"]) for p in raw),
+        "source_identical_after_validation": sha(Path(source).read_bytes())
+        == expected_hash,
+        "reviewer_bundles": roles,
+        "distributed_sha256": manifest["distributed_sha256"],
+        "unblinding_map_read": False,
+        "human_semantic_reviews_created": False,
+        "limitations": [
+            "Uses the owner's prior file commitment; does not independently authenticate the dataset or rerun host hash-chain certification.",
+            "Schema/text leak screening and preserved evidence do not guarantee perfect stylistic blinding. Owner must inspect before distribution.",
+            "No semantic scores, physical certification or independent human judgments are produced.",
+        ],
+    }
+    if not result["source_identical_after_validation"]:
+        fail("source_changed_during_verification")
+    write(receipt, result)
+    return {k: v for k, v in result.items() if k != "distributed_sha256"}
 
 
 def atom_template(atom):
@@ -333,17 +599,7 @@ def prepare(source, out, expected_hash, *, count=70):
     source, out = Path(source), Path(out)
     if out.exists():
         fail("fresh_output_directory_required")
-    if (
-        not re.fullmatch("[0-9a-f]{64}", expected_hash)
-        or sha(source.read_bytes()) != expected_hash
-    ):
-        fail("packet_file_commitment_mismatch")
-    raw = read(source)
-    if not isinstance(raw, list) or len(raw) != count:
-        fail("expected_packet_count_mismatch")
-    packets = [project(p) for p in raw]
-    if len({p["review_id"] for p in packets}) != count:
-        fail("duplicate_blind_ids")
+    _raw, packets = source_packets(source, expected_hash, count)
     rubric = (ROOT / "FROZEN_RUBRIC.md").read_bytes()
     if (
         hashlib.sha1(b"blob " + str(len(rubric)).encode() + b"\0" + rubric).hexdigest()
@@ -403,13 +659,35 @@ def prepare(source, out, expected_hash, *, count=70):
             (folder / name).write_bytes((ROOT / name).read_bytes())
         # Readable content, not a new investigator UI. JSON blocks avoid untrusted HTML execution.
         for n, p in enumerate(ordered, 1):
-            text = f"# Blinded packet {p['review_id']}\n\nRead only this received evidence. Source submission is not authoritative.\n\n"
-            body = json.dumps(p, indent=2)
-            fence = "`" * max(
-                3, max((len(x) for x in re.findall(r"`+", body)), default=0) + 1
+            text = render_packet(p)
+            (folder / f"packet-{n:03d}.md").write_text(text, encoding="utf-8")
+            write(
+                folder / f"item-{n:03d}.json",
+                {
+                    "version": VERSION,
+                    "bundle_id": bundle_id,
+                    "reviewer_code": role,
+                    "review": row_template(p),
+                },
             )
-            text += fence + "json\n" + body + "\n" + fence + "\n"
-            (folder / f"packet-{n:03d}.md").write_text(text)
+        write(
+            folder / "human-attestation.json",
+            {
+                "qualified_independent_human": False,
+                "no_key_or_variant_access": False,
+                "no_other_review_access": False,
+                "not_ai_generated": False,
+            },
+        )
+        (folder / "PACKET_INDEX.md").write_text(
+            "# Assigned packets\n\n"
+            + "\n".join(
+                f"- [{i:03d}: {p['review_id']}](packet-{i:03d}.md) — blank item-{i:03d}.json"
+                for i, p in enumerate(ordered, 1)
+            )
+            + "\n",
+            encoding="utf-8",
+        )
     # Bind all distributed bytes; completed forms are returned as new files, never overwritten.
     manifest["distributed_sha256"] = {
         str(p.relative_to(out)): sha(p.read_bytes())
@@ -431,6 +709,28 @@ def bundle(root):
     root = Path(root)
     m = read(root / "owner/manifest.json")
     packets = read(root / "owner/packets.json")
+    expected_keys = {
+        "version",
+        "implementation_sha256",
+        "weights",
+        "penalties",
+        "bundle_id",
+        "source_packet_sha256",
+        "count",
+        "rubric_blob",
+        "assignment_seed",
+        "packet_hashes",
+        "projection_limit",
+        "distributed_sha256",
+    }
+    if (
+        not isinstance(m, dict)
+        or set(m) != expected_keys
+        or m["weights"] != WEIGHTS
+        or m["penalties"] != PENALTIES
+        or m["rubric_blob"] != RUBRIC_BLOB
+    ):
+        fail("owner_manifest_contract_changed")
     if m["implementation_sha256"] != implementation_hash():
         fail("review_process_code_changed_use_fresh_versioned_bundle")
     if (
@@ -438,8 +738,29 @@ def bundle(root):
         or {p["review_id"]: sha(p) for p in packets} != m["packet_hashes"]
     ):
         fail("bundle_modified")
+    if m["count"] != len(packets) or len({p["review_id"] for p in packets}) != len(
+        packets
+    ):
+        fail("bundle_coverage_changed")
+    if set(m["distributed_sha256"]) != expected_distributed_paths(m["count"]):
+        fail("distributed_file_coverage_changed")
     for path, expected in m["distributed_sha256"].items():
-        if sha((root / path).read_bytes()) != expected:
+        rel = Path(path)
+        if (
+            rel.is_absolute()
+            or len(rel.parts) != 2
+            or rel.parts[0] not in ("R-A", "R-B")
+            or ".." in rel.parts
+        ):
+            fail("unsafe_distributed_path")
+        target = root / rel
+        if (
+            target.is_symlink()
+            or target.parent.is_symlink()
+            or target.resolve().parent != (root / rel.parts[0]).resolve()
+        ):
+            fail("unsafe_distributed_symlink")
+        if sha(target.read_bytes()) != expected:
             fail("distributed_bundle_modified")
     return m, {p["review_id"]: p for p in packets}
 
@@ -678,8 +999,8 @@ def differences(a, b):
 
 def compare(root, a_path, b_path, out):
     m, packets = bundle(root)
-    a = read(a_path)
-    b = read(b_path)
+    a_raw, b_raw = Path(a_path).read_bytes(), Path(b_path).read_bytes()
+    a, b = parse(a_raw), parse(b_raw)
     ar = validate_form(a, m, packets, "R-A")
     br = validate_form(b, m, packets, "R-B")
     out = Path(out)
@@ -703,8 +1024,8 @@ def compare(root, a_path, b_path, out):
     report = {
         "version": VERSION,
         "bundle_id": m["bundle_id"],
-        "review_a_sha256": sha(Path(a_path).read_bytes()),
-        "review_b_sha256": sha(Path(b_path).read_bytes()),
+        "review_a_sha256": sha(a_raw),
+        "review_b_sha256": sha(b_raw),
         "packets": len(packets),
         "disagreement_fields": len(ds),
         "disagreement_packets": len({d["review_id"] for d in ds}),
@@ -731,7 +1052,9 @@ def compare(root, a_path, b_path, out):
                 "qualified_independent_human": False,
                 "remained_variant_and_key_blind": False,
                 "not_ai_generated": False,
+                "equal_grade_narratives_checked": False,
             },
+            "narrative_notes": [],
             "resolutions": [
                 {
                     "review_id": d["review_id"],
@@ -751,9 +1074,10 @@ def finalize(root, a_path, b_path, adjudication_path, out):
     m, packets = bundle(root)
     a_raw = Path(a_path).read_bytes()
     b_raw = Path(b_path).read_bytes()
-    a = validate_form(read(a_path), m, packets, "R-A")
-    b = validate_form(read(b_path), m, packets, "R-B")
-    ad = read(adjudication_path)
+    a = validate_form(parse(a_raw), m, packets, "R-A")
+    b = validate_form(parse(b_raw), m, packets, "R-B")
+    ad_raw = Path(adjudication_path).read_bytes()
+    ad = parse(ad_raw)
     expected_keys = {
         "version",
         "bundle_id",
@@ -761,6 +1085,7 @@ def finalize(root, a_path, b_path, adjudication_path, out):
         "review_b_sha256",
         "adjudicator_code",
         "attestation",
+        "narrative_notes",
         "resolutions",
     }
     if (
@@ -776,8 +1101,22 @@ def finalize(root, a_path, b_path, adjudication_path, out):
         "qualified_independent_human",
         "remained_variant_and_key_blind",
         "not_ai_generated",
+        "equal_grade_narratives_checked",
     } or any(v is not True for v in ad["attestation"].values()):
         fail("human_blinded_adjudication_required")
+    notes = ad["narrative_notes"]
+    if not isinstance(notes, list):
+        fail("adjudication_narrative_notes_required")
+    for note in notes:
+        if (
+            not isinstance(note, dict)
+            or set(note) != {"review_id", "evidence_refs", "rationale"}
+            or note["review_id"] not in packets
+            or not isinstance(note["rationale"], str)
+            or not note["rationale"].strip()
+        ):
+            fail("adjudication_narrative_note_invalid")
+        refs(packets[note["review_id"]], note["evidence_refs"])
     ds = differences(a, b)
     expected = {(d["review_id"], d["field"]) for d in ds}
     rs = ad["resolutions"]
@@ -833,7 +1172,18 @@ def finalize(root, a_path, b_path, adjudication_path, out):
         "packets": len(packets),
         "completed_reviews_with_human_independence_attestation": 2 * len(packets),
         "adjudicated_fields": len(rs),
-        "independent_verdict_counts": dict(counts),
+        "adjudicator_narrative_notes": len(notes),
+        "adjudicated_verdict_counts": dict(counts),
+        "independent_verdict_counts": {
+            role: dict(
+                Counter(
+                    atom["preferred_verdict"]
+                    for row in form.values()
+                    for atom in row["atoms"]
+                )
+            )
+            for role, form in (("R-A", a), ("R-B", b))
+        },
         "packet_semantic_scores": totals,
         "semantic_maximum": 51,
         "mechanical_points_of_29": None,
@@ -856,7 +1206,7 @@ def finalize(root, a_path, b_path, adjudication_path, out):
     for name, raw in [
         ("independent-a.json", a_raw),
         ("independent-b.json", b_raw),
-        ("adjudication.json", Path(adjudication_path).read_bytes()),
+        ("adjudication.json", ad_raw),
     ]:
         with (out / name).open("xb") as stream:
             stream.write(raw)
@@ -875,7 +1225,7 @@ def finalize(root, a_path, b_path, adjudication_path, out):
         "bundle_id": m["bundle_id"],
         "review_a_sha256": sha(a_raw),
         "review_b_sha256": sha(b_raw),
-        "adjudication_sha256": sha(Path(adjudication_path).read_bytes()),
+        "adjudication_sha256": sha(ad_raw),
         "packet_source_sha256": m["source_packet_sha256"],
         "files": {
             p.name: sha(p.read_bytes()) for p in sorted(out.iterdir()) if p.is_file()

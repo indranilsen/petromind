@@ -1,4 +1,4 @@
-# Blinded human semantic review — handbook v1
+# Blinded human semantic review — handbook v2
 
 You are assessing a research model's evidence reasoning, not operating a well.
 Read this handbook and the supplied frozen rubric. Do not consult the study's
@@ -129,7 +129,18 @@ constant readings can be legitimate, but "frozen" quality has its stated meaning
 ## Completing the form
 
 `packets.json` and `packet-001.md`, etc., contain the same received evidence.
-Use your assigned `review-form.json` as a template and save a new completed file.
+For 70 evaluations, the recommended option is one `item-NNN.json` form beside
+each Markdown packet. Copy those item forms into a separate working folder and
+fill them in batches. Preserve their IDs, reviewer code and bundle ID. Save your
+completed `human-attestation.json` separately, only after all independent reviews
+are complete. Return the completed items and that attestation to the owner, who
+will assemble and validate them without supplying any grades.
+
+Alternatively use the single `review-form.json` template and save a NEW completed
+file. Choose one return format, not both. Never edit the distributed originals.
+Do not submit both an item and a duplicate item under another filename. You may
+ask the owner to validate a finished item for formatting while keeping scientific
+judgments independent. Empty templates and partial returns cannot be finalized.
 Keep `version`, `bundle_id`, reviewer code, review IDs, packet hashes, atom IDs and
 status unchanged. Fill every judgment, fraction, flag and written justification.
 
