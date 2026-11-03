@@ -25,8 +25,8 @@
         <div>
           <p class="eyebrow">INDUSTRIAL FAILURE INVESTIGATION</p>
           <h1>
-            Industrial sensor measurements.<br /><em
-              >Statistical diagnosis.<br />Evidence assessment.</em
+            A fault prediction is a start.<br /><em
+              >Find out what the evidence<br />actually supports.</em
             >
           </h1>
           <p class="hero-copy">
@@ -35,7 +35,7 @@
             what the evidence actually supports before they trust a diagnosis.
           </p>
           <a href="/demo" class="primary page-link" data-case="0"
-            >Open historical incident replay <span>↗</span></a
+            >Explore the investigation <span>↗</span></a
           >
         </div>
         <div class="home-illustration">
@@ -136,8 +136,8 @@
           <label
             >SCENARIO<select id="scenarioSelect">
               <option value="historical">Historical incident · real 3W</option>
-              <option value="synthetic">
-                Synthetic challenge · not enabled
+              <option value="synthetic" disabled>
+                Synthetic challenge · unavailable
               </option>
             </select></label
           ><label
@@ -166,6 +166,31 @@
         </button>
       </div>
       <div id="historicalWorkspace" data-workflow-stage="monitoring">
+        <section class="journey-guide" aria-label="Guided incident walkthrough">
+          <div class="journey-topline">
+            <strong>Follow one investigation</strong
+            ><span id="journeyMode" class="badge"></span>
+          </div>
+          <ol
+            id="journeySteps"
+            class="journey-steps"
+            aria-label="Investigation stages"
+          >
+            <li>Monitor</li>
+            <li>Alert</li>
+            <li>Classifier</li>
+            <li>Muse investigates</li>
+            <li>Findings</li>
+          </ol>
+          <div class="journey-next">
+            <p id="journeyHint"></p>
+            <button id="journeyAction" class="primary"></button>
+          </div>
+          <small id="journeySeekNote"
+            >Timeline jumps navigate recorded measurements; they do not run a
+            model or add evidence.</small
+          >
+        </section>
         <div
           id="workflowStatus"
           class="workflow-status"
@@ -313,6 +338,11 @@
                 >
               </section>
             </div>
+            <section
+              id="pressureOverview"
+              class="pressure-overview"
+              aria-label="Recorded pressure traces"
+            ></section>
             <div id="trendLegend" class="trend-legend">
               <span class="warm">↑ Higher</span><span class="cool">↓ Lower</span
               ><span>→ Unchanged</span><span>— Unavailable</span
@@ -424,6 +454,17 @@
                   comparisons to assess what is supported, what is not
                   established, and what evidence is still needed.
                 </p>
+              </section>
+              <section
+                id="investigationLaunch"
+                class="handoff-block handoff-next"
+                hidden
+                aria-labelledby="launchTitle"
+              >
+                <p class="handoff-kicker">CONTINUE / MUSE SPARK</p>
+                <h3 id="launchTitle">
+                  Inspect the evidence behind the prediction
+                </h3>
                 <label id="executionControl" hidden
                   >Investigation mode<select id="executionSelect">
                     <option value="captured">
@@ -440,61 +481,59 @@
                   Investigate with Muse Spark
                 </button>
               </section>
-              <details
-                id="handoffDetails"
-                class="handoff-block handoff-details"
-                hidden
-              >
-                <summary>
-                  Details · claim, model and investigation scope
-                </summary>
-                <div class="handoff-detail-body">
-                  <h4>Constructed claim being audited</h4>
-                  <p id="claimSummary"></p>
-                  <p class="fine-print">
-                    This is a constructed claim for the audit, not a causal
-                    explanation produced by the statistical classifier.
-                  </p>
-                  <h4>Model inputs and limitations</h4>
-                  <p id="classifierFeatures"></p>
-                  <p id="classifierInputs"></p>
-                  <p class="fine-print">
-                    Observed pressure changes are shown for investigation, not
-                    as feature importance. An anomaly is not a predicted fault,
-                    and a predicted fault is not a verified cause.
-                  </p>
-                  <h4>Alert and measurement window</h4>
-                  <p id="alertRuleDetails"></p>
-                  <p class="fine-print">
-                    The saved classification is revealed only after its full
-                    diagnostic evidence window is available. It is not an early
-                    prediction made at the alert.
-                  </p>
-                  <details
-                    id="capabilityDetails"
-                    class="capability-details"
-                    hidden
-                  >
-                    <summary>Tools, scope and spending limits</summary>
-                    <p id="capabilityText"></p>
-                    <p>
-                      Public tool requests/results only. No private reasoning
-                      transcript. A disconnected browser does not cancel an
-                      already started capped run. No automatic retry or replay
-                      substitution.
-                    </p>
-                  </details>
-                  <h4>Investigation record</h4>
-                  <span id="runBadge" class="badge"
-                    >Captured replay · not a new call</span
-                  >
-                  <p id="executionNote" class="fine-print" hidden></p>
-                  <button id="inspectDetails" class="quiet" hidden>
-                    Explore original captured evidence ↗
-                  </button>
-                </div>
-              </details>
             </div>
+            <details
+              id="handoffDetails"
+              class="handoff-block handoff-details"
+              hidden
+            >
+              <summary>Details · claim, model and investigation scope</summary>
+              <div class="handoff-detail-body">
+                <h4>Constructed claim being audited</h4>
+                <p id="claimSummary"></p>
+                <p class="fine-print">
+                  This is a constructed claim for the audit, not a causal
+                  explanation produced by the statistical classifier.
+                </p>
+                <h4>Model inputs and limitations</h4>
+                <p id="classifierFeatures"></p>
+                <p id="classifierInputs"></p>
+                <p class="fine-print">
+                  Observed pressure changes are shown for investigation, not as
+                  feature importance. An anomaly is not a predicted fault, and a
+                  predicted fault is not a verified cause.
+                </p>
+                <h4>Alert and measurement window</h4>
+                <p id="alertRuleDetails"></p>
+                <p class="fine-print">
+                  The saved classification is revealed only after its full
+                  diagnostic evidence window is available. It is not an early
+                  prediction made at the alert.
+                </p>
+                <details
+                  id="capabilityDetails"
+                  class="capability-details"
+                  hidden
+                >
+                  <summary>Tools, scope and spending limits</summary>
+                  <p id="capabilityText"></p>
+                  <p>
+                    Public tool requests/results only. No private reasoning
+                    transcript. A disconnected browser does not cancel an
+                    already started capped run. No automatic retry or replay
+                    substitution.
+                  </p>
+                </details>
+                <h4>Investigation record</h4>
+                <span id="runBadge" class="badge"
+                  >Captured replay · not a new call</span
+                >
+                <p id="executionNote" class="fine-print" hidden></p>
+                <button id="inspectDetails" class="quiet" hidden>
+                  Explore original captured evidence ↗
+                </button>
+              </div>
+            </details>
             <section id="preDiagnosis">
               <p class="eyebrow">BEGIN WITH MEASUREMENTS</p>
               <h2 id="monitoringHeading">Monitoring sensor measurements</h2>
@@ -536,6 +575,24 @@
             class="investigation-activity"
             role="status"
           ></p>
+          <section
+            id="investigationBrief"
+            class="investigation-brief"
+            aria-label="Investigation evidence so far"
+          >
+            <div>
+              <p class="eyebrow">THE QUESTION UNDER REVIEW</p>
+              <p id="investigationQuestion"></p>
+            </div>
+            <div>
+              <p class="eyebrow">EVIDENCE RECEIVED SO FAR</p>
+              <p id="investigationEvidence"></p>
+              <small
+                >Counts reflect revealed records, including repeated returns. A
+                lookup is context, not proof of cause.</small
+              >
+            </div>
+          </section>
           <div class="investigation-columns">
             <section
               class="conversation-column"
@@ -550,7 +607,7 @@
               <div id="insideAssessment"></div>
             </section>
             <details id="graphPanel" class="evidence-column" open>
-              <summary>Evidence graph · actual retrieved relationships</summary>
+              <summary>Evidence map · inspect returned sources</summary>
               <p id="insidePending" class="notice">
                 Review the recorded measurements to the checkpoint before the
                 diagnosis and investigation are available.

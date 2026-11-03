@@ -5118,3 +5118,256 @@ select {
   display: block;
   font-weight: 650;
 }
+
+/* Judge walkthrough: navigation changes only; evidence gates stay in JS. */
+.journey-guide {
+  border: 1px solid #35515b;
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin: 0 0 24px;
+  background: linear-gradient(125deg, #142e37, #10212d);
+}
+.journey-topline,
+.journey-next {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.journey-topline strong {
+  font-size: 16px;
+}
+.journey-topline .badge {
+  font-size: 11px;
+  color: #a8d7c9;
+  white-space: normal;
+  text-align: right;
+}
+.journey-steps {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  padding: 0;
+  margin: 20px 0 16px;
+  gap: 8px;
+  counter-reset: journey;
+}
+.journey-steps li {
+  counter-increment: journey;
+  border-top: 3px solid #354951;
+  padding-top: 10px;
+  color: #a6b8c0;
+  font-size: 12px;
+}
+.journey-steps li::before {
+  content: "0" counter(journey) " / ";
+  opacity: 0.65;
+}
+.journey-steps .is-current {
+  border-color: #9de8cf;
+  color: #d1f8eb;
+  font-weight: 650;
+}
+.journey-steps .is-complete {
+  border-color: #578579;
+}
+.journey-next p {
+  max-width: 720px;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+}
+.journey-next button {
+  flex-shrink: 0;
+  padding: 12px 18px;
+  font-size: 13px;
+}
+.journey-guide > small {
+  display: block;
+  color: #9eb5bc;
+  font-size: 11px;
+  margin-top: 10px;
+  line-height: 1.5;
+}
+.pressure-overview {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+.pressure-preview {
+  border: 1px solid #304954;
+  border-radius: 10px;
+  padding: 14px;
+  background: #10242f;
+  min-width: 0;
+}
+.pressure-preview strong,
+.pressure-preview span,
+.pressure-preview small {
+  display: block;
+}
+.pressure-preview strong {
+  font-size: 13px;
+}
+.pressure-preview span {
+  font-size: 12px;
+  margin-top: 5px;
+  color: #c5ded8;
+}
+.pressure-preview svg {
+  width: 100%;
+  display: block;
+  margin-top: 6px;
+}
+.pressure-preview small {
+  font-size: 10px;
+  color: #9eb5bc;
+  line-height: 1.5;
+}
+#handoffDetails {
+  margin: 14px 0;
+  padding: 16px 20px;
+  border: 1px solid #304954;
+  border-radius: 12px;
+  background: #10212b;
+  font-size: 12px;
+  line-height: 1.7;
+}
+#handoffDetails > summary {
+  cursor: pointer;
+  color: #bdd3d9;
+}
+#handoffDetails h4 {
+  margin-bottom: 6px;
+}
+#handoffDetails p {
+  color: #b6cbd1;
+}
+.investigation-brief {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 28px;
+  padding: 22px 24px;
+  border: 1px solid #35515b;
+  background: #112630;
+  border-radius: 14px;
+  margin: 20px 0;
+}
+.investigation-brief p {
+  line-height: 1.65;
+  margin: 6px 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.investigation-brief small {
+  font-size: 11px;
+  color: #a2b9c0;
+  line-height: 1.6;
+}
+#historicalWorkspace[data-workflow-stage="diagnosis"] .console-layout {
+  grid-template-columns: 1fr;
+}
+#historicalWorkspace[data-workflow-stage="diagnosis"] .operator-panel {
+  order: -1;
+}
+#historicalWorkspace[data-workflow-stage="diagnosis"] .classifier-handoff {
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+}
+#historicalWorkspace[data-workflow-stage="diagnosis"] .handoff-alert {
+  border-top: 3px solid #e3b876;
+}
+.classifier-handoff .handoff-block {
+  scroll-margin-top: 24px;
+}
+.classifier-handoff #investigationLaunch {
+  border-top: 3px solid #9de8cf;
+}
+.full-receipt {
+  margin-top: 24px;
+  border-top: 1px solid #35515b;
+  padding-top: 16px;
+}
+.full-receipt > summary {
+  color: #b8cdd3;
+  cursor: pointer;
+}
+:focus-visible {
+  outline: 2px solid #b0f1dc;
+  outline-offset: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0s !important;
+  }
+}
+@media (max-width: 740px) {
+  .journey-guide {
+    padding: 16px;
+  }
+  .journey-topline,
+  .journey-next {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .journey-topline .badge {
+    align-self: flex-start;
+    text-align: left;
+  }
+  .journey-steps {
+    gap: 5px;
+    margin-top: 14px;
+  }
+  .journey-steps li {
+    font-size: 10px;
+    line-height: 1.5;
+  }
+  .journey-steps li::before {
+    display: block;
+  }
+  .journey-next button {
+    width: 100%;
+  }
+  .pressure-overview,
+  .investigation-brief,
+  #historicalWorkspace[data-workflow-stage="diagnosis"] .classifier-handoff {
+    grid-template-columns: 1fr;
+  }
+  .investigation-brief {
+    padding: 16px;
+    gap: 12px;
+  }
+}
+.journey-guide,
+.classifier-handoff .handoff-block,
+#insidePanel {
+  scroll-margin-top: 100px;
+}
+
+@media (min-width: 741px) {
+  #historicalWorkspace[data-workflow-stage="diagnosis"] .classifier-handoff {
+    grid-template-areas: "alert alert" "classifier why" "classifier launch";
+  }
+  #historicalWorkspace[data-workflow-stage="diagnosis"] #checkpointAlert {
+    grid-area: alert;
+  }
+  #historicalWorkspace[data-workflow-stage="diagnosis"] #diagnosisCard {
+    grid-area: classifier;
+  }
+  #historicalWorkspace[data-workflow-stage="diagnosis"] #investigationNext {
+    grid-area: why;
+  }
+  #historicalWorkspace[data-workflow-stage="diagnosis"] #investigationLaunch {
+    grid-area: launch;
+  }
+}
+#classifierHandoff,
+#pressureOverview {
+  scroll-margin-top: 100px;
+}

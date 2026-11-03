@@ -2,10 +2,16 @@
 
 **A statistical model proposes a fault. Meta Muse Spark investigates what the evidence actually establishes.**
 
-Home / Demo / Technology present real recorded Petrobras 3W measurements, a
-prefix-only anomaly monitor, a saved statistical diagnosis and an inspectable
-Muse claim audit. Original captured replay, verified saved v5 replay and explicitly authorized live runs are visibly
-separate. No private chain of thought or invented tool activity is displayed.
+Industrial measurements can look similar for different failures. PetroMind helps an
+engineer separate a plausible classifier prediction from an explanation the
+available evidence actually supports.
+
+**Watch the complete story:** recorded telemetry → pressure alert → statistical
+hypothesis → Muse Spark tool investigation → traceable findings and uncertainty.
+The Demo's guided actions navigate the recorded alert and original diagnosis
+checkpoint. They never add sensor evidence or make a model call. Muse's received
+measurements, documented context, historical comparisons, and accepted public
+findings remain inspectable. Replay and paid live execution are clearly labeled.
 
 ## Run the hackathon demo
 
@@ -31,8 +37,10 @@ python scripts/demo_claim_audit.py serve \
 
 Open **http://127.0.0.1:8765/demo**. These commands make no paid calls. Start at the
 first sample; alerts are computed from the observed prefix, and the original
-600-sample classifier window must finish before diagnosis is revealed. Click
-Investigate once to watch genuine captured records unfold automatically. Inspect
+600-sample classifier window must finish before diagnosis is revealed. Use **Jump to recorded alert**, then **Continue to classifier** (when a monitoring
+bundle is loaded). Review the four handoff cards, choose the investigation mode,
+and click **Investigate with Muse Spark** to watch genuine captured records unfold
+automatically. Inspect
 the returned source facts, historical overlap, public findings and missing premise.
 
 [Readiness runbook and one-run live smoke commands](docs/hackathon-readiness.md) ·
@@ -48,6 +56,12 @@ server-side `MODEL_API_KEY` and an explicit paid action. No paid readiness call 
 run here. The supported deployment is a trusted **local Python process**, not a
 static site or a validated public multi-user service. Do not disable loopback,
 Host/Origin/token or spending protections to publish it.
+
+For the full judge walkthrough, current verification limits, and submission
+checklist, see [final sprint readiness](docs/hackathon-completion.md).
+[Architecture](docs/architecture.md) · [Video plan](docs/hackathon-demo.md) ·
+[Project description](docs/hackathon-submission.md) ·
+[Official requirements checked November 2](docs/submission-checklist.md).
 
 ## Architecture and evidence boundary
 
