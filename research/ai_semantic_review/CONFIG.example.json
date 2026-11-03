@@ -1,0 +1,38 @@
+{
+  "execution_mode": "live_external",
+  "pricing_confirmation": "REPLACE_WITH_OWNER_VERIFIED_PRICE_CEILINGS_AFTER_CHECKING_RATES",
+  "same_family_reason": "",
+  "reviewer_a": {
+    "provider": "openai",
+    "model": "REPLACE_WITH_SUPPORTED_OPENAI_MODEL",
+    "max_output_tokens": 8192,
+    "temperature": null,
+    "reasoning_effort": null,
+    "input_ceiling_usd_per_million": "REPLACE_WITH_VERIFIED_CEILING",
+    "output_ceiling_usd_per_million": "REPLACE_WITH_VERIFIED_CEILING",
+    "rate_source": "https://openai.com/api/pricing/",
+    "rate_checked_at": "YYYY-MM-DD"
+  },
+  "reviewer_b": {
+    "provider": "anthropic",
+    "model": "REPLACE_WITH_SUPPORTED_CLAUDE_MODEL",
+    "max_output_tokens": 8192,
+    "temperature": null,
+    "reasoning_effort": null,
+    "input_ceiling_usd_per_million": "REPLACE_WITH_VERIFIED_CEILING",
+    "output_ceiling_usd_per_million": "REPLACE_WITH_VERIFIED_CEILING",
+    "rate_source": "https://platform.claude.com/docs/en/about-claude/pricing",
+    "rate_checked_at": "YYYY-MM-DD"
+  },
+  "adjudicator": {
+    "provider": "openai",
+    "model": "REPLACE_WITH_SUPPORTED_OPENAI_MODEL",
+    "max_output_tokens": 8192,
+    "temperature": null,
+    "reasoning_effort": null,
+    "input_ceiling_usd_per_million": "REPLACE_WITH_VERIFIED_CEILING",
+    "output_ceiling_usd_per_million": "REPLACE_WITH_VERIFIED_CEILING",
+    "rate_source": "https://openai.com/api/pricing/",
+    "rate_checked_at": "YYYY-MM-DD"
+  }
+}
