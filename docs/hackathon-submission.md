@@ -1,4 +1,4 @@
-# PetroMind — when a diagnosis outruns its evidence
+# PetroMind — investigate the evidence behind an industrial diagnosis
 
 A production well has dozens of measurements. Knowing what failed is harder:
 readings may be incomplete and different faults may have overlapping symptoms.
@@ -19,6 +19,7 @@ a published fault example without treating the match as proof of root cause.
 The diagnostic claims were constructed for evaluation, not presented as real
 expert diagnoses. Original model outputs are inspectable and unchanged.
 
+The guided demo makes that progression understandable without petroleum expertise.
 Home explains the industrial problem. Demo combines an instrumented Operator
 Console and an interactive Inside Muse evidence graph. The graph follows actual
 received measurements, tool results, documented relationships, historical overlap,
@@ -31,9 +32,11 @@ source-motivated sensor summaries within the same total five-sensor budget. It
 cannot traverse verified well-specific topology. Viewer-only telemetry remains
 separate; additional queries are not forced or claimed to improve diagnosis.
 
-The innovation we investigate is the model's ability to examine whether a causal
-conclusion follows from evidence, rather than generate another classifier label.
-We do not claim novelty for graph retrieval or tool calling in isolation.
+The distinctive product interaction is an evidence handoff: an alert becomes a
+ranked hypothesis, and Muse checks the stronger constructed diagnostic claim
+against the information actually received. Engineers can inspect each source and
+see where an explanation outruns its evidence. We do not claim novelty for graph
+retrieval or tool calling in isolation.
 
 We preserve the uncomfortable results: conventional adaptive diagnosis achieved
 60.6% on the frozen 33-incident benchmark; direct Muse sensor-only, graph and
@@ -74,3 +77,14 @@ New interactive live history suppresses training-event labels under a fresh pinn
 projection version. Original captured audits retain their original training-label
 metadata and must not be described as retrospectively label-free. Neither route
 exposes hidden held-out target labels or private well/source paths to the agent.
+
+## Portal preparation
+
+Suggested tagline: **A classifier proposes a fault. Muse investigates the evidence.**
+
+Use the short description above for a compact project field, and the main copy
+for a longer field, subject to the actual portal's character limits. Technical
+architecture is in [architecture.md](architecture.md); recording script and shot
+plan are in [hackathon-demo.md](hackathon-demo.md). [Submission requirements](submission-checklist.md)
+separate verified rules from signed-in form fields still needing confirmation.
+Do not mark the project submitted until its receipt is available.

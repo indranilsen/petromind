@@ -1,4 +1,16 @@
-# Three-minute judge walkthrough
+# Demo video script and recording plan
+
+The three-minute edit below is an editorial target, **not a verified contest
+video-duration rule**. Confirm the signed-in submission form's limit before
+recording/exporting the final version. No final video is included in this PR.
+
+Record at 1440×900 with browser notifications off and readable page zoom. Keep the
+replay badge visible when establishing the mode. Record one uninterrupted
+investigation pass before editing; do not splice evidence from different runs.
+Use only the actual imported/captured findings in narration. The early setup
+belongs off camera. Reserve about half the video for the investigation and its
+payoff. Export in the format accepted by the actual submission form, then check
+video playback and link access in a signed-out browser.
 
 Use the [readiness runbook](hackathon-readiness.md) to prepare the recorded bundle,
 check inputs, and start the app before recording. The recommended presentation
@@ -9,10 +21,10 @@ visible. Do not call captured activity a new live execution.
 | Time | Action | Suggested narration |
 | --- | --- | --- |
 | 0:00–0:20 | Home → Demo. Begin with the first recorded sample. | “Industrial equipment produces many measurements, but a plausible fault prediction is not a proven cause. PetroMind lets an engineer investigate that distinction.” |
-| 0:20–0:40 | Play briefly; scrub the first case through 14:32. | “This is real Petrobras 3W telemetry. Sensors update from recorded samples, including missing readings. Our fixed prefix-only monitor detected sustained pressure deviation. It is a demonstration heuristic, not a validated industrial alarm.” |
-| 0:40–0:55 | Show evidence accumulation, then scrub to 39:59. | “An anomaly does not identify a fault. The original 600-sample diagnosis window must finish; we have not moved it to manufacture an early prediction.” |
-| 0:55–1:15 | Read the classifier heading and two pressure comparisons. | “The statistical machine-learning classifier proposed service-line hydrate—ice-like material that can restrict flow. The recorded pressures rose. That still does not establish what caused the change.” |
-| 1:15–1:45 | Click Investigate with Muse Spark. Let automatic replay unfold. | “This is a genuine previously recorded Muse investigation. Muse received its fixed, budgeted summaries—not all the telemetry the viewer can explore. These are actual public tool records, not a private reasoning transcript.” |
+| 0:20–0:40 | Play briefly, then click Jump to recorded alert. | “This is real Petrobras 3W telemetry. Sensors update from recorded samples, including missing readings. Our fixed monitor detected sustained pressure deviation against its earlier measured reference. It is a demonstration heuristic, not a validated industrial alarm.” |
+| 0:40–0:55 | Show evidence accumulation, then click Continue to classifier. | “An anomaly does not identify a fault. The original 600-sample diagnosis window must finish; we have not moved it to manufacture an early prediction.” |
+| 0:55–1:15 | Show the four handoff cards: alert, classifier, why investigate, and continue. | “The statistical machine-learning classifier proposed service-line hydrate—ice-like material that can restrict flow. The recorded pressures rose. That still does not establish what caused the change.” |
+| 1:15–1:45 | Choose the recorded mode, then click Investigate with Muse Spark. Let automatic replay unfold. | “This is a genuine previously recorded Muse investigation. Muse received its fixed, budgeted summaries—not all the telemetry the viewer can explore. These are actual public tool records, not a private reasoning transcript.” |
 | 1:45–2:10 | Pause on returned facts; show the focused graph and inspect one source. Use Show all evidence only if asked. | “Muse queried documented engineering context and compared permitted training incidents. The graph shows the actual returned facts and cited evidence. Generic equipment associations are not the installed topology of this particular well. Similarity is not causal proof.” |
 | 2:10–2:40 | Resume; read the concise measured/documented/causal takeaway. Expand one missing premise. | “Muse accepts the measured increases but identifies the unsupported step: no supplied verified criterion establishes that this pressure pattern specifically proves hydrate. We need applicable documentation or validated discriminating evidence, not a more confident explanation.” |
 | 2:40–3:00 | Briefly show the second captured case or Technology results. | “The second audit supports a narrow comparison with a published pressure-pattern example, without turning that match into root cause. Conventional methods outperformed direct Muse classification in our benchmark. Muse’s role here is auditable evidence investigation and uncertainty, not a claimed accuracy improvement.” |
@@ -34,7 +46,8 @@ Select Saved verified v5 investigation if imported, otherwise Original captured 
 and verdict remain unchanged. Do not imitate live token timing or manufacture a
 successful tool call. Do not initiate another paid attempt during a recorded demo
 unless separately authorized and cost-capped. The reliable submission recording
-can use captured mode throughout, without requiring a network connection.
+can use captured mode throughout. After the authorized bundles and app are
+installed locally, replay needs no Meta API connection.
 
 ## Before pressing Record
 

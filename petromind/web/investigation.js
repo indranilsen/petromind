@@ -353,8 +353,160 @@
             : x.text,
       }));
   }
+  function completedResult(events) {
+    // A submitted assessment alone is not a completed investigation.
+    const end = events.findLastIndex((e) => e.kind === "completion");
+    if (end < 0 || events[end].status !== "completed") return null;
+    return (
+      events
+        .slice(0, end)
+        .findLast((e) => e.tool === "submit_audit" && e.assessment)
+        ?.assessment || null
+    );
+  }
+  function conclusion(events) {
+    const result = completedResult(events);
+    if (!result) return null;
+    const received = events.find((e) => e.kind === "evidence_received") || {};
+    const findings = result.findings || [];
+    const observations = { ...received.observations };
+    for (const e of events)
+      if (e.sensor && e.summary) observations[e.sensor] = e.summary;
+    const measured = [];
+    for (const [sensor, summary] of Object.entries(observations)) {
+      const indices = findings.flatMap((f, i) =>
+        f.verdict === "SUPPORTED" &&
+        (f.scope === "measured_observation" ||
+          (!f.scope && f.basis === "measurement")) &&
+        (f.citations || []).includes("measurement:" + sensor)
+          ? [i]
+          : [],
+      );
+      const numbers = (result.numeric_observations || []).filter(
+        (n) => n.sensor === sensor,
+      );
+      const matches = (metric) =>
+        numbers.some(
+          (n) =>
+            n.metric === metric &&
+            Number.isFinite(n.value) &&
+            n.value === summary[metric],
+        );
+      if (
+        indices.length &&
+        summary.available &&
+        Number.isFinite(summary.first) &&
+        Number.isFinite(summary.last) &&
+        (matches("delta") || (matches("first") && matches("last")))
+      )
+        measured.push({ sensor, summary, indices });
+    }
+    const causal = findings.filter((f) => f.scope === "diagnostic_conclusion");
+    const priority = (f) =>
+      f.scope === "diagnostic_conclusion" ||
+      (!f.scope && f.basis === "hypothesis")
+        ? 0
+        : f.basis === "unsupported"
+          ? 1
+          : 2;
+    const gaps = findings
+      .filter((f) => f.missing_premise)
+      .sort((a, b) => priority(a) - priority(b));
+    const verified =
+      causal.length > 0 &&
+      causal.every((f) => f.verdict === "SUPPORTED" && !f.missing_premise);
+    const contradicted = causal.some((f) => f.verdict === "CONTRADICTED");
+    const unsupported =
+      causal.some((f) =>
+        ["NOT_ESTABLISHED", "PARTIALLY_SUPPORTED"].includes(f.verdict),
+      ) ||
+      findings.some(
+        (f) =>
+          !f.scope &&
+          ["hypothesis", "unsupported"].includes(f.basis) &&
+          f.missing_premise &&
+          ["NOT_ESTABLISHED", "PARTIALLY_SUPPORTED"].includes(f.verdict),
+      );
+    const status =
+      !causal.length && result.verdict === "CONTRADICTED"
+        ? "claim_contradicted"
+        : verified
+          ? "supported"
+          : contradicted
+            ? "contradicted"
+            : unsupported
+              ? "unverified"
+              : "not_recorded";
+    const fault =
+      faultNames[received.hypothesis] ||
+      (received.hypothesis
+        ? "fault category " + received.hypothesis
+        : "proposed cause");
+    const pressurePair = ["P-PDG", "P-TPT"].every((sensor) =>
+      measured.some((m) => m.sensor === sensor),
+    );
+    const headline = pressurePair
+      ? measured
+          .filter((m) => ["P-PDG", "P-TPT"].includes(m.sensor))
+          .every((m) => m.summary.last > m.summary.first)
+        ? "Pressure increases confirmed."
+        : "Pressure changes confirmed."
+      : measured.length
+        ? "Recorded measurements confirmed."
+        : result.verdict === "CONTRADICTED"
+          ? "The assessed claim is contradicted."
+          : result.verdict === "SUPPORTED"
+            ? "The assessed claim is supported within its stated scope."
+            : "The full assessed claim is not established.";
+    const cause =
+      status === "claim_contradicted"
+        ? "The assessed claim is contradicted; the physical cause is not settled."
+        : status === "supported"
+          ? "Muse recorded support for the causal claim."
+          : status === "contradicted"
+            ? "The causal claim is contradicted by the cited evidence."
+            : status === "unverified"
+              ? "Suspected " + fault.toLowerCase() + " not verified."
+              : "No separate root-cause confirmation was recorded.";
+    // Preserve recorded scope: an accepted source comparison is not a causal finding.
+    const confirmed = findings.filter(
+      (f) => f.verdict === "SUPPORTED" && f.scope !== "diagnostic_conclusion",
+    );
+    const uncertain = [...new Set(gaps.map((f) => f.missing_premise))];
+    const next = [
+      ...new Set(
+        gaps
+          .map((f) =>
+            typeof f.next_evidence === "string"
+              ? f.next_evidence
+              : f.next_evidence?.kind !== "none"
+                ? f.next_evidence?.purpose
+                : "",
+          )
+          .filter(Boolean),
+      ),
+    ];
+    return {
+      headline,
+      cause,
+      status,
+      fault,
+      measured,
+      confirmed,
+      uncertain,
+      next,
+      caveat:
+        status === "unverified" || status === "not_recorded"
+          ? "Not verified does not mean ruled out. A pattern or source comparison alone does not identify its physical cause."
+          : status === "contradicted"
+            ? "A contradiction applies to the assessed claim; it does not by itself exclude every version of the suspected fault."
+            : "This reports the accepted model finding, not independent verification of physical correctness.",
+    };
+  }
   const api = {
     graph,
+    completedResult,
+    conclusion,
     assessmentSections,
     focusedGraph,
     takeaway,

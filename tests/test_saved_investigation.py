@@ -298,13 +298,16 @@ def test_saved_browser_progression_and_graph(saved, monkeypatch):
                     page.clock.run_for(1400)
                     assert page.locator("#eventFeed li").count() == count
                     assert page.locator(".evidence-node").count() <= 10
-                    if not any(e.get("assessment") for e in expected[:count]):
+                    if not any(
+                        e.get("kind") == "completion" and e.get("status") == "completed"
+                        for e in expected[:count]
+                    ):
                         assert page.locator("#insideAssessment").inner_text() == ""
                 assert (
-                    "causal conclusion"
-                    in page.locator("#insideAssessment").inner_text()
+                    "not verified" in page.locator("#insideAssessment").text_content()
                 )
                 assert page.locator("#insideAssessment details").count() > 0
+                page.locator("#insideAssessment [data-inspect-evidence]").click()
                 if not page.locator("#graphPanel").evaluate("(e)=>e.open"):
                     page.locator("#graphPanel>summary").click()
                 page.locator("#graphToggle").click()
@@ -316,6 +319,7 @@ def test_saved_browser_progression_and_graph(saved, monkeypatch):
                     '(e)=>window.scrollTo({top:scrollY+e.getBoundingClientRect().top-160,behavior:"instant"})'
                 )
                 page.screenshot(path=str(screenshots / f"{label}-full-graph.png"))
+                page.locator("#insideAssessment .full-receipt > summary").click()
                 page.locator('#insideAssessment [data-finding-index="1"]').click()
                 assert page.locator(".evidence-node").count() <= 10
                 page.locator("#insideAssessment").evaluate(
@@ -346,7 +350,7 @@ def test_saved_browser_progression_and_graph(saved, monkeypatch):
                 page.locator("#captureSkip").click()
                 assert (
                     "PARTIALLY SUPPORTED"
-                    in page.locator("#insideAssessment").inner_text()
+                    in page.locator("#insideAssessment").text_content()
                 )
                 page.locator("#operatorView").click()
                 page.locator("#executionSelect").select_option("captured")
@@ -354,7 +358,7 @@ def test_saved_browser_progression_and_graph(saved, monkeypatch):
                 page.locator("#captureSkip").click()
                 assert (
                     "ORIGINAL CAPTURED"
-                    in page.locator("#insideAssessment").inner_text()
+                    in page.locator("#insideAssessment").text_content()
                 )
                 page.locator("#caseSelect").select_option("1")
                 assert not errors, errors

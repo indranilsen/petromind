@@ -133,6 +133,18 @@ def main():
                         )
                         assert shown <= supplied
                         assert page.locator(".evidence-node").count() <= 10
+                        if count == len(expected):
+                            page.clock.run_for(32)
+                            if a.screenshots:
+                                page.screenshot(
+                                    path=str(
+                                        a.screenshots
+                                        / f"case-{i + 1}-{label}-first-completed-viewport.png"
+                                    )
+                                )
+                            page.locator(
+                                "#insideAssessment [data-inspect-evidence]"
+                            ).click()
                         page.locator("#graphToggle").click()
                         assert (
                             set(
@@ -143,11 +155,16 @@ def main():
                             == supplied
                         )
                         page.locator("#graphToggle").click()
-                        if not any(e.get("assessment") for e in expected[:count]):
+                        if not any(
+                            e.get("kind") == "completion"
+                            and e.get("status") == "completed"
+                            for e in expected[:count]
+                        ):
                             assert page.locator("#insideAssessment").inner_text() == ""
                     page.clock.run_for(
                         500
                     )  # Finish the restrained scroll/reveal animation.
+                    page.locator("#journeyAction").click()
                     heading = page.locator("#insideAssessment h3").first.bounding_box()
                     assert heading and 0 <= heading["y"] < h - 35
                     assert page.locator("#capturePause").is_disabled()
@@ -155,10 +172,12 @@ def main():
                         case["audits"]["grounded"]["output"]["verdict"].replace(
                             "_", " "
                         )
-                        in page.locator("#insideAssessment").inner_text()
+                        in page.locator("#insideAssessment").text_content()
                     )
-                    assert page.locator("#physicalHypotheses").inner_text()
+                    assert page.locator("#physicalHypotheses").text_content()
                     shot("assessment", "#insideAssessment")
+                    page.locator("#insideAssessment [data-inspect-evidence]").click()
+                    shot("expanded-evidence", "#graphPanel")
                     page.emulate_media(reduced_motion="reduce")
                     page.locator("#captureRestart").click()
                     assert page.locator("#eventFeed li").count() == 1

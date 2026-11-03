@@ -36,7 +36,7 @@ def assert_classifier_handoff(page, case):
         "checkpointAlert",
         "diagnosisCard",
         "investigationNext",
-        "handoffDetails",
+        "investigationLaunch",
     ]
     assert page.locator("#checkpointAlert").is_visible()
     assert (
@@ -54,7 +54,7 @@ def assert_classifier_handoff(page, case):
     )
     assert (
         page.locator("#executionControl").locator("..").get_attribute("id")
-        == "investigationNext"
+        == "investigationLaunch"
     )
     assert page.locator("#executionSelect").input_value() in {"captured", "saved"}
     assert page.locator("#executionSelect option[value=live]").evaluate(
@@ -445,10 +445,11 @@ def mock_active_browser(browser, capture):
             page.locator("#operatorResult").get_by_text(
                 "NEW LIVE ASSESSMENT", exact=True
             ).wait_for()
-            assert (
-                "Tree temperature (charged)"
-                in page.locator("#operatorResult").inner_text()
-            )
+            page.locator("#operatorResult [data-inspect-evidence]").click()
+            assert "Tree temperature" in page.locator("#eventFeed").inner_text()
+            assert "Charged" in page.locator("#eventFeed").inner_text()
+            page.locator("#operatorView").click()
+            page.locator("#operatorResult .full-receipt > summary").click()
             assert "Software fixture" in page.locator("#operatorResult").inner_text()
             assert len(calls) == 3
         finally:
@@ -619,7 +620,9 @@ def raw_widget_browser(browser, url, payload):
         assert page.locator("#slider").input_value() == position
         assert "Viewer only" in page.locator('[data-sensor="T-TPT"]').inner_text()
         page.locator(".sensor-hit.tree").click()
-        assert page.locator(".chart-line").get_attribute("d").count("M") >= 2
+        assert (
+            page.locator("#sensorDialog .chart-line").get_attribute("d").count("M") >= 2
+        )
     finally:
         page.close()
     # Run the exhaustive verifier against an EXPLICITLY CONSTRUCTED route fixture.
@@ -754,7 +757,7 @@ def main():
             page.locator(".site-nav a").nth(0).click()
             assert page.locator(".site-nav a").count() == 3
             assert (
-                "Industrial sensor measurements"
+                "A fault prediction is a start"
                 in page.locator("#homePage h1").inner_text()
             )
             shot("home-" + label)
@@ -764,12 +767,9 @@ def main():
             for i, case in enumerate(payload["cases"]):
                 page.locator("#caseSelect").select_option(str(i))
                 assert_monitoring(page)
-                if label == "desktop":
-                    assert (
-                        page.locator("#sampleCounter").bounding_box()["y"]
-                        + page.locator("#sampleCounter").bounding_box()["height"]
-                        <= height
-                    )
+                # The guided walkthrough precedes telemetry; transport remains reachable.
+                page.locator("#transport").scroll_into_view_if_needed()
+                assert page.locator("#sampleCounter").is_visible()
                 assert page.locator(".claim-sensor").count() == 2
                 assert page.locator(".secondary-sensor").count() == 10
                 assert page.locator("#play").is_disabled() == (
@@ -812,6 +812,7 @@ def main():
                 page.locator("#insideView").click()
                 assert page.locator(".evidence-node").count() == 5
                 page.locator("#captureSkip").click()
+                page.locator("#insideAssessment [data-inspect-evidence]").click()
                 assert page.locator(".evidence-node").count() <= 10
                 if not page.locator("#graphPanel").evaluate("e=>e.open"):
                     page.locator("#graphPanel>summary").click()
@@ -848,9 +849,9 @@ def main():
                     == case["audits"]["grounded"]["output"]
                 )
                 page.keyboard.press("Escape")
-                page.locator("#scenarioSelect").select_option("synthetic")
-                assert page.locator("#syntheticNotice").is_visible()
-                page.locator("#returnHistorical").click()
+                assert page.locator(
+                    '#scenarioSelect option[value="synthetic"]'
+                ).evaluate("e => e.disabled")
             page.locator("#caseSelect").select_option("0")
             assert_monitoring(page)
             reach_checkpoint(page)

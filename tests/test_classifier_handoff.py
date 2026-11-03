@@ -51,7 +51,12 @@ def structure():
 
 def test_handoff_four_blocks_preserve_monitoring_gates_and_order():
     parser = structure()
-    blocks = ["checkpointAlert", "diagnosisCard", "investigationNext", "handoffDetails"]
+    blocks = [
+        "checkpointAlert",
+        "diagnosisCard",
+        "investigationNext",
+        "investigationLaunch",
+    ]
     children = [
         key
         for key in parser.order
@@ -67,8 +72,9 @@ def test_handoff_four_blocks_preserve_monitoring_gates_and_order():
 
 def test_mode_and_action_share_next_step_while_metadata_is_disclosed():
     parser = structure()
-    for key in ["plausibility", "executionSelect", "nextScene", "runInstruction"]:
-        assert ("section", "investigationNext") in parser.ids[key][1]
+    assert ("section", "investigationNext") in parser.ids["plausibility"][1]
+    for key in ["executionSelect", "nextScene", "runInstruction"]:
+        assert ("section", "investigationLaunch") in parser.ids[key][1]
     for key in [
         "claimSummary",
         "classifierFeatures",
