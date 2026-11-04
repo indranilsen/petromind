@@ -123,6 +123,7 @@ class DemoApp:
         science_protocol=None,
         monitoring_directory=None,
         saved_directory=None,
+        synthetic_directory=None,
     ):
         self.cases = demo_cases(capture)
         self.review = review_capture(capture)
@@ -196,6 +197,11 @@ class DemoApp:
             next(case for case in self.cases if case["id"] == saved["case_id"])[
                 "saved_investigation"
             ] = saved
+        self.synthetic = None
+        if synthetic_directory is not None:
+            from .synthetic_replay import load_synthetic
+
+            self.synthetic = load_synthetic(synthetic_directory)
         self.live_directory = Path(live_directory) if live_directory else None
         self.client_factory = client_factory
         self.lock = threading.Lock()
@@ -410,6 +416,12 @@ def make_server(app, port=8765):
                         "replay": "Captured real Muse v1 outputs; independent engineering review pending.",
                     },
                 )
+            if self.path == "/api/synthetic":
+                return (
+                    self.send(200, app.synthetic)
+                    if app.synthetic
+                    else self.send(404, {"error": "synthetic_replay_not_supplied"})
+                )
             if self.path == "/api/review":
                 return self.send(200, app.review)
             if self.path == "/api/status":
@@ -417,6 +429,7 @@ def make_server(app, port=8765):
                     200,
                     {
                         "live_enabled": app.live_directory is not None,
+                        "synthetic_replay_enabled": app.synthetic is not None,
                         "token": app.token,
                         "live_version": app.live_version,
                         "live_limits": app.live_limits,
@@ -442,6 +455,8 @@ def make_server(app, port=8765):
                 "/technology": ("index.html", "text/html"),
                 "/app.js": ("app.js", "text/javascript"),
                 "/investigation.js": ("investigation.js", "text/javascript"),
+                "/synthetic.js": ("synthetic.js", "text/javascript"),
+                "/synthetic.css": ("synthetic.css", "text/css"),
                 "/style.css": ("style.css", "text/css"),
             }
             if self.path not in files:

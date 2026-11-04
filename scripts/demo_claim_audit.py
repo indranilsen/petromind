@@ -48,6 +48,11 @@ def main():
         if name in ("serve", "check"):
             q.add_argument("--port", type=int, default=8765)
             q.add_argument(
+                "--synthetic-replay",
+                type=Path,
+                help="Verified extracted c-7a91 showcase directory; replay only",
+            )
+            q.add_argument(
                 "--saved-run", type=Path, help="Explicit verified saved-replay bundle"
             )
             q.add_argument(
@@ -151,6 +156,7 @@ def main():
                 science_protocol=source,
                 monitoring_directory=a.monitoring,
                 saved_directory=a.saved_run,
+                synthetic_directory=a.synthetic_replay,
             )
             if a.command == "check":
                 replays = [
@@ -171,6 +177,7 @@ def main():
                             ),
                             "replays": replays,
                             "live_configured": a.enable_live is not None,
+                            "synthetic_replay_enabled": app.synthetic is not None,
                             "saved_replays": sum(
                                 "saved_investigation" in c for c in app.cases
                             ),

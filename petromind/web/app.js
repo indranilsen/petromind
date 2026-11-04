@@ -1487,6 +1487,11 @@ function renderPlatform() {
   $("savedExecution").hidden = !c().saved_investigation;
   $("syntheticNotice").hidden = !synthetic;
   $("historicalWorkspace").hidden = synthetic;
+  document.querySelector(".demo-heading h1").textContent = synthetic
+    ? "Synthetic hydraulic investigation" : "Historical incident replay";
+  $("caseSelect").closest("label").hidden = synthetic;
+  $("operatorView").parentElement.hidden = synthetic;
+  window.PetroMindSynthetic?.activate(synthetic && pageName === "demo");
   $("consoleView").hidden = workspaceView !== "operator";
   $("insidePanel").hidden = workspaceView !== "inside";
   $("operatorView").classList.toggle("active", workspaceView === "operator");
@@ -3221,6 +3226,11 @@ $("closeNode").onclick = () => $("nodeDialog").close();
     if (!cr.ok || !sr.ok) throw Error("Reviewed capture could not be loaded");
     cases = (await cr.json()).cases;
     status = await sr.json();
+    const syntheticOption = $("scenarioSelect").querySelector('[value="synthetic"]');
+    syntheticOption.disabled = !status.synthetic_replay_enabled;
+    syntheticOption.textContent = status.synthetic_replay_enabled
+      ? "Synthetic hydraulic investigation · increased resistance"
+      : "Synthetic hydraulic investigation · not supplied";
     index = 0;
     const preferred = cases.findIndex(
       (caseData) => caseData.saved_investigation,

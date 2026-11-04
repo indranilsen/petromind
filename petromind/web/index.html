@@ -4,8 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>PetroMind · Industrial diagnosis investigation</title>
+    <link rel="stylesheet" href="/synthetic.css" />
     <link rel="stylesheet" href="/style.css" />
     <script defer src="/investigation.js"></script>
+    <script defer src="/synthetic.js"></script>
     <script defer src="/app.js"></script>
   </head>
   <body>
@@ -135,9 +137,9 @@
         <div class="workspace-selectors">
           <label
             >SCENARIO<select id="scenarioSelect">
-              <option value="historical">Historical incident · real 3W</option>
+              <option value="historical">Real industrial incident · hydrate obstruction suspected</option>
               <option value="synthetic" disabled>
-                Synthetic challenge · unavailable
+                Synthetic hydraulic investigation · not supplied
               </option>
             </select></label
           ><label
@@ -154,17 +156,11 @@
           ><button id="insideView" class="tab">Inside Muse</button>
         </div>
       </div>
-      <div id="syntheticNotice" class="notice" hidden>
-        <h2>Synthetic challenge is not enabled.</h2>
-        <p>
-          No physics-validated synthetic scenario or fitted statistical-model
-          bundle is supplied here. Only historical development incidents are
-          available. No synthetic measurements or root causes are sent to Muse.
-        </p>
-        <button id="returnHistorical" class="quiet">
-          Use historical incident →
-        </button>
-      </div>
+      <section id="syntheticNotice" class="synthetic-workspace" hidden aria-label="Synthetic hydraulic investigation">
+        <p id="syntheticLoadStatus" role="status">Loading verified synthetic recording…</p>
+        <button id="returnHistorical" class="quiet" hidden>Return to historical incident</button>
+        <div id="syntheticContent" hidden></div>
+      </section>
       <div id="historicalWorkspace" data-workflow-stage="monitoring">
         <section class="journey-guide" aria-label="Guided incident walkthrough">
           <div class="journey-topline">

@@ -386,3 +386,10 @@ It precommits expectations before Python executes a sensor-budgeted test, then
 checks numeric interpretation separately from physical inference. See the
 [execution status and limitations](docs/milestone5-status.md). No live scientific
 capability or improvement is claimed from offline/mock tests.
+
+### Optional synthetic investigation scenario
+
+Replay the verified c-7a91 hydraulic investigation alongside the historical demo
+with `--synthetic-replay .petromind/PetroMind-Synthetic-Showcase`. This is a
+separate captured-only contract: no detector or classifier is fabricated, and
+no new API calls are made. See [setup and verification](docs/synthetic-investigation-demo.md).
