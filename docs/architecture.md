@@ -37,3 +37,15 @@ Replay invokes no Meta endpoint. Live runs require an explicitly configured fres
 protocol and a paid user action; failures never silently switch to a recording.
 The shared five-sensor budget counts inherited and requested summaries, including
 unavailable queries. Source and citation validation do not certify physical truth.
+
+## Product and research boundaries
+
+The primary `/demo` investigates real Petrobras 3W measurements. The optional
+`/extension` has a separate, explicitly synthetic hydraulic recording and adapter;
+its model-scoped findings are not validation of the real-data study. `/technology`
+explains both the evidence boundary and frozen classification results.
+
+The frozen 33-incident fixed/adaptive configurations use Gaussian statistical
+sensor selection, not Muse or GraphRAG. The current claim auditor's source-backed
+engineering knowledge and optional active summaries are a separate capability.
+See the [documentation index](README.md) for research definitions and dated receipts.

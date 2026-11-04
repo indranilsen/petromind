@@ -762,7 +762,7 @@ def main():
             page.locator(".site-nav a").nth(0).click()
             assert page.locator(".site-nav a").count() == 4
             assert (
-                "A fault prediction is a start"
+                "Beyond prediction."
                 in page.locator("#homePage h1").inner_text()
             )
             shot("home-" + label)

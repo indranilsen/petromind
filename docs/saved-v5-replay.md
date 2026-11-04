@@ -8,8 +8,9 @@ Three execution choices remain distinct:
 
 A saved run is preferred when available for the initially selected incident.
 The other incident remains available with its original capture. No arbitrary local
-files are discovered or imported automatically. HOME / DEMO / TECHNOLOGY remain
-unchanged. Prompts, tool definitions, v5 validation/aggregation, classifier windows,
+files are discovered or imported automatically. Current navigation is HOME /
+DEMO / EXTENSION / TECHNOLOGY; the synthetic Extension is separate from this
+historical saved run. Prompts, tool definitions, v5 validation/aggregation, classifier windows,
 monitoring, five-query accounting and evaluation records are unchanged.
 
 ## Verify and import your actual saved run (zero API calls)

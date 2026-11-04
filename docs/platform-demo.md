@@ -1,3 +1,9 @@
+> **Historical implementation snapshot.** This document records an earlier UI
+> iteration; references to three pages or a deferred synthetic mode are not current.
+> Use the [project README](../README.md), [documentation index](README.md) and
+> [current setup runbook](hackathon-readiness.md). Original implementation and
+> verification details below are retained for provenance.
+
 > Current refinement: [replay verification and optional v3 sensor acquisition](live-investigation-verification.md). The v2 commands and tool limits below describe audit-only mode; v3 is a separate opt-in protocol requiring the matching raw dataset. Existing captures remain v1.
 
 # PetroMind platform: Home, Demo, Technology

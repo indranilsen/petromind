@@ -40,7 +40,10 @@ not a continuous raw replay. It does not replace raw monitoring verification.
    unestablished. The composite PARTIALLY_SUPPORTED does not partly prove a cause.
 5. Read the frozen classification chart. The adaptive statistical baseline
    outperformed Muse variants. Muse's demonstrated role is evidence auditing;
-   this page makes no new accuracy or physical-verification claim.
+   this page makes no new accuracy or physical-verification claim. Fixed and
+   adaptive are statistical sensor-selection baselines with no GraphRAG. The
+   GraphRAG Muse configuration adds generic equipment context and train-only
+   similar incidents, not the source-backed engineering registry added later.
 
 ## Data and illustration boundaries
 
@@ -67,7 +70,7 @@ not a continuous raw replay. It does not replace raw monitoring verification.
 ## Reproduce verification
 
 ```bash
-python -m pytest -q
+python -m pytest -q tests/test_technology_page.py
 python -m pip install playwright
 python -m playwright install chromium
 python scripts/verify_technology_browser.py \

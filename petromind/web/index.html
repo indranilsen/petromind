@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>PetroMind · Industrial diagnosis investigation</title>
+    <title>PetroMind — Beyond Prediction, Toward Understanding</title>
     <link rel="stylesheet" href="/synthetic.css" />
     <link rel="stylesheet" href="/style.css" />
     <script defer src="/investigation.js"></script>
@@ -26,16 +26,15 @@
     <section id="homePage" class="site-page">
       <div class="home-hero">
         <div>
-          <p class="eyebrow">INDUSTRIAL FAILURE INVESTIGATION</p>
+          <p class="eyebrow">REAL PETROBRAS DATA · META MUSE SPARK</p>
           <h1>
-            A fault prediction is a start.<br /><em
-              >Find out what the evidence<br />actually supports.</em
-            >
+            Beyond prediction.<br /><em>Toward understanding.</em>
           </h1>
           <p class="hero-copy">
-            Industrial failures can produce overlapping symptoms. Measurements
-            can be incomplete or misleading. PetroMind helps engineers determine
-            what the evidence actually supports before they trust a diagnosis.
+            Traditional anomaly detection tells operators something changed.
+            PetroMind uses Meta Muse Spark to investigate why, using real Petrobras
+            oil-well sensor data and source-scoped engineering context. A plausible
+            prediction can still end with root cause not established.
           </p>
           <a href="/demo" class="primary page-link" data-case="0"
             >Explore the investigation <span>↗</span></a
@@ -132,8 +131,8 @@
     <section id="demoPage" class="site-page" hidden>
       <div class="demo-heading">
         <div>
-          <p class="eyebrow">INVESTIGATION WORKSPACE</p>
-          <h1>Historical incident replay</h1>
+          <p class="eyebrow">REAL PETROBRAS 3W DATA</p>
+          <h1>Petrobras 3W investigation</h1>
         </div>
         <div class="workspace-selectors">
           <label
@@ -676,7 +675,7 @@
           >
         </h1>
         <p class="tech-lead">
-          Real industrial measurements. A statistical hypothesis. Meta Muse
+          Real Petrobras 3W measurements. A statistical hypothesis. Meta Muse
           Spark checks whether the explanation holds up.
         </p>
         <div class="tech-reading-guide">
@@ -1056,13 +1055,13 @@
           >
         </div>
         <div class="tech-score-axis" aria-hidden="true">
-          <span>Correct classification</span><span>0% <b>100%</b></span
+          <span>Correct fault classifications (%)</span><span>0% <b>100%</b></span
           ><span></span>
         </div>
         <div
           id="techScoreChart"
           class="tech-score-chart"
-          aria-label="Classification accuracy on 33 incidents, scale zero to one hundred percent"
+          aria-label="Correct fault classifications on 33 Petrobras 3W incidents, scale zero to one hundred percent"
         ></div>
         <p
           id="techScoreDetail"
@@ -1090,7 +1089,7 @@
               <tr>
                 <th>Method</th>
                 <th>Correct</th>
-                <th>Accuracy</th>
+                <th>Correct rate</th>
               </tr>
             </thead>
             <tbody>
@@ -1115,7 +1114,7 @@
                 <td>3.0%</td>
               </tr>
               <tr data-method="graphrag" data-description="Muse investigates sensor evidence with equipment context and retrieved similar training incidents.">
-                <td>Sensor + GraphRAG</td>
+                <td>GraphRAG</td>
                 <td>5 / 33</td>
                 <td>15.2%</td>
               </tr>

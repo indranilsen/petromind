@@ -234,8 +234,8 @@
     $("syntheticLoadStatus").hidden = true;
     const root = $("syntheticContent"); root.hidden = false;
     const intro = node("div", undefined, "synthetic-intro");
-    intro.append(node("p", "EXTENSION · CONTROLLED SYNTHETIC PHYSICS", "eyebrow"),
-      node("h1", "A growing pressure difference. But what's causing it?"),
+    intro.append(node("p", "Demo Extension · Synthetic Physics Scenario", "eyebrow"),
+      node("h1", "Evidence-Based Physical Reasoning Through Pressure, Flow & Hydraulic Resistance"),
       node("p", "Pressure alone leaves two possible explanations under this simulated model: more production flow, or greater resistance to flow."),
       node("p", "Previously recorded Muse Spark investigation · simulated measurements, not Petrobras telemetry or a new live run.", "fine-print"));
     const content = [intro];

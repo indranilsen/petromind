@@ -1,3 +1,9 @@
+> **Historical implementation snapshot.** This document records an earlier UI
+> iteration; references to three pages or a deferred synthetic mode are not current.
+> Use the [project README](../README.md), [documentation index](README.md) and
+> [current setup runbook](hackathon-readiness.md). Original implementation and
+> verification details below are retained for provenance.
+
 # Classifier result and guided Muse investigation
 
 This refines the existing Home / Demo / Technology product. It retains the

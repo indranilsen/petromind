@@ -1,4 +1,13 @@
-# Current three-page product screenshots
+# Screenshot archive
+
+These are dated UI snapshots, not the current four-page product or proof of the
+owner's latest private recording. Images and their original verification notes
+are preserved for traceability. Start with the [current product overview](../../README.md)
+and [documentation index](../README.md).
+
+---
+
+# Earlier three-page product screenshots
 
 Actual Chromium viewport captures at **1440×900** and **390×844**, converted to
 lossless WebP. All model activity shown here is genuine **captured replay**. No
