@@ -2448,7 +2448,7 @@ select {
 }
 .evidence-node .node-kind {
   fill: #9dbbb1;
-  font-size: 8px !important;
+  font-size: 10px !important;
 }
 .evidence-node:hover rect,
 .evidence-node:focus rect {

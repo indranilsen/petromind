@@ -534,48 +534,39 @@
       claim_contradicted: "CLAIM CONTRADICTED",
       not_recorded: "NOT SEPARATELY ASSESSED",
     }[summary.status];
-    const causal = result.findings.filter(
-      (f) =>
-        f.scope === "diagnostic_conclusion" ||
-        (!f.scope && ["unsupported", "hypothesis"].includes(f.basis)),
-    );
-    const causalGaps = causal
-      .filter((f) => f.missing_premise)
-      .map((f) => f.missing_premise);
-    const text = causalGaps.join(" ");
-    const discrimination =
-      /discrimin|specific|sufficien|exclud|alternativ|distinguish/i.test(text);
-    const necessity = /necess|always|universal/i.test(text);
-    const context = /per.well|context|topolog|applicab|location/i.test(text);
-    const requirements = [];
-    if (discrimination)
-      requirements.push(
-        "Evidence distinguishing the suspected cause from other faults with similar measurements.",
-      );
-    if (context)
-      requirements.push(
-        "Evidence connecting this measurement pattern to the suspected cause in the applicable well context.",
-      );
-    if (necessity)
-      requirements.push(
-        "An applicable engineering rule supporting the claimed necessary relationship.",
-      );
-    if (!requirements.length)
-      requirements.push(...summary.uncertain.slice(0, 2));
-    const requests = result.findings.flatMap((f) => {
+    // Do not interpret free-text gaps as physical rules. Keep each request tied
+    // to its recorded finding and preserve negation, conditions and terminology.
+    const requirementSources = [];
+    const requests = [];
+    result.findings.forEach((f, findingIndex) => {
+      const premise =
+        typeof f.missing_premise === "string" ? f.missing_premise.trim() : "";
       const n = f.next_evidence;
-      if (typeof n === "string")
-        return n ? [{ text: n, kind: "legacy_request" }] : [];
-      return n && n.kind !== "none"
-        ? [{ text: n.purpose || "", kind: n.kind, target: n.target }].filter(
-            (x) => x.text,
-          )
-        : [];
+      const structured =
+        n && typeof n === "object" && n.kind && n.kind !== "none";
+      const purpose =
+        structured && typeof n.purpose === "string" ? n.purpose.trim() : "";
+      const legacy = typeof n === "string" ? n.trim() : "";
+      if (purpose || legacy)
+        requests.push({
+          text: purpose || legacy,
+          kind: structured ? n.kind : "legacy_request",
+          target: structured ? n.target : "",
+          findingIndex,
+        });
+      if (purpose || premise)
+        requirementSources.push({
+          text: purpose || premise,
+          source: purpose ? "recorded evidence request" : "recorded missing premise",
+          findingIndex,
+          premise,
+          citations: [...(f.citations || [])],
+        });
     });
-    const noTest = requests.some(
-      (n) =>
-        n.kind === "no_verified_discriminating_test" ||
-        /no verified.*(?:test|basis)/i.test(n.text),
+    const requirements = requirementSources.map((r) => r.text);
+    const noTest = result.findings.some((f) =>
+      f.next_evidence?.kind === "no_verified_discriminating_test" ||
+      (typeof f.next_evidence === "string" && /^No verified discriminating test (?:is |was )?(?:supplied|provided|identified|available)\b/i.test(f.next_evidence.trim())),
     );
     const comparisons = summary.confirmed.filter(
       (f) =>
@@ -599,12 +590,9 @@
       explanation,
       comparisons,
       nextPlan: {
-        question: discrimination
-          ? "Can the observed measurement pattern be distinguished from patterns produced by other faults?"
-          : necessity
-            ? "Does the proposed fault necessarily produce this pattern in the applicable context?"
-            : `What evidence is needed to assess ${suspected.toLowerCase()} as the cause?`,
+        question: `What evidence is needed to assess ${suspected.toLowerCase()} as the cause?`,
         requirements,
+        requirementSources,
         requests,
         limitation: noTest
           ? "The investigation did not identify a verified test that can conclusively distinguish these causes."

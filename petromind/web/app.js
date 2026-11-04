@@ -1862,8 +1862,16 @@ function renderFinalFinding(box, result, events) {
     el("strong", summary.nextPlan.question, "unresolved-question"),
   );
   const requirements = el("ul");
-  for (const requirement of summary.nextPlan.requirements)
-    requirements.append(narrative("li", requirement));
+  for (const requirement of summary.nextPlan.requirementSources) {
+    const item = narrative("li", requirement.text);
+    item.append(el("small", `Finding ${requirement.findingIndex + 1} · ${requirement.source}`, "fine-print"));
+    if (requirement.premise && requirement.premise !== requirement.text) {
+      const origin = el("details");
+      origin.append(el("summary", "Original missing premise"), narrative("p", requirement.premise));
+      item.append(origin);
+    }
+    requirements.append(item);
+  }
   if (!requirements.children.length)
     requirements.append(
       el(

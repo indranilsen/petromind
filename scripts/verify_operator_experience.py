@@ -19,6 +19,7 @@ def verify(browser, app, url, screenshots=None, *, fixture=False):
     errors, paid = [], []
     before = canonical(app.cases)
     checks = 0
+    graph_sizes = []
     for width, height, label in [
         (1440, 900, "desktop"),
         (1024, 768, "tablet"),
@@ -78,6 +79,7 @@ def verify(browser, app, url, screenshots=None, *, fixture=False):
                 "What should be verified next?"
                 in page.locator("#insideAssessment").inner_text()
             )
+            assert not page.evaluate("showAllEvidence")
             shot("finding")
             for _ in range(3):
                 page.locator("#operatorView").click()
@@ -143,18 +145,65 @@ def verify(browser, app, url, screenshots=None, *, fixture=False):
             ).count() == page.evaluate(
                 "PublicInvestigation.graph(visibleEvents()).edges.length"
             )
+            full = page.evaluate(
+                "JSON.parse(JSON.stringify(PublicInvestigation.graph(visibleEvents())))"
+            )
+            graph_sizes.append(len(full["nodes"]))
+            actual_edges = page.locator("#evidenceGraph .evidence-edge").evaluate_all(
+                "els=>els.map(e=>[e.dataset.from,e.dataset.to,e.dataset.relation])"
+            )
+            assert sorted(actual_edges) == sorted(
+                [e["from"], e["to"], e["label"]] for e in full["edges"]
+            )
+            connected = {v for e in full["edges"] for v in (e["from"], e["to"])}
+            for node in full["nodes"]:
+                locator = page.locator(f'[data-node-id="{node["id"]}"]')
+                assert locator.count() == 1
+                if node["id"] not in connected:
+                    assert not any(node["id"] in e[:2] for e in actual_edges)
+                locator.scroll_into_view_if_needed()
+                locator.click()
+                assert page.locator("#nodeDialog").is_visible()
+                assert (
+                    json.loads(page.locator("#nodeData").text_content()) == node["data"]
+                ), (node["id"], page.locator("#nodeData").text_content(), node["data"])
+                page.locator("#closeNode").click()
+            # Verify actual SVG text bounds, rather than merely counting labels.
+            clipped = page.locator(".evidence-node").evaluate_all("""els=>els.flatMap(n=>{
+                const r=n.querySelector('rect').getBBox();
+                return [...n.querySelectorAll('text')].filter(t=>{const b=t.getBBox();return b.x<r.x||b.x+b.width>r.x+r.width+1||parseFloat(getComputedStyle(t).fontSize)<10}).map(t=>({id:n.dataset.nodeId,text:t.textContent,width:t.getBBox().width,nodeWidth:r.width,font:getComputedStyle(t).fontSize}));
+            })""")
+            assert not clipped, clipped
             page.locator("#graphControls").get_by_role(
                 "button", name="Zoom in", exact=True
             ).click()
             assert "125%" in page.locator("#graphControls").inner_text()
+            viewport = page.locator("#evidenceGraph").locator("..")
+            page.clock.run_for(32)
+            viewport.scroll_into_view_if_needed()
+            viewport.evaluate("e=>{e.scrollTop=0;e.scrollLeft=0}")
+            box = viewport.bounding_box()
+            start_y = min(height - 30, box["y"] + box["height"] - 10)
+            end_y = max(270, box["y"] + 10)
+            page.mouse.move(box["x"] + 3, start_y)
+            page.mouse.down()
+            page.mouse.move(box["x"] + 3, end_y, steps=5)
+            page.mouse.up()
+            assert viewport.evaluate("e=>e.scrollHeight<=e.clientHeight||e.scrollTop>0")
             page.locator("#graphControls").get_by_role(
                 "button", name="Reset view", exact=True
             ).click()
-            page.locator("#graphPanel").scroll_into_view_if_needed()
+            viewport.scroll_into_view_if_needed()
+            viewport.evaluate("e=>window.scrollBy(0,e.getBoundingClientRect().top-260)")
+            page.clock.run_for(32)
             shot("full-graph")
-            page.locator(".evidence-node.type-measurement").first.click()
-            assert page.locator("#nodeDialog").is_visible()
-            page.locator("#closeNode").click()
+            page.locator("#operatorView").click()
+            assert page.locator(
+                "#operatorResult .operator-investigation-summary"
+            ).is_visible()
+            page.locator("#operatorResult [data-open-finding]").click()
+            assert page.evaluate("showAllEvidence")
+            assert page.locator(".evidence-node").count() == len(full["nodes"])
             assert (
                 page.locator(".physical-evidence-diagram .physical-card").count() == 3
             )
@@ -172,6 +221,7 @@ def verify(browser, app, url, screenshots=None, *, fixture=False):
     assert not paid, paid
     assert canonical(app.cases) == before
     return {
+        "full_graph_entities": graph_sizes,
         "viewports": 3,
         "case_viewport_journeys": checks,
         "javascript_errors": 0,

@@ -41,6 +41,9 @@ const s=p.operatorConclusion(all);
 assert.equal(s.rootVerdict,'NOT ESTABLISHED');assert(s.suspected.includes('obstruction'));
 assert.equal(assessment.verdict,'PARTIALLY_SUPPORTED');
 assert(s.nextPlan.requirements.length);assert(s.nextPlan.question);
+assert(s.nextPlan.requirements.some(t=>t.includes('other causes')));
+assert.equal(s.nextPlan.requirementSources[0].findingIndex,3);
+assert.equal(s.nextPlan.requirementSources[0].premise,assessment.findings[3].missing_premise);
 assert(s.nextPlan.limitation.includes('did not identify a verified test'));
 assert.equal(JSON.stringify(all),before);
 assert.equal(p.operatorConclusion(all.slice(0,-1)),null);
@@ -71,6 +74,26 @@ def test_operator_summary_and_each_finding_control_after_repeated_tab_switches(s
     capture_dir, run, _row, bundle = saved
     import_saved(capture_dir, run, bundle)
     app = DemoApp(capture_dir, saved_directory=bundle)
+    # Layout-only received-record fixture, not a scientific benchmark or saved run.
+    # Seven independent context records exercise a graph larger than 48 entities.
+    events = app.cases[0]["saved_investigation"]["events"]
+    events.insert(
+        -2,
+        {
+            "kind": "tool_result",
+            "tool": "lookup_knowledge",
+            "facts": [
+                {
+                    "citation_id": f"ui-layout:{i}",
+                    "subject": f"layout_context_{i}",
+                    "relation": "documents",
+                    "object": f"layout_quantity_{i}",
+                    "scope": "SYNTHETIC UI LAYOUT ONLY",
+                }
+                for i in range(7)
+            ],
+        },
+    )
     server = make_server(app, 0)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     screenshots = Path(
@@ -92,8 +115,76 @@ def test_operator_summary_and_each_finding_control_after_repeated_tab_switches(s
                     fixture=True,
                 )
                 assert report["case_viewport_journeys"] == 6
+                assert max(report["full_graph_entities"]) >= 48
             finally:
                 browser.close()
     finally:
         server.shutdown()
         server.server_close()
+
+
+@pytest.mark.parametrize(
+    "premise,evidence_request",
+    [
+        (
+            "No additional specificity evidence is needed; the gap concerns calibration.",
+            None,
+        ),
+        (
+            "If topology is verified, a necessity rule may be relevant; otherwise assess calibration.",
+            None,
+        ),
+        ("The hydraulic impedance criterion has not been supplied.", None),
+        ("", None),
+        (
+            "",
+            {
+                "kind": "no_verified_discriminating_test",
+                "target": "fault:9",
+                "purpose": "",
+            },
+        ),
+        (
+            "A criterion is missing.",
+            {
+                "kind": "documented_rule",
+                "target": "fault:9",
+                "purpose": "Provide a documented criterion separating these causes.",
+            },
+        ),
+        (
+            "A discriminating criterion is missing.",
+            {
+                "kind": "no_verified_discriminating_test",
+                "target": "fault:9",
+                "purpose": "No verified discriminating test is supplied.",
+            },
+        ),
+    ],
+)
+def test_next_evidence_preserves_negation_conditions_and_source(
+    premise, evidence_request
+):
+    import json
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node required for presentation checks")
+    script = r"""
+const assert=require('node:assert/strict'),p=require('./petromind/web/investigation.js');
+const [premise,request]=JSON.parse(process.argv[1]);
+const f={statement:'Causal claim',scope:'diagnostic_conclusion',basis:'hypothesis',verdict:'NOT_ESTABLISHED',missing_premise:premise,citations:['measurement:P-PDG'],next_evidence:request||{kind:'none',purpose:'',target:''}};
+const events=[{kind:'evidence_received',hypothesis:9,observations:{}},{kind:'tool_result',tool:'submit_audit',assessment:{verdict:'PARTIALLY_SUPPORTED',findings:[f]}},{kind:'completion',status:'completed'}];
+const before=JSON.stringify(events),plan=p.operatorConclusion(events).nextPlan;
+const expected=request?.purpose||premise;
+assert.deepEqual(plan.requirements,expected?[expected]:[]);
+assert.equal(plan.noTest,request?.kind==='no_verified_discriminating_test');
+if(expected){assert.equal(plan.requirementSources[0].findingIndex,0);assert.equal(plan.requirementSources[0].premise,premise);assert.deepEqual(plan.requirementSources[0].citations,f.citations);}
+assert.equal(JSON.stringify(events),before);
+assert(!plan.question.includes('necessarily'));
+"""
+    subprocess.run(
+        [node, "-e", script, json.dumps([premise, evidence_request])],
+        cwd=Path(__file__).resolve().parents[1],
+        check=True,
+    )
