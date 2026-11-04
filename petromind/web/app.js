@@ -811,12 +811,13 @@ $("closeSensor").onclick = () => $("sensorDialog").close();
 let pageName =
   location.pathname === "/technology"
     ? "technology"
-    : location.pathname === "/demo"
+    : location.pathname === "/extension"
+      ? "extension"
+      : location.pathname === "/demo"
       ? "demo"
       : "home";
 let workspaceView = "operator",
   execution = "captured",
-  synthetic = false,
   focusSensor = null,
   showAllEvidence = false,
   selectedFinding = null;
@@ -1042,7 +1043,6 @@ function syncCapturedClock() {
     execution !== "live" &&
     pageName === "demo" &&
     checkpointReached() &&
-    !synthetic &&
     r.phase === 2 &&
     r.playing &&
     r.cursor < r.events.length;
@@ -1466,7 +1466,7 @@ function renderClassifierCandidates(ranked) {
 function renderPlatform() {
   if (!cases.length) return;
   if (execution === "saved" && !c().saved_investigation) execution = "captured";
-  for (const name of ["home", "demo", "technology"])
+  for (const name of ["home", "demo", "extension", "technology"])
     $(name + "Page").hidden = pageName !== name;
   document
     .querySelectorAll(".site-nav a")
@@ -1478,9 +1478,10 @@ function renderPlatform() {
           : "false",
       ),
     );
+  window.PetroMindSynthetic?.activate(pageName === "extension");
+  if (pageName === "extension") return;
   $("caseSelect").value = String(current);
   $("caseSelect").disabled = liveBusy;
-  $("scenarioSelect").disabled = liveBusy;
   $("executionSelect").disabled = liveBusy;
   $("executionSelect").value = execution;
   const liveOption = $("executionSelect").querySelector('[value="live"]');
@@ -1490,13 +1491,6 @@ function renderPlatform() {
     : "Run live investigation · not enabled";
   $("savedExecution").disabled = !c().saved_investigation;
   $("savedExecution").hidden = !c().saved_investigation;
-  $("syntheticNotice").hidden = !synthetic;
-  $("historicalWorkspace").hidden = synthetic;
-  document.querySelector(".demo-heading h1").textContent = synthetic
-    ? "Synthetic hydraulic investigation" : "Historical incident replay";
-  $("caseSelect").closest("label").hidden = synthetic;
-  $("operatorView").parentElement.hidden = synthetic;
-  window.PetroMindSynthetic?.activate(synthetic && pageName === "demo");
   $("consoleView").hidden = workspaceView !== "operator";
   $("insidePanel").hidden = workspaceView !== "inside";
   $("operatorView").classList.toggle("active", workspaceView === "operator");
@@ -2035,7 +2029,7 @@ function showFindingEvidence(index) {
   });
 }
 function beginInvestigation() {
-  if (!checkpointReached() || synthetic || liveBusy) return;
+  if (!checkpointReached() || liveBusy) return;
   const r = investigation();
   if (r.phase === 2) {
     workspaceView = "inside";
@@ -2062,7 +2056,6 @@ async function startLive() {
   if (
     liveBusy ||
     !status.live_enabled ||
-    synthetic ||
     !checkpointReached() ||
     investigation().phase === 2
   )
@@ -2413,7 +2406,7 @@ const architectureData = [
   [
     "Telemetry",
     "Real replay / synthetic boundary",
-    "Verified private mapping selects a real 600-sample window. Viewer telemetry stays separate from Muse’s frozen packet. The optional synthetic M1 recording uses its own validated replay contract; it is not Petrobras data or a new live run.",
+    "Verified private mapping selects a real 600-sample window. Viewer telemetry stays separate from Muse’s frozen packet. The separate Extension page uses a validated synthetic replay; it is not Petrobras data or a new live run.",
   ],
   [
     "Statistical engine",
@@ -3121,8 +3114,6 @@ document.querySelectorAll(".page-link").forEach(
       if (a.dataset.case !== undefined && !liveBusy) {
         const changed = current !== Number(a.dataset.case);
         current = Number(a.dataset.case);
-        synthetic = false;
-        $("scenarioSelect").value = "historical";
         if (changed) {
           index = 0;
           workspaceView = "operator";
@@ -3139,9 +3130,11 @@ window.onpopstate = () =>
   navigate(
     location.pathname === "/technology"
       ? "technology"
-      : location.pathname === "/demo"
-        ? "demo"
-        : "home",
+      : location.pathname === "/extension"
+        ? "extension"
+        : location.pathname === "/demo"
+          ? "demo"
+          : "home",
     false,
   );
 $("caseSelect").onchange = () => {
@@ -3161,16 +3154,6 @@ $("graphToggle").onclick = () => {
 };
 $("executionSelect").onchange = () => {
   execution = $("executionSelect").value;
-  renderPlatform();
-};
-$("scenarioSelect").onchange = () => {
-  synthetic = $("scenarioSelect").value === "synthetic";
-  resetPlayback();
-  renderPlatform();
-};
-$("returnHistorical").onclick = () => {
-  synthetic = false;
-  $("scenarioSelect").value = "historical";
   renderPlatform();
 };
 $("operatorView").onclick = () => {
@@ -3231,11 +3214,6 @@ $("closeNode").onclick = () => $("nodeDialog").close();
     if (!cr.ok || !sr.ok) throw Error("Reviewed capture could not be loaded");
     cases = (await cr.json()).cases;
     status = await sr.json();
-    const syntheticOption = $("scenarioSelect").querySelector('[value="synthetic"]');
-    syntheticOption.disabled = !status.synthetic_replay_enabled;
-    syntheticOption.textContent = status.synthetic_replay_enabled
-      ? "Synthetic hydraulic investigation · increased resistance"
-      : "Synthetic hydraulic investigation · not supplied";
     index = 0;
     const preferred = cases.findIndex(
       (caseData) => caseData.saved_investigation,

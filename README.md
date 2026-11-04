@@ -387,9 +387,12 @@ checks numeric interpretation separately from physical inference. See the
 [execution status and limitations](docs/milestone5-status.md). No live scientific
 capability or improvement is claimed from offline/mock tests.
 
-### Optional synthetic investigation scenario
+### Optional Extension page
 
-Replay the verified c-7a91 hydraulic investigation alongside the historical demo
-with `--synthetic-replay .petromind/PetroMind-Synthetic-Showcase`. This is a
-separate captured-only contract: no detector or classifier is fabricated, and
-no new API calls are made. See [setup and verification](docs/synthetic-investigation-demo.md).
+**HOME | DEMO | EXTENSION | TECHNOLOGY**
+
+Demo remains the historical Petrobras 3W experience. The separate **Extension**
+page at `/extension` replays the verified synthetic hydraulic investigation with
+its own before/after story and collapsed technical evidence. Keep the existing
+`--synthetic-replay .petromind/PetroMind-Synthetic-Showcase` server argument.
+No new API calls are made. See [setup and focused verification](docs/synthetic-investigation-demo.md).

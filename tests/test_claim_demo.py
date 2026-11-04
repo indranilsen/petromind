@@ -367,10 +367,10 @@ def test_mock_live_v2_execution_is_separate_idempotent_and_budgeted(
         app.live(TASKS[1], "a" * 32)
 
 
-def test_three_pages_and_tool_scope_are_explicit(server):
+def test_four_pages_and_tool_scope_are_explicit(server):
     _, url = server
     with httpx.Client(trust_env=False) as client:
-        for path in ("/", "/demo", "/technology"):
+        for path in ("/", "/demo", "/extension", "/technology"):
             response = client.get(url + path)
             assert response.status_code == 200
             assert "Main navigation" in response.text

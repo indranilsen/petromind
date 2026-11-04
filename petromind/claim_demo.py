@@ -452,6 +452,7 @@ def make_server(app, port=8765):
             files = {
                 "/": ("index.html", "text/html"),
                 "/demo": ("index.html", "text/html"),
+                "/extension": ("index.html", "text/html"),
                 "/technology": ("index.html", "text/html"),
                 "/app.js": ("app.js", "text/javascript"),
                 "/investigation.js": ("investigation.js", "text/javascript"),

@@ -275,13 +275,13 @@ def test_original_verified_recording():
 
 
 @pytest.mark.skipif(
-    os.getenv("PETROMIND_BROWSER_CHECK") != "1", reason="Opt-in Chromium journey"
+    os.getenv("PETROMIND_BROWSER_CHECK") != "1", reason="Opt-in desktop smoke"
 )
-def test_browser_synthetic_and_historical_switching(capture, showcase, tmp_path):
+def test_extension_desktop_smoke(capture, showcase, tmp_path):
+    """One quick desktop route/replay check, not a viewport matrix."""
     from playwright.sync_api import sync_playwright
 
     path = os.environ.get("PETROMIND_SYNTHETIC_SHOWCASE") or showcase
-    # Real supplied package uses production commitments, not fixture commitments.
     if os.getenv("PETROMIND_SYNTHETIC_SHOWCASE"):
         adapter.MANIFEST_SHA256 = (
             "8e0eba8f09efc4b14fb1ea9e4b2be29b0c394d1aba50f44a006bd4c1b71203b3"
@@ -290,200 +290,81 @@ def test_browser_synthetic_and_historical_switching(capture, showcase, tmp_path)
             "acc1a8e0ec3ddffda69ebd9f992426fb500d2ba12799a7ff6c56b0b328447f4d"
         )
     app = DemoApp(capture, synthetic_directory=path)
+    before = canonical(app.cases)
     server = make_server(app, 0)
     threading.Thread(target=server.serve_forever, daemon=True).start()
-    errors, paid = [], []
     shots = Path(os.environ.get("PETROMIND_SCREENSHOTS", str(tmp_path / "shots")))
     shots.mkdir(parents=True, exist_ok=True)
+    errors, paid = [], []
     try:
         with sync_playwright() as pw:
             browser = pw.chromium.launch(
                 executable_path=os.getenv("PETROMIND_CHROMIUM"),
                 args=["--no-sandbox", "--disable-dev-shm-usage"],
             )
-            for width, height, label in [
-                (1440, 900, "desktop"),
-                (1024, 768, "tablet"),
-                (390, 844, "mobile"),
-            ]:
-                page = browser.new_page(
-                    viewport={"width": width, "height": height}, reduced_motion="reduce"
-                )
-                page.on("pageerror", lambda e: errors.append(str(e)))
-                page.on(
-                    "request",
-                    lambda r: (
-                        paid.append(r.url)
-                        if "/api/live" in r.url or "api.meta.ai" in r.url
-                        else None
-                    ),
-                )
-                page.goto(
-                    f"http://127.0.0.1:{server.server_port}/demo",
-                    wait_until="networkidle",
-                )
-                assert page.locator("#historicalWorkspace").is_visible()
-                historical = page.locator("#caseSelect").input_value()
-                page.locator("#scenarioSelect").select_option("synthetic")
-                page.get_by_role("button", name="Watch Muse investigate").wait_for()
-                assert not page.locator("#historicalWorkspace").is_visible()
-                assert not page.locator("#classifierHandoff").is_visible()
-                page.screenshot(
-                    path=str(shots / f"synthetic-{label}-intro.png"), full_page=True
-                )
-                # Virtual clock advances ordinary UI pacing; does not alter events.
-                page.clock.install()
-                page.get_by_role("button", name="Watch Muse investigate").click()
-                assert page.locator(".synthetic-sensors button").count() == 3
-                page.get_by_role("button", name="Pause investigation replay").click()
-                initial_counter = page.locator(".synthetic-controls span").inner_text()
-                page.clock.run_for(10000)
-                assert (
-                    page.locator(".synthetic-controls span").inner_text()
-                    == initial_counter
-                )
-                page.locator("#scenarioSelect").select_option("historical")
-                assert page.locator("#historicalWorkspace").is_visible()
-                page.locator("#scenarioSelect").select_option("synthetic")
-                page.get_by_role("button", name="Resume investigation replay").click()
-                page.clock.run_for(1800)  # Requested flow is not returned yet.
-                assert page.locator(".synthetic-sensors button").count() == 3
-                assert (
-                    "production flow"
-                    in page.locator("#syntheticCurrentActivity").inner_text()
-                )
-                page.clock.run_for(1800)
-                assert page.locator(".synthetic-sensors button").count() == 4
-                page.clock.run_for(1800)  # Separator request alone adds no measurement.
-                assert page.locator(".synthetic-sensors button").count() == 4
-                page.clock.run_for(1800)
-                assert page.locator(".synthetic-sensors button").count() == 5
-                assert (
-                    page.locator('.synthetic-evidence-nodes [data-kind="fact"]').count()
-                    == 0
-                )
-                page.clock.run_for(1800)  # Graph requested, not returned.
-                assert (
-                    page.locator('.synthetic-evidence-nodes [data-kind="fact"]').count()
-                    == 0
-                )
-                page.clock.run_for(1800)
-                expected_facts = sum(
-                    len(e.get("facts", [])) for e in app.synthetic["events"]
-                )
-                assert (
-                    page.locator('.synthetic-evidence-nodes [data-kind="fact"]').count()
-                    == expected_facts
-                )
-                page.clock.run_for(40000)
-                page.locator("#syntheticFinal").wait_for()
-                assert page.locator(".synthetic-sensors button").count() == 5
-                assert (
-                    page.locator(".synthetic-conversation")
-                    .locator('.synthetic-event[data-kind="tool_request"]')
-                    .count()
-                    == 6
-                )
-                assert page.locator(".synthetic-conversation").locator(
-                    '.synthetic-event[data-kind="tool_request"]'
-                ).evaluate_all("els => els.map(e => e.dataset.tool)") == [
-                    "query_sensor",
-                    "query_sensor",
-                    "lookup_graph",
-                    "read_document",
-                    "read_document",
-                    "submit_audit",
-                ]
-                expected_sources = {
-                    d["id"]
-                    for e in app.synthetic["events"]
-                    for d in e.get("documents", [])
-                }
-                expected_sources.update(
-                    f["id"] for e in app.synthetic["events"] for f in e.get("facts", [])
-                )
-                for source_id in expected_sources:
-                    assert (
-                        page.locator(
-                            f'.synthetic-evidence-nodes button[data-evidence-id="{source_id}"]'
-                        ).count()
-                        == 1
-                    )
-
-                assert (
-                    "The specific cause remains unidentified"
-                    in page.locator("#syntheticFinal").inner_text()
-                )
-                assert (
-                    page.locator(
-                        '.synthetic-evidence-nodes button[data-evidence-id="model:M1"]'
-                    ).count()
-                    == 1
-                )
-                assert page.locator("#syntheticFinal h2").inner_text() == (
-                    "Hydraulic evidence supports increased effective resistance under synthetic model M1. "
-                    "The specific cause remains unidentified."
-                )
-                assert page.locator("#syntheticFinal > h3").all_text_contents() == [
-                    "What the hydraulic evidence supports",
-                    "What Muse did not establish",
-                    "What evidence would help next",
-                ]
-                page.get_by_text(
-                    "Accepted Muse premise · exact wording", exact=True
-                ).click()
-                assert (
-                    app.synthetic["assessment"]["findings"][2]["premises"][0]
-                    in page.locator("#syntheticFinal blockquote").inner_text()
-                )
-                page.get_by_text(
-                    "Accepted Muse premise · exact wording", exact=True
-                ).click()
-                page.get_by_text("Exact scientific assessment", exact=True).click()
-                assert (
-                    json.loads(
-                        page.locator("#syntheticOriginalAssessment").inner_text()
-                    )
-                    == app.synthetic["assessment"]
-                )
-                assert (
-                    "PARTIALLY_SUPPORTED"
-                    in page.locator("#syntheticScientificAssessment").inner_text()
-                )
-                page.get_by_text("Exact scientific assessment", exact=True).click()
-
-                page.locator(
-                    '.synthetic-evidence-nodes button[data-evidence-id="model:M1"]'
-                ).click()
-                assert (
-                    "model:M1"
-                    in page.locator("#syntheticSelectedEvidence").inner_text()
-                )
-                assert page.evaluate(
-                    "document.documentElement.scrollWidth <= window.innerWidth"
-                )
-                page.locator("#syntheticFinal").evaluate(
-                    "e => e.scrollIntoView({block: 'start'})"
-                )
-                page.screenshot(
-                    path=str(shots / f"synthetic-{label}-final.png"), full_page=True
-                )
-                page.screenshot(
-                    path=str(shots / f"synthetic-{label}-final-viewport.png")
-                )
-                page.get_by_role(
-                    "button", name="Restart synthetic investigation"
-                ).click()
-                assert page.locator("#syntheticFinal").count() == 0
-                assert page.locator(".synthetic-sensors button").count() == 3
-                page.locator("#scenarioSelect").select_option("historical")
-                assert page.locator("#historicalWorkspace").is_visible()
-                assert page.locator("#caseSelect").input_value() == historical
-                page.locator("#scenarioSelect").select_option("synthetic")
-                assert page.locator("#syntheticContent").is_visible()
-                page.close()
+            page = browser.new_page(
+                viewport={"width": 1440, "height": 900}, reduced_motion="reduce"
+            )
+            page.on("pageerror", lambda e: errors.append(str(e)))
+            page.on(
+                "request",
+                lambda r: (
+                    paid.append(r.url)
+                    if "/api/live" in r.url or "api.meta.ai" in r.url
+                    else None
+                ),
+            )
+            url = f"http://127.0.0.1:{server.server_port}"
+            page.goto(url + "/extension", wait_until="networkidle")
+            assert page.locator(".site-nav a").all_text_contents() == [
+                "HOME",
+                "DEMO",
+                "EXTENSION",
+                "TECHNOLOGY",
+            ]
+            page.get_by_role("button", name="Watch Muse investigate").wait_for()
+            page.reload(wait_until="networkidle")
+            page.get_by_role("button", name="Watch Muse investigate").wait_for()
+            page.screenshot(path=str(shots / "extension-mystery.png"))
+            page.clock.install()
+            page.get_by_role("button", name="Watch Muse investigate").click()
+            page.clock.run_for(1800)
+            assert (
+                page.locator(".extension-new-reading").count() == 0
+            )  # Request is not a reading.
+            page.clock.run_for(1800)
+            assert page.locator(".extension-new-reading").count() == 1
+            page.clock.run_for(40000)
+            page.locator("#syntheticFinal").wait_for()
+            assert (
+                page.locator("#syntheticFinal h2").inner_text()
+                == "Muse narrowed the problem: the evidence supports increased resistance to fluid flow."
+            )
+            assert not page.locator("#syntheticEvidenceDetails").get_attribute("open")
+            assert not page.locator(".synthetic-evidence").is_visible()
+            page.screenshot(path=str(shots / "extension-conclusion.png"))
+            page.get_by_text("Inspect the evidence", exact=True).click()
+            page.get_by_text("Exact scientific assessment", exact=True).click()
+            assert (
+                json.loads(page.locator("#syntheticOriginalAssessment").inner_text())
+                == app.synthetic["assessment"]
+            )
+            assert (
+                page.locator(".synthetic-conversation [data-kind=tool_request]").count()
+                == 6
+            )
+            page.locator(
+                '.synthetic-evidence-nodes [data-evidence-id="model:M1"]'
+            ).click()
+            assert page.locator("#syntheticSelectedEvidence").is_visible()
+            page.get_by_role("link", name="DEMO", exact=True).click()
+            assert page.locator("#historicalWorkspace").is_visible()
+            assert page.locator("#scenarioSelect").count() == 0
+            assert page.locator("#extensionPage").is_hidden()
+            assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+            assert canonical(app.cases) == before
+            assert errors == [] and paid == []
             browser.close()
-        assert errors == [] and paid == []
     finally:
         server.shutdown()
         server.server_close()

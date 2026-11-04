@@ -18,6 +18,7 @@
       <nav class="site-nav" aria-label="Main navigation">
         <a href="/" class="page-link">HOME</a
         ><a href="/demo" class="page-link">DEMO</a
+        ><a href="/extension" class="page-link">EXTENSION</a
         ><a href="/technology" class="page-link">TECHNOLOGY</a>
       </nav>
       <span class="header-caption">Industrial evidence assessment</span>
@@ -136,13 +137,6 @@
         </div>
         <div class="workspace-selectors">
           <label
-            >SCENARIO<select id="scenarioSelect">
-              <option value="historical">Real industrial incident · hydrate obstruction suspected</option>
-              <option value="synthetic" disabled>
-                Synthetic hydraulic investigation · not supplied
-              </option>
-            </select></label
-          ><label
             >INCIDENT<select id="caseSelect">
               <option value="0">01 · Pressure measurements</option>
               <option value="1">02 · Pressure-pattern comparison</option>
@@ -156,11 +150,6 @@
           ><button id="insideView" class="tab">Inside Muse</button>
         </div>
       </div>
-      <section id="syntheticNotice" class="synthetic-workspace" hidden aria-label="Synthetic hydraulic investigation">
-        <p id="syntheticLoadStatus" role="status">Loading verified synthetic recording…</p>
-        <button id="returnHistorical" class="quiet" hidden>Return to historical incident</button>
-        <div id="syntheticContent" hidden></div>
-      </section>
       <div id="historicalWorkspace" data-workflow-stage="monitoring">
         <section class="journey-guide" aria-label="Guided incident walkthrough">
           <div class="journey-topline">
@@ -667,6 +656,12 @@
             </div>
           </details>
         </section>
+      </div>
+    </section>
+    <section id="extensionPage" class="site-page" hidden aria-label="Extension · synthetic investigation">
+      <div id="syntheticNotice" class="synthetic-workspace">
+        <p id="syntheticLoadStatus" role="status">Loading the previously recorded synthetic investigation…</p>
+        <div id="syntheticContent" hidden></div>
       </div>
     </section>
     <section id="technologyPage" class="site-page" hidden>

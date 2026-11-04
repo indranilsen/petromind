@@ -54,3 +54,15 @@
 }
 .synthetic-final { scroll-margin-top: 105px; }
 .synthetic-final h2 { scroll-margin-top: 110px; }
+/* Extension owns its narrative; the historical Demo layout is untouched. */
+.synthetic-intro h1 { font-size: clamp(2rem, 3.4vw, 3rem); line-height: 1.12; margin: 12px 0 20px; }
+.extension-mystery-body, .extension-before-after { display: grid; grid-template-columns: 1.2fr 1fr; gap: 28px; align-items: center; margin: 24px 0; }
+.extension-before-after { grid-template-columns: 1fr 1fr; align-items: stretch; }
+.extension-before-after > div { padding: 20px; border: 1px solid #466e7e; border-radius: 14px; background: #102a30; }
+.extension-timeline { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0; }
+.extension-timeline li { border: 1px solid #466e7e; border-radius: 10px; padding: 10px; font-size: .85rem; }
+.extension-timeline .pending { color: #829ba4; border-style: dashed; }
+.extension-timeline .received { color: #a1e6d3; }
+.extension-new-reading { font-size: 1.25rem; padding: 20px; border: 1px solid #84cbb7; border-radius: 14px; background: #10322f; }
+#syntheticEvidenceDetails { border-top: 1px solid #294752; padding-top: 18px; margin-top: 32px; }
+@media (max-width: 740px) { .extension-mystery-body, .extension-before-after { grid-template-columns: 1fr; gap: 12px; } }
