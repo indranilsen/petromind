@@ -2448,7 +2448,7 @@ select {
 }
 .evidence-node .node-kind {
   fill: #9dbbb1;
-  font-size: 8px !important;
+  font-size: 10px !important;
 }
 .evidence-node:hover rect,
 .evidence-node:focus rect {
@@ -5523,3 +5523,237 @@ select {
     scroll-margin-top: 215px;
   }
 }
+
+/* Compact operator state and one complete findings view. */
+.classifier-handoff[hidden] {
+  display: none !important;
+}
+.operator-investigation-summary {
+  min-width: 0;
+  border: 1px solid #4a7774;
+  border-radius: 14px;
+  background: #122b33;
+  padding: 22px;
+}
+.operator-investigation-summary h3 {
+  font-size: 23px;
+  line-height: 1.3;
+  margin: 8px 0 12px;
+}
+.operator-investigation-summary p {
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+#consoleView .operator-panel {
+  min-width: 0;
+}
+#consoleView #operatorResult {
+  max-width: 100%;
+}
+#activityPanel {
+  margin-top: 14px;
+}
+.root-cause-status {
+  display: block;
+  font-size: 14px;
+  margin-top: 10px;
+  color: #bfe8d9;
+}
+.operator-next-steps {
+  margin: 18px 0;
+  padding: 22px 26px;
+  border: 1px solid #a58d61;
+  border-radius: 14px;
+  background: #252c2c;
+}
+.operator-next-steps h4 {
+  font-size: 23px;
+  margin: 5px 0 16px;
+}
+.unresolved-question {
+  display: block;
+  font-size: 17px;
+  line-height: 1.5;
+}
+.operator-next-steps h5 {
+  font-size: 14px;
+  margin: 20px 0 8px;
+}
+.operator-next-steps li {
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 7px 0;
+}
+.test-limitation {
+  padding: 12px 15px;
+  border-left: 3px solid #ebc77e;
+  background: #e1c47a0a;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.result-summary {
+  grid-template-columns: 1fr 1fr;
+}
+.sensor-term {
+  position: relative;
+  cursor: help;
+  border-bottom: 1px dotted #a8c5cd;
+  border-radius: 2px;
+}
+.sensor-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 12;
+  padding: 5px 9px;
+  border: 1px solid #75999d;
+  border-radius: 6px;
+  background: #07151e;
+  color: #e8f8f4;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1.5;
+  box-shadow: 0 4px 14px #0008;
+}
+.sensor-term:hover .sensor-tooltip,
+.sensor-term:focus .sensor-tooltip,
+.sensor-term.tooltip-open .sensor-tooltip {
+  display: block;
+}
+.mode-details {
+  font-size: 11px;
+  color: #adc6ca;
+}
+.mode-details summary {
+  cursor: pointer;
+}
+.mode-details p {
+  max-width: 650px;
+  padding: 12px;
+  line-height: 1.6;
+  background: #142c36;
+  border: 1px solid #3c5964;
+  border-radius: 8px;
+}
+#insideModeBadge {
+  font-size: 10px;
+  font-weight: 500;
+  color: #a1c7bd;
+}
+.capture-controls {
+  align-items: center;
+}
+#insideAssessment {
+  scroll-margin-top: 205px;
+}
+.finding-evidence-context {
+  margin: 16px 0;
+  padding: 16px 20px;
+  border-left: 4px solid #b1ebd6;
+  border-radius: 8px;
+  background: #17383b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.finding-evidence-context[hidden] {
+  display: none;
+}
+.graph-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+}
+.graph-scroll {
+  max-height: 640px;
+  overflow: auto;
+  touch-action: pan-x pan-y;
+}
+.evidence-node.selected-finding rect {
+  stroke: #d0ffe8;
+  stroke-width: 4;
+}
+.evidence-edge.finding-reference {
+  stroke: #c8f3dc;
+  stroke-width: 3;
+  opacity: 1;
+}
+#graphPanel {
+  scroll-margin-top: 205px;
+}
+#graphNodeList > button {
+  font-size: 13px;
+  padding: 12px 16px;
+  margin: 10px 0;
+}
+.physical-evidence-diagram {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin: 18px 0;
+}
+.physical-card {
+  border: 1px solid #45626b;
+  border-radius: 12px;
+  background: #142b36;
+  padding: 18px;
+  position: relative;
+}
+.physical-card + .physical-card::before {
+  content: "→";
+  position: absolute;
+  left: -18px;
+  top: 50%;
+  color: #9fbdc5;
+}
+.physical-card h5 {
+  font-size: 15px;
+  margin: 9px 0;
+}
+.physical-card p {
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.physical-card small {
+  font-size: 10px;
+  color: #aec7cc;
+  line-height: 1.5;
+}
+.physical-card.measured {
+  border-top: 3px solid #9cdebe;
+}
+.physical-card.documented {
+  border-top: 3px solid #8bb5cd;
+}
+.physical-card.gap {
+  border-top: 3px dashed #dec38c;
+}
+@media (max-width: 740px) {
+  .result-summary,
+  .physical-evidence-diagram {
+    grid-template-columns: 1fr;
+  }
+  .operator-next-steps {
+    padding: 18px;
+  }
+  .physical-card + .physical-card::before {
+    content: "↓";
+    left: 50%;
+    top: -22px;
+  }
+  #insideAssessment,
+  #graphPanel {
+    scroll-margin-top: 245px;
+  }
+  .capture-controls {
+    gap: 6px;
+  }
+  .capture-controls .quiet {
+    font-size: 11px;
+    padding: 10px;
+  }
+}
+.sensor-term.tooltip-dismissed .sensor-tooltip { display:none; }

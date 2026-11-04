@@ -56,6 +56,72 @@ const names = {
   "P-MON-CKP": "Choke inlet pressure",
   "P-JUS-CKP": "Choke outlet pressure",
 };
+let tooltipSerial = 0,
+  graphZoom = 1;
+function sensorLabel(sensor) {
+  return names[sensor] || c()?.sensor_definitions?.[sensor]?.name || sensor;
+}
+function canonicalPlain(text) {
+  let output = String(text || "");
+  for (const sensor of Object.keys(c()?.sensor_definitions || {}).sort(
+    (a, b) => b.length - a.length,
+  )) {
+    const label = sensorLabel(sensor);
+    if (label !== sensor) output = output.replaceAll(sensor, label);
+  }
+  return output;
+}
+function namedText(text) {
+  const fragment = document.createDocumentFragment(),
+    source = String(text || "");
+  const sensors = Object.keys(c()?.sensor_definitions || {})
+    .filter((s) => sensorLabel(s) !== s)
+    .sort((a, b) => b.length - a.length);
+  if (!sensors.length) {
+    fragment.append(source);
+    return fragment;
+  }
+  const escaped = sensors.map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  for (const part of source.split(
+    new RegExp("(" + escaped.join("|") + ")", "g"),
+  )) {
+    if (!sensors.includes(part)) {
+      fragment.append(part);
+      continue;
+    }
+    const term = el("span", sensorLabel(part), "sensor-term");
+    term.tabIndex = 0;
+    term.setAttribute("role", "button");
+    term.setAttribute(
+      "aria-label",
+      `${sensorLabel(part)}. Technical identifier: ${part}. Activate to inspect.`,
+    );
+    term.title = part;
+    term.dataset.sensorId = part;
+    const tip = el("span", part, "sensor-tooltip");
+    tip.id = "sensor-tip-" + ++tooltipSerial;
+    tip.setAttribute("role", "tooltip");
+    term.setAttribute("aria-describedby", tip.id);
+    term.append(tip);
+    term.onfocus = () => term.classList.remove("tooltip-dismissed");
+    term.onmouseenter = () => term.classList.remove("tooltip-dismissed");
+    term.onclick = () => { term.classList.toggle("tooltip-open"); term.classList.toggle("tooltip-dismissed",!term.classList.contains("tooltip-open")); };
+    term.onkeydown = (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        term.classList.toggle("tooltip-open");
+      }
+      if (e.key === "Escape") { term.classList.remove("tooltip-open"); term.classList.add("tooltip-dismissed"); }
+    };
+    fragment.append(term);
+  }
+  return fragment;
+}
+function narrative(tag, text, cls) {
+  const n = el(tag, undefined, cls);
+  n.append(namedText(text));
+  return n;
+}
 const groups = [
   { name: "Gas lift", cls: "gas-group", sensors: ["ABER-CKGL", "QGL"] },
   {
@@ -201,6 +267,7 @@ function renderTelemetry() {
       `sensor-hit ${sensorPositions[s] || ""} ${primary ? "claim-sensor" : "secondary-sensor"} ${st.trend}`,
     );
     b.dataset.sensor = s;
+    b.title = s;
     b.dataset.value = st.value === null ? "" : String(st.value);
     b.dataset.quality = st.quality;
     b.dataset.trend = st.trend;
@@ -1039,32 +1106,45 @@ function renderConversation() {
   const r = investigation(),
     events = visibleEvents();
   $("investigationLabel").textContent =
-    execution !== "live"
-      ? execution === "saved"
-        ? c().saved_investigation.disclosure
-        : "Captured Muse activity · automatic presentation pacing, not original token timing. Headings are interface labels; findings below are recorded public output."
-      : "Live Meta Muse · actual public events as received. No private reasoning or invented intermediate messages.";
-  $("captureControls").hidden =
-    execution === "live" || r.phase !== 2 || !checkpointReached();
-  $("capturePause").textContent = r.playing ? "Pause replay" : "Resume replay";
+    "Muse checks the proposed explanation against measurements and engineering context.";
+  const modeDisclosure =
+    execution === "live"
+      ? "A fresh Muse investigation using the enabled model and tools."
+      : "This demonstration replays a previously completed Muse investigation using its original recorded evidence and findings. No new AI request will be made.";
+  $("insideModeBadge").textContent =
+    execution === "live" ? "Live investigation" : "Investigation replay";
+  $("insideModeBadge").setAttribute("aria-label", modeDisclosure);
+  $("insideModeText").textContent =
+    modeDisclosure +
+    (execution !== "live"
+      ? " Event order is preserved; playback pacing is presentation timing, not original model timing."
+      : " Progress shows received tool activity.");
+  $("captureControls").hidden = r.phase !== 2 || !checkpointReached();
+  for (const id of ["capturePause", "captureRestart", "captureSkip"])
+    $(id).hidden = execution === "live";
+  $("capturePause").textContent = r.playing ? "Pause investigation" : "Continue investigation";
   $("capturePause").disabled = r.cursor >= r.events.length;
   $("captureSkip").disabled = r.cursor >= r.events.length;
   $("investigationActivity").textContent =
     !checkpointReached() || r.phase !== 2
       ? ""
       : liveBusy
-        ? "Live request running · awaiting the next actual event"
+        ? "Muse is investigating · waiting for evidence"
         : r.error
           ? "Stopped · no completed assessment substituted"
           : execution !== "live" && r.cursor < r.events.length
             ? r.playing
-              ? "Replaying captured activity…"
+              ? "Investigation in progress…"
               : "Replay paused"
-            : "Public investigation records received";
+            : "Investigation complete";
   $("investigationBrief").hidden = !checkpointReached() || r.phase !== 2;
   const received = events.find((e) => e.kind === "evidence_received");
-  $("investigationQuestion").textContent =
-    received?.claim || "Awaiting the public input packet.";
+  $("investigationQuestion").replaceChildren(
+    namedText(
+      received?.claim ||
+        "Waiting for the measurements and question under review.",
+    ),
+  );
   const observations = new Set(Object.keys(received?.observations || {}));
   for (const e of events) if (e.sensor && e.summary) observations.add(e.sensor);
   const facts = events.flatMap((e) => e.facts || []),
@@ -1109,11 +1189,11 @@ function renderConversation() {
           ? "Measurements and claim received"
           : e.kind === "tool_request"
             ? execution !== "live"
-              ? "Recorded tool request"
-              : "Actual live tool request"
+              ? "Evidence requested"
+              : "Evidence requested"
             : e.kind === "completion"
               ? "Execution status"
-              : "Actual public tool result",
+              : "Evidence retrieved",
         "event-origin",
       ),
     );
@@ -1131,13 +1211,15 @@ function renderConversation() {
       li.append(
         el(
           "p",
-          `Engineering context requested: ${e.topic}. These facts describe documented topics, not the verified layout of this particular well.`,
+          `Engineering context: ${canonicalPlain(e.topic)}. Documentation describes general topics, not a verified layout of this well.`,
         ),
       );
     for (const f of e.facts || []) {
       const fact = el(
         "button",
-        `${f.subject} · ${f.relation.replaceAll("_", " ")} · ${f.object}`,
+        canonicalPlain(
+          `${f.subject} · ${f.relation.replaceAll("_", " ")} · ${f.object}`,
+        ),
         "returned-fact",
       );
       fact.onclick = () => {
@@ -1202,24 +1284,25 @@ function renderConversation() {
         el("h3", "Assessment received"),
         el(
           "p",
-          "Read the scoped findings below, or expand the original returned statements.",
+          "Read the investigation finding above. Exact findings are available in the technical audit.",
         ),
       );
       const detail = el("details");
-      detail.append(
-        el(
-          "summary",
-          `Recorded verdict: ${e.assessment.verdict.replaceAll("_", " ")}`,
-        ),
-      );
+      detail.append(el("summary", "Assessment details"));
       for (const f of e.assessment.findings)
         detail.append(
           el("p", `${f.verdict.replaceAll("_", " ")}: ${f.statement}`),
         );
       li.append(detail);
     }
-    if (e.kind === "completion")
-      li.append(el("p", `${e.status} · ${e.reason}`));
+    if (e.kind === "completion") {
+      const d = el("details");
+      d.append(
+        el("summary", "Execution details"),
+        el("p", `${e.status} · ${e.reason}`),
+      );
+      li.append(d);
+    }
     feed.append(li);
   });
 }
@@ -1227,89 +1310,97 @@ function renderPhysicalHypotheses(events) {
   const box = $("physicalHypotheses");
   box.replaceChildren();
   const facts = events.flatMap((e) => e.facts || []),
-    assessment = PublicInvestigation.result(events);
-  const mechanisms = facts.filter((f) => f.relation === "described_as");
-  if (!mechanisms.length && !assessment) return;
-  const details = el("details"),
-    summary = el(
-      "summary",
-      "Physical explanation · sources and unresolved premises",
-    );
-  details.append(summary);
-  details.append(
+    summary = PublicInvestigation.operatorConclusion(events);
+  if (!facts.length && !summary) return;
+  box.append(
+    el("h4", "How the evidence connects"),
     el(
       "p",
-      "Public source facts and submitted findings, not a reconstruction of Muse’s private reasoning. Generic equipment associations are not verified installed topology.",
+      "Logical evidence diagram — not a piping diagram or a physical causal model.",
+      "fine-print",
     ),
   );
-  for (const f of mechanisms) {
-    details.append(
-      el("h4", `Documented description: ${f.object.replaceAll("_", " ")}`),
-      el("p", `Source: ${f.locator}. Scope: ${f.scope}.`),
-    );
-    const equipment = facts.find(
-      (x) => x.subject === f.subject && x.relation === "affects",
-    );
-    if (equipment)
-      details.append(
-        el(
+  const diagram = el("div", undefined, "physical-evidence-diagram");
+  function card(title, label, kind) {
+    const c = el("section", undefined, "physical-card " + kind);
+    c.append(el("small", label), el("h5", title));
+    diagram.append(c);
+    return c;
+  }
+  const observed = card(
+    "Observed measurement changes",
+    summary ? "SUPPORTED MEASUREMENTS" : "MEASUREMENTS RECEIVED",
+    "measured",
+  );
+  if (summary?.measured.length)
+    for (const m of summary.measured)
+      observed.append(
+        narrative(
           "p",
-          `Documented generic equipment association: ${equipment.object.replaceAll("_", " ")}.`,
+          `${m.sensor}: ${value(m.sensor, m.summary.first)} → ${value(m.sensor, m.summary.last)}`,
         ),
       );
-    const expectations = facts.filter((x) => x.relation.startsWith("example:"));
-    details.append(
+  else
+    observed.append(
       el(
         "p",
-        expectations.length
-          ? "Returned example directions: " +
-              expectations
-                .map((x) => `${x.object} ${x.relation.slice(8)}`)
-                .join("; ") +
-              ". A published example is not a universal or discriminating fault rule."
-          : "No verified fault-specific pressure expectation or discriminating test was returned. No differential-pressure model or installed flow path is inferred.",
+        "Read the supplied measurements in the evidence timeline; no new direction or causal inference is added here.",
       ),
     );
-  }
-  const observed = {
-    ...events.find((e) => e.kind === "evidence_received")?.observations,
-  };
-  for (const e of events)
-    if (e.sensor && e.summary) observed[e.sensor] = e.summary;
-  details.append(el("h4", "Actual observations available to Muse"));
-  const relevant = new Set([
-    "P-PDG",
-    "P-TPT",
-    ...facts
-      .filter((f) => f.relation.startsWith("example:"))
-      .map((f) => f.object),
-  ]);
-  for (const sensor of relevant) {
-    const reading = observed[sensor];
-    details.append(
-      el(
-        "p",
-        `${sensor}: ${!reading ? "Not observed by Muse; this example component cannot be evaluated." : !reading.available ? "No valid measurement was available." : `${value(sensor, reading.first)} → ${value(sensor, reading.last)}. Recorded endpoints, not proof of a mechanism.`}`,
-      ),
+  const documented = card(
+    "Documented comparison",
+    "ENGINEERING CONTEXT",
+    "documented",
+  );
+  if (summary?.comparisons.length)
+    documented.append(narrative("p", summary.comparisons[0].statement));
+  else {
+    const example = facts.find((f) =>
+      String(f.relation).startsWith("example:"),
+    );
+    documented.append(
+      example
+        ? narrative(
+            "p",
+            `${example.subject}: ${example.object} — ${example.relation.replaceAll("_", " ")}`,
+          )
+        : el(
+            "p",
+            "No supported example comparison was identified in this assessment.",
+          ),
     );
   }
-  for (const f of assessment?.findings || []) {
-    if (f.basis === "measurement") continue;
-    details.append(
-      el("h4", `Muse public finding · ${f.verdict.replaceAll("_", " ")}`),
-      el("p", f.statement),
-      el("p", `Premises: ${f.premises.join("; ")}`),
+  documented.append(
+    el(
+      "small",
+      "A source example or general association is not proof of this well’s cause.",
+    ),
+  );
+  const causal = card(
+    "Evidence needed for causation",
+    summary?.rootVerdict || "ASSESSMENT PENDING",
+    "gap",
+  );
+  if (summary?.nextPlan.requirements.length)
+    for (const requirement of summary.nextPlan.requirements.slice(0, 2))
+      causal.append(narrative("p", requirement));
+  else
+    causal.append(
       el(
         "p",
-        `Missing premise: ${f.missing_premise || "None stated within this finding’s narrow scope."}`,
-      ),
-      el(
-        "p",
-        `Next evidence: ${typeof f.next_evidence === "string" ? f.next_evidence : `${f.next_evidence.target}: ${f.next_evidence.purpose}`}`,
+        summary?.statusLabel ||
+          "Causal status is shown only after the assessment completes.",
       ),
     );
-  }
-  box.append(details);
+  box.append(diagram);
+  const sources = el("details");
+  sources.append(el("summary", "Engineering source facts and exact scope"));
+  for (const fact of facts)
+    sources.append(
+      narrative("p", `${fact.subject} · ${fact.relation} · ${fact.object}`),
+      el("small", `${fact.locator || ""} · ${fact.scope || ""}`),
+    );
+  box.append(sources);
 }
 
 function investigation() {
@@ -1556,8 +1647,8 @@ function renderPlatform() {
   $("runInstruction").textContent =
     execution !== "live"
       ? execution === "saved"
-        ? "Replay: plays a verified saved Muse investigation automatically. No new model call."
-        : "Replay: plays a previously captured Muse investigation automatically. No new model call."
+        ? "Replay: This demonstration replays a previously completed Muse investigation using its original recorded evidence and findings. No new AI request will be made. Playback advances automatically."
+        : "Replay: This demonstration replays a previously completed Muse investigation using its original recorded evidence and findings. No new AI request will be made. Playback advances automatically."
       : status.live_enabled
         ? `Live: runs a fresh Muse investigation with the enabled model and tools. Clicking Investigate uses the paid API within the prepared $${status.live_limits?.estimated_usd ?? 2} estimated cap.`
         : "Live is disabled. Prepare a fresh live protocol and restart with --enable-live; no API calls occur in replay.";
@@ -1605,33 +1696,56 @@ function renderPlatform() {
       ),
       el("p", `Recorded execution status: ${stopped}`, "fine-print"),
     );
-  if (ready && result) renderFinalFinding(box, result, events);
   $("insideAssessment").replaceChildren();
-  if (ready && (result || stopped)) {
-    const copy = box.cloneNode(true);
-    copy.removeAttribute("id");
-    for (const button of copy.querySelectorAll("[data-finding-index]"))
-      button.onclick = () => {
-        selectedFinding = "finding:" + button.dataset.findingIndex;
-        showAllEvidence = false;
-        $("completionEvidence").open = true;
-        renderEvidenceGraph();
-        $("graphPanel").open = true;
-        $("graphPanel").scrollIntoView({ block: "start" });
-      };
-    $("insideAssessment").append(copy);
-  }
-  for (const root of [box, $("insideAssessment")]) {
+  if (ready && result) {
+    renderFinalFinding($("insideAssessment"), result, events);
+    const summary = PublicInvestigation.operatorConclusion(events);
+    const compact = el("section", undefined, "operator-investigation-summary");
+    compact.append(
+      el("p", "Investigation complete", "eyebrow"),
+      el("h3", summary.statusLabel),
+      el("p", summary.headline),
+      el("p", `Classifier suspected: ${summary.suspected}.`),
+    );
+    const review = el("button", "Open investigation finding →", "primary");
+    review.dataset.openFinding = "true";
+    compact.append(review);
+    box.append(compact);
+  } else if (ready && stopped) {
+    box.append(el("p","Root-cause assessment incomplete","root-cause-status"));
+    const review=el("button","Review incomplete investigation →","quiet");review.dataset.openFinding="true";box.append(review);
+    const incomplete=box.cloneNode(true);incomplete.removeAttribute("id");$("insideAssessment").append(incomplete);
+  } else if (ready && r.phase === 2)
+    box.append(
+      el("h3", "Muse investigation in progress"),
+      el("p", "Follow the evidence and findings in Inside Muse."),
+    );
+  $("classifierHandoff").hidden = ready && r.phase === 2;
+  const modeHome = r.phase === 2 ? $("handoffDetails").querySelector(".handoff-detail-body") : $("investigationLaunch");
+  if(r.phase===2) modeHome.append($("executionControl"),$("runInstruction"));
+  else { modeHome.insertBefore($("executionControl"),$("nextScene")); modeHome.insertBefore($("runInstruction"),$("nextScene")); }
+
+  for (const root of [box, $("insideAssessment")])
     root.onclick = (event) => {
-      const button = event.target.closest("[data-inspect-evidence]");
-      if (!button) return;
-      workspaceView = "inside";
-      $("completionEvidence").open = true;
-      $("graphPanel").open = true;
-      renderPlatform();
-      $("completionEvidence").scrollIntoView({ block: "start" });
+      const finding = event.target.closest("[data-finding-index]");
+      if (finding) {
+        showFindingEvidence(Number(finding.dataset.findingIndex));
+        return;
+      }
+      if (event.target.closest("[data-open-finding]")) {
+        workspaceView = "inside";
+        renderPlatform();
+        followInvestigation();
+        return;
+      }
+      if (event.target.closest("[data-inspect-evidence]")) {
+        workspaceView = "inside";
+        $("completionEvidence").open = true;
+        $("graphPanel").open = true;
+        renderPlatform();
+        $("completionEvidence").scrollIntoView({ block: "start" });
+      }
     };
-  }
   $("inspectDetails").hidden = !ready || !result;
   renderTelemetry();
   renderPressureOverview();
@@ -1643,7 +1757,7 @@ function renderPlatform() {
       ?.classList.add("evidence-focus");
 }
 function renderFinalFinding(box, result, events) {
-  const summary = PublicInvestigation.conclusion(events);
+  const summary = PublicInvestigation.operatorConclusion(events);
   const mode =
     execution === "live"
       ? "NEW LIVE"
@@ -1653,11 +1767,16 @@ function renderFinalFinding(box, result, events) {
   const hero = el("section", undefined, "final-conclusion");
   hero.dataset.causeStatus = summary.status;
   hero.append(
-    el("p", `${mode} ASSESSMENT`, "eyebrow"),
+    el("p", "Investigation finding", "eyebrow"),
     el("h3", summary.headline),
-    el("p", summary.cause, "conclusion-cause"),
+    el(
+      "p",
+      `Suspected root cause: ${summary.suspected} — ${summary.rootVerdict}.`,
+      "conclusion-cause",
+    ),
+    el("strong", summary.statusLabel, "root-cause-status"),
   );
-  hero.append(el("p", summary.caveat, "conclusion-boundary"));
+  hero.append(el("p", summary.explanation, "conclusion-boundary"));
   box.append(hero);
   const comparison = el("div", undefined, "result-comparison");
   const classifier = el("section"),
@@ -1669,7 +1788,7 @@ function renderFinalFinding(box, result, events) {
   );
   muse.append(
     el("h4", "Muse investigation"),
-    el("strong", summary.cause),
+    el("strong", summary.statusLabel),
     el("p", "The findings below report what the received evidence supports."),
   );
   comparison.append(classifier, muse);
@@ -1686,9 +1805,9 @@ function renderFinalFinding(box, result, events) {
   if (summary.measured.length) {
     for (const m of summary.measured)
       confirmed.append(
-        el(
+        narrative(
           "p",
-          `${names[m.sensor] || m.sensor}: ${value(m.sensor, m.summary.first)} → ${value(m.sensor, m.summary.last)} (change ${value(m.sensor, m.summary.delta)}).`,
+          `${m.sensor}: ${value(m.sensor, m.summary.first)} → ${value(m.sensor, m.summary.last)} (change ${value(m.sensor, m.summary.delta)}).`,
           "confirmed-measurement",
         ),
       );
@@ -1700,7 +1819,8 @@ function renderFinalFinding(box, result, events) {
         (!f.scope && f.basis === "measurement")
       ),
   );
-  for (const f of other.slice(0, 2)) confirmed.append(el("p", f.statement));
+  for (const f of other.slice(0, 1))
+    confirmed.append(narrative("p", f.statement));
   if (!summary.measured.length && !other.length)
     confirmed.append(
       el(
@@ -1721,7 +1841,7 @@ function renderFinalFinding(box, result, events) {
     );
     const gaps = el("details");
     gaps.append(el("summary", "Read the recorded evidence gap"));
-    for (const gap of summary.uncertain) gaps.append(el("p", gap));
+    for (const gap of summary.uncertain) gaps.append(narrative("p", gap));
     uncertain.append(gaps);
   }
   if (!summary.uncertain.length)
@@ -1733,44 +1853,61 @@ function renderFinalFinding(box, result, events) {
           : "No separate causal gap was recorded. Read the claim's exact scope before drawing a root-cause conclusion.",
       ),
     );
-  const next = part("What would help next", "next");
-  const targets = summary.next.slice(0, 1);
-  for (const n of targets)
-    next.append(
-      el(
-        "p",
-        n.replace(/\b(fault|event) (\d+)\b/gi, (match, kind, id) =>
-          PublicInvestigation.faultNames[id]
-            ? `${PublicInvestigation.faultNames[id].toLowerCase()} (${kind.toLowerCase()} ${id})`
-            : match,
-        ),
-      ),
-    );
-  if (!targets.length)
-    next.append(
-      el(
-        "p",
-        "No additional evidence requirement was recorded. No new investigation step has been invented.",
-      ),
-    );
-  else
-    next.append(
-      el(
-        "small",
-        "Recorded evidence requests, not a validated field procedure or newly observed data.",
-      ),
-    );
   box.append(parts);
+  const next = el("section", undefined, "operator-next-steps");
+  next.dataset.resultPart = "next";
+  next.append(
+    el("p", "Next evidence", "eyebrow"),
+    el("h4", "What should be verified next?"),
+    el("strong", summary.nextPlan.question, "unresolved-question"),
+  );
+  const requirements = el("ul");
+  for (const requirement of summary.nextPlan.requirementSources) {
+    const item = narrative("li", requirement.text);
+    item.append(el("small", `Finding ${requirement.findingIndex + 1} · ${requirement.source}`, "fine-print"));
+    if (requirement.premise && requirement.premise !== requirement.text) {
+      const origin = el("details");
+      origin.append(el("summary", "Original missing premise"), narrative("p", requirement.premise));
+      item.append(origin);
+    }
+    requirements.append(item);
+  }
+  if (!requirements.children.length)
+    requirements.append(
+      el(
+        "li",
+        "No separate evidence requirement was specified for this claim.",
+      ),
+    );
+  next.append(
+    el("h5", "Evidence needed"),
+    requirements,
+    el("p", summary.nextPlan.limitation, "test-limitation"),
+  );
+  const requests = el("details");
+  requests.append(el("summary", "Assessment’s evidence requests and scope"));
+  for (const request of summary.nextPlan.requests)
+    requests.append(narrative("p", request.text));
+  if (!summary.nextPlan.requests.length)
+    requests.append(el("p", "No additional recommendation was supplied."));
+  requests.append(
+    el(
+      "p",
+      "These are evidence requirements, not newly identified tests, sensor readings or field procedures.",
+    ),
+  );
+  next.append(requests);
+  box.append(next);
   const inspect = el("button", "Inspect supporting evidence →", "primary");
   inspect.dataset.inspectEvidence = "true";
   box.append(inspect);
   const receipt = el("details", undefined, "full-receipt");
   receipt.append(
+    el("summary", "Technical audit · exact findings, verdicts and citations"),
     el(
-      "summary",
-      "Original assessment · exact verdicts, findings and citation receipts",
+      "p",
+      `Execution: ${mode}. Exact verdict: ${result.verdict.replaceAll("_", " ")}`,
     ),
-    el("p", `Recorded verdict: ${result.verdict.replaceAll("_", " ")}`),
     el(
       "p",
       `Contract: ${result.contract_version || "Not specified"}. This presentation does not regrade or modify it.`,
@@ -1815,18 +1952,34 @@ function renderFinalFinding(box, result, events) {
             "scope-gap",
           ),
         );
-      const button = el("button", "Show this evidence", "quiet");
-      button.dataset.findingIndex = result.findings.indexOf(f);
-      button.onclick = () => {
-        workspaceView = "inside";
-        $("completionEvidence").open = true;
-        selectedFinding = "finding:" + result.findings.indexOf(f);
-        showAllEvidence = false;
-        renderPlatform();
-        $("graphPanel").open = true;
-        $("graphPanel").scrollIntoView({ block: "start" });
-      };
-      item.append(button);
+      const index = result.findings.indexOf(f),
+        resolution = PublicInvestigation.findingEvidence(events, index);
+      if (resolution.available) {
+        const button = el(
+          "button",
+          resolution.citations.length
+            ? "Show this evidence"
+            : "Inspect the missing evidence",
+          "quiet",
+        );
+        button.dataset.findingIndex = index;
+        item.append(button);
+        if (!resolution.citations.length)
+          item.append(
+            el(
+              "p",
+              "No received source citation supports this finding; inspect its stated evidence gap.",
+              "fine-print",
+            ),
+          );
+      } else
+        item.append(
+          el(
+            "p",
+            "No visual source or measurement can be resolved for this finding.",
+            "fine-print",
+          ),
+        );
       group.append(item);
     }
     receipt.append(group);
@@ -1845,6 +1998,31 @@ function renderFinalFinding(box, result, events) {
       "fine-print",
     ),
   );
+}
+function showFindingEvidence(index) {
+  const resolution = PublicInvestigation.findingEvidence(
+    visibleEvents(),
+    index,
+  );
+  if (!resolution.available) return;
+  workspaceView = "inside";
+  selectedFinding = "finding:" + index;
+  showAllEvidence = false;
+  const entries = visibleEvents();
+  selectedEvidenceEvent = entries.findLastIndex((e) => e.assessment);
+  $("completionEvidence").open = true;
+  $("graphPanel").open = true;
+  renderPlatform();
+  $("completionEvidence").open = true;
+  $("graphPanel").open = true;
+  renderEvidenceGraph();
+  requestAnimationFrame(() => {
+    $("graphPanel").scrollIntoView({ block: "start", behavior: "instant" });
+    const node = Array.from(
+      $("evidenceGraph").querySelectorAll("[data-node-id]"),
+    ).find((n) => n.dataset.nodeId === selectedFinding);
+    node?.focus({ preventScroll: true });
+  });
 }
 function beginInvestigation() {
   if (!checkpointReached() || synthetic || liveBusy) return;
@@ -1992,6 +2170,24 @@ function renderEvidenceGraph() {
           selectedFinding,
         ),
     nodes = new Map(projection.nodes.map((n) => [n.id, n]));
+  const context = $("findingEvidenceContext");
+  context.replaceChildren();
+  context.hidden = !selectedFinding;
+  if (selectedFinding) {
+    const index = Number(selectedFinding.split(":")[1]),
+      selected = PublicInvestigation.findingEvidence(events, index);
+    if (selected.finding)
+      context.append(
+        el("strong", "Evidence for the selected finding"),
+        narrative("p", selected.finding.statement),
+        el(
+          "p",
+          selected.citations.length
+            ? `${selected.citations.length} cited evidence item(s) are connected to this finding. Highlighted links show citations, not proof of cause.`
+            : "This finding records missing evidence. No received source citation establishes it.",
+        ),
+      );
+  }
   const graph = $("evidenceGraph"),
     active = selectedEvidenceEvent ?? events.length - 1;
   const mobile =
@@ -2005,7 +2201,9 @@ function renderEvidenceGraph() {
         : Math.floor((available - 24 - (columns - 1) * 18) / columns);
   const heights = Array(columns).fill(24);
   for (const n of nodes.values()) {
-    if (n.sensor) n.label = names[n.sensor] || n.label;
+    n.technicalLabel = n.technicalLabel || n.label;
+    n.label = canonicalPlain(n.label);
+    if (n.sensor) n.label = sensorLabel(n.sensor);
     const words = n.label.replaceAll("_", " ").split(/\s+/),
       lines = [""];
     for (const word of words) {
@@ -2051,7 +2249,7 @@ function renderEvidenceGraph() {
     if (!a || !b) continue;
     const line = svg("path", {
       d: `M${a.x + nodeWidth} ${a.y + 30} C${a.x + nodeWidth + 16} ${a.y + 30},${b.x - 22} ${b.y + 30},${b.x} ${b.y + 30}`,
-      class: `evidence-edge relation-${edge.kind} ${edge.event === active ? "current-relation" : ""}`,
+      class: `evidence-edge relation-${edge.kind} ${edge.event === active ? "current-relation" : ""} ${selectedFinding && (edge.from === selectedFinding || edge.to === selectedFinding) ? "finding-reference" : ""}`,
       "data-from": edge.from,
       "data-to": edge.to,
       "data-relation": edge.label,
@@ -2066,13 +2264,16 @@ function renderEvidenceGraph() {
     graph.append(line);
   }
   for (const n of nodes.values()) {
-    if (n.sensor) n.label = names[n.sensor] || n.label;
+    n.technicalLabel = n.technicalLabel || n.label;
+    n.label = canonicalPlain(n.label);
+    if (n.sensor) n.label = sensorLabel(n.sensor);
     const isActive = n.eventKeys.includes(active);
     const g = svg("g", {
-      class: `evidence-node type-${n.kind} verdict-${n.data?.verdict || "none"} ${isActive ? "current-node" : ""}`,
+      class: `evidence-node type-${n.kind} verdict-${n.data?.verdict || "none"} ${isActive ? "current-node" : ""} ${n.id === selectedFinding ? "selected-finding" : ""}`,
       role: "button",
       tabindex: 0,
-      "aria-label": n.label,
+      "aria-label":
+        n.label + (n.sensor ? `. Technical identifier: ${n.sensor}` : ""),
       "data-node-id": n.id,
       "data-event-keys": n.eventKeys.join(","),
     });
@@ -2095,7 +2296,12 @@ function renderEvidenceGraph() {
     n.lines.forEach((line, i) =>
       g.append(svg("text", { x: n.x + 10, y: n.y + 38 + i * 16 }, line)),
     );
-    g.append(svg("title", {}, n.label));
+    g.append(svg("title", {}, n.sensor || n.technicalLabel || n.label));
+    g.onfocus = () => {
+      $("graphIdentifier").textContent = n.sensor
+        ? `${sensorLabel(n.sensor)} · identifier ${n.sensor}`
+        : "Select a node to inspect its source details.";
+    };
     g.onclick = () => {
       if (n.kind === "finding") selectedFinding = n.id;
       inspectNode(n);
@@ -2109,18 +2315,74 @@ function renderEvidenceGraph() {
     graph.append(g);
   }
   $("graphNodeList").replaceChildren();
-  const list = el("details"),
-    header = el(
-      "summary",
-      `Inspect all ${full.nodes.length} received graph entities`,
-    );
-  list.append(header);
+  const expand = el(
+    "button",
+    showAllEvidence
+      ? "Return to focused evidence"
+      : `Expand full evidence graph (${full.nodes.length} entities)`,
+    "quiet",
+  );
+  expand.dataset.expandGraph = "true";
+  expand.onclick = () => {
+    showAllEvidence = !showAllEvidence;
+    graphZoom = 1;
+    renderEvidenceGraph();
+  };
+  $("graphNodeList").append(expand);
+  const list = el("details");
+  list.append(el("summary", "Technical entity index"));
   for (const n of full.nodes) {
-    const b = el("button", n.label, "quiet");
-    b.onclick = () => inspectNode(n);
-    list.append(b);
+    const button = el("button", canonicalPlain(n.label), "quiet");
+    button.onclick = () => inspectNode(n);
+    list.append(button);
   }
   $("graphNodeList").append(list);
+  const toolbar = $("graphControls");
+  toolbar.replaceChildren();
+  for (const [label, change] of [
+    ["Zoom out", -0.25],
+    ["Zoom in", 0.25],
+    ["Reset view", 0],
+  ]) {
+    const button = el("button", label, "quiet");
+    button.onclick = () => {
+      graphZoom = change ? Math.max(0.75, Math.min(2, graphZoom + change)) : 1;
+      renderEvidenceGraph();
+    };
+    toolbar.append(button);
+  }
+  toolbar.append(
+    el(
+      "span",
+      `${Math.round(graphZoom * 100)}% · scroll or drag the background to explore`,
+      "fine-print",
+    ),
+  );
+  graph.style.width = `${graphWidth * graphZoom}px`;
+  graph.style.height = `${Math.max(220, ...heights) * graphZoom}px`;
+  const viewport = graph.parentElement;
+  if (!viewport.dataset.panBound) {
+    viewport.dataset.panBound = "true";
+    let pan = null;
+    viewport.onpointerdown = (e) => {
+      if (e.target.closest(".evidence-node")) return;
+      pan = {
+        x: e.clientX,
+        y: e.clientY,
+        left: viewport.scrollLeft,
+        top: viewport.scrollTop,
+      };
+      viewport.setPointerCapture(e.pointerId);
+    };
+    viewport.onpointermove = (e) => {
+      if (pan) {
+        viewport.scrollLeft = pan.left + pan.x - e.clientX;
+        viewport.scrollTop = pan.top + pan.y - e.clientY;
+      }
+    };
+    viewport.onpointerup = () => (pan = null);
+    viewport.onpointercancel = () => (pan = null);
+  }
   renderPhysicalHypotheses(events);
   const signature = `${c().id}:${execution}:${active}:${nodes.size}`;
   if (graph.dataset.focusSignature !== signature && nodes.size) {
@@ -2922,6 +3184,9 @@ $("captureRestart").onclick = () => {
   r.cursor = 1;
   r.playing = true;
   selectedEvidenceEvent = 0;
+  selectedFinding = null;
+  showAllEvidence = false;
+  graphZoom = 1;
   renderPlatform();
 };
 $("captureSkip").onclick = () => {

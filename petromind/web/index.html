@@ -545,7 +545,8 @@
             <section id="activityPanel" hidden>
               <div id="operatorResult"></div>
               <p class="fine-print">
-                The synchronized investigation conversation is in Inside Muse.
+                Open Inside Muse to inspect the completed finding and supporting
+                evidence.
               </p>
             </section>
             <button id="back" class="quiet" hidden>
@@ -562,12 +563,17 @@
             </div>
           </div>
           <div id="captureControls" class="capture-controls" hidden>
-            <button id="capturePause" class="quiet">Pause replay</button>
+            <span id="insideModeBadge" class="badge" role="status"></span>
+            <details class="mode-details">
+              <summary>Mode and timing</summary>
+              <p id="insideModeText"></p>
+            </details>
+            <button id="capturePause" class="quiet">Pause investigation</button>
             <button id="captureRestart" class="quiet">
-              Restart investigation replay
+              Restart investigation
             </button>
             <button id="captureSkip" class="quiet">
-              Show completed assessment
+              Show completed finding
             </button>
           </div>
           <p
@@ -578,7 +584,7 @@
           <div id="insideAssessment" aria-live="polite"></div>
           <details id="completionEvidence" open>
             <summary id="completionEvidenceTitle" hidden>
-              Inspect supporting evidence · sources, map and recorded activity
+              Supporting evidence · sources, graph and investigation activity
             </summary>
             <section
               id="investigationBrief"
@@ -616,6 +622,17 @@
                   Review the recorded measurements to the checkpoint before the
                   diagnosis and investigation are available.
                 </p>
+                <section
+                  id="findingEvidenceContext"
+                  class="finding-evidence-context"
+                  role="status"
+                  aria-live="polite"
+                  hidden
+                ></section>
+                <div id="graphControls" class="graph-controls"></div>
+                <p id="graphIdentifier" class="fine-print">
+                  Select a node to inspect its source details.
+                </p>
                 <div id="graphLegend" class="graph-legend">
                   <span>◇ Statistical hypothesis</span
                   ><span>● Measured summary</span><span>▧ Documented fact</span
@@ -628,7 +645,11 @@
                   Show all evidence
                 </button>
                 <p id="graphFocusNote" class="fine-print"></p>
-                <div class="graph-scroll">
+                <div
+                  class="graph-scroll"
+                  tabindex="0"
+                  aria-label="Evidence graph viewport; scroll to explore"
+                >
                   <svg
                     id="evidenceGraph"
                     role="img"
