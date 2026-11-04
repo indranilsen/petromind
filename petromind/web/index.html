@@ -1069,6 +1069,11 @@
           class="tech-score-detail"
           aria-live="polite"
         ></p>
+        <p class="tech-caption">
+          Exploratory evaluation on 33 Petrobras 3W incidents. Results are
+          configuration-specific and do not establish production diagnostic reliability.
+          Non-correct classifications are not necessarily abstentions or declarations of an unknown cause.
+        </p>
         <p class="tech-results-conclusion">
           Graph-grounded approaches were investigated, but the frozen evaluation
           did not demonstrate a classification-accuracy advantage over the
@@ -1089,28 +1094,28 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Conventional adaptive</td>
+              <tr data-method="adaptive" data-description="Statistical classifier with adaptive sensor selection; no equipment graph or GraphRAG.">
+                <td>Adaptive Investigation</td>
                 <td>20 / 33</td>
                 <td>60.6%</td>
               </tr>
-              <tr>
-                <td>Conventional fixed</td>
+              <tr data-method="fixed" data-description="Statistical classifier with a predefined, training-ranked sensor order; no equipment graph or GraphRAG.">
+                <td>Fixed Investigation</td>
                 <td>13 / 33</td>
                 <td>39.4%</td>
               </tr>
-              <tr>
-                <td>Muse sensor-only</td>
+              <tr data-method="sensor_only" data-description="Muse investigates sensor evidence without added graph retrieval.">
+                <td>Sensor-only</td>
                 <td>4 / 33</td>
                 <td>12.1%</td>
               </tr>
-              <tr>
-                <td>Muse + equipment graph</td>
+              <tr data-method="topology" data-description="Muse investigates sensor evidence with generic equipment-relationship context.">
+                <td>Sensor + Equipment Graph</td>
                 <td>1 / 33</td>
                 <td>3.0%</td>
               </tr>
-              <tr>
-                <td>Muse + GraphRAG</td>
+              <tr data-method="graphrag" data-description="Muse investigates sensor evidence with equipment context and retrieved similar training incidents.">
+                <td>Sensor + GraphRAG</td>
                 <td>5 / 33</td>
                 <td>15.2%</td>
               </tr>
