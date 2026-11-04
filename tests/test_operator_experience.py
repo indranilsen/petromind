@@ -41,7 +41,10 @@ const s=p.operatorConclusion(all);
 assert.equal(s.rootVerdict,'NOT ESTABLISHED');assert(s.suspected.includes('obstruction'));
 assert.equal(assessment.verdict,'PARTIALLY_SUPPORTED');
 assert(s.nextPlan.requirements.length);assert(s.nextPlan.question);
-assert(s.nextPlan.requirements.some(t=>t.includes('other causes')));
+assert.deepEqual(s.nextPlan.requirements,[assessment.findings[3].missing_premise]);
+assert(!s.nextPlan.requirements.includes(assessment.findings[3].next_evidence.purpose));
+assert.equal(s.nextPlan.requirementSources[0].source,'recorded missing premise');
+assert.deepEqual(s.nextPlan.requirementSources[0].citations,assessment.findings[3].citations);
 assert.equal(s.nextPlan.requirementSources[0].findingIndex,3);
 assert.equal(s.nextPlan.requirementSources[0].premise,assessment.findings[3].missing_premise);
 assert(s.nextPlan.limitation.includes('did not identify a verified test'));
@@ -141,6 +144,38 @@ def test_operator_summary_and_each_finding_control_after_repeated_tab_switches(s
             {
                 "kind": "no_verified_discriminating_test",
                 "target": "fault:9",
+                "purpose": "No verified discriminating test was supplied.",
+            },
+        ),
+        (
+            "   ",
+            {
+                "kind": "no_verified_discriminating_test",
+                "target": "fault:9",
+                "purpose": "No verified discriminating test was supplied.",
+            },
+        ),
+        (
+            "A specific test is not required; calibration evidence is missing.",
+            {
+                "kind": "no_verified_discriminating_test",
+                "target": "fault:9",
+                "purpose": "No verified discriminating test was supplied.",
+            },
+        ),
+        (
+            "If the pressure context applies, a causal criterion is missing.",
+            {
+                "kind": "no_verified_discriminating_test",
+                "target": "fault:9",
+                "purpose": "No verified discriminating test was supplied.",
+            },
+        ),
+        (
+            "",
+            {
+                "kind": "no_verified_discriminating_test",
+                "target": "fault:9",
                 "purpose": "",
             },
         ),
@@ -176,10 +211,12 @@ const [premise,request]=JSON.parse(process.argv[1]);
 const f={statement:'Causal claim',scope:'diagnostic_conclusion',basis:'hypothesis',verdict:'NOT_ESTABLISHED',missing_premise:premise,citations:['measurement:P-PDG'],next_evidence:request||{kind:'none',purpose:'',target:''}};
 const events=[{kind:'evidence_received',hypothesis:9,observations:{}},{kind:'tool_result',tool:'submit_audit',assessment:{verdict:'PARTIALLY_SUPPORTED',findings:[f]}},{kind:'completion',status:'completed'}];
 const before=JSON.stringify(events),plan=p.operatorConclusion(events).nextPlan;
-const expected=request?.purpose||premise;
+const noTest=request?.kind==='no_verified_discriminating_test';
+const expected=(!noTest&&request?.purpose)||premise.trim();
 assert.deepEqual(plan.requirements,expected?[expected]:[]);
 assert.equal(plan.noTest,request?.kind==='no_verified_discriminating_test');
-if(expected){assert.equal(plan.requirementSources[0].findingIndex,0);assert.equal(plan.requirementSources[0].premise,premise);assert.deepEqual(plan.requirementSources[0].citations,f.citations);}
+if(noTest){assert(plan.limitation.includes('did not identify a verified test'));assert(!plan.requirements.includes(request.purpose));}
+if(expected){assert.equal(plan.requirementSources[0].source,!noTest&&request?.purpose?'recorded evidence request':'recorded missing premise');assert.equal(plan.requirementSources[0].findingIndex,0);assert.equal(plan.requirementSources[0].premise,premise);assert.deepEqual(plan.requirementSources[0].citations,f.citations);}
 assert.equal(JSON.stringify(events),before);
 assert(!plan.question.includes('necessarily'));
 """

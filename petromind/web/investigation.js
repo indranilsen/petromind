@@ -554,10 +554,13 @@
           target: structured ? n.target : "",
           findingIndex,
         });
-      if (purpose || premise)
+      // A no-test record describes a limitation, not evidence to obtain.
+      const evidencePurpose =
+        n?.kind === "no_verified_discriminating_test" ? "" : purpose;
+      if (evidencePurpose || premise)
         requirementSources.push({
-          text: purpose || premise,
-          source: purpose ? "recorded evidence request" : "recorded missing premise",
+          text: evidencePurpose || premise,
+          source: evidencePurpose ? "recorded evidence request" : "recorded missing premise",
           findingIndex,
           premise,
           citations: [...(f.citations || [])],

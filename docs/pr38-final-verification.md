@@ -1,6 +1,8 @@
 # PR #38 final verification
 
-Evidence requirements now prefer the recorded structured `next_evidence.purpose`.
+Evidence requirements prefer the recorded structured `next_evidence.purpose`,
+except for `no_verified_discriminating_test`: its purpose is a limitation only,
+and its original missing premise supplies the evidence requirement when present.
 Otherwise they quote the original missing premise in context, preserving negation,
 conditions and unfamiliar terminology. Each displayed requirement names its source
 finding; the original premise remains expandable when a structured request is used.
