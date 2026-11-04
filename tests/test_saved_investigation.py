@@ -610,3 +610,73 @@ def test_import_never_writes_inside_original_run(saved):
     with pytest.raises(ValueError, match="outside the original"):
         import_saved(capture, run, run / "derived")
     assert hashes(run) == before and not (run / "derived").exists()
+
+
+@pytest.mark.skipif(
+    __import__("os").getenv("PETROMIND_BROWSER_CHECK") != "1",
+    reason="Explicit local Chromium layout smoke; no paid API",
+)
+def test_completed_finding_map_order(saved):
+    import os
+    import threading
+
+    from playwright.sync_api import sync_playwright
+
+    from petromind.claim_demo import make_server
+
+    capture, run, _row, bundle = saved
+    import_saved(capture, run, bundle)
+    server = make_server(DemoApp(capture, saved_directory=bundle), 0)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    errors = []
+    try:
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(
+                executable_path=os.getenv("PETROMIND_CHROMIUM"),
+                args=["--no-sandbox", "--disable-dev-shm-usage"],
+            )
+            for width, height in [(1440, 900), (390, 844)]:
+                page = browser.new_page(viewport={"width": width, "height": height})
+                page.on("pageerror", lambda e: errors.append(str(e)))
+                page.goto(
+                    f"http://127.0.0.1:{server.server_port}/demo",
+                    wait_until="networkidle",
+                )
+                page.locator("#slider").fill(
+                    page.locator("#slider").get_attribute("max")
+                )
+                page.locator("#nextScene").click()
+                page.locator("#captureSkip").click()
+                assert page.locator("#evidenceGraph").count() == 1
+                assert page.locator("#graphPanel").evaluate("e=>e.open")
+                assert page.evaluate("""()=>{
+                    const next=document.querySelector('#insideAssessment [data-result-part=next]');
+                    return next.nextElementSibling===document.getElementById('graphPanel') &&
+                        next.nextElementSibling.nextElementSibling.matches('[data-inspect-evidence]');
+                }""")
+                focused = page.locator(".evidence-node").count()
+                page.locator("#graphToggle").click()
+                assert page.locator(".evidence-node").count() > focused
+                page.locator("#graphToggle").click()
+                assert page.locator(".evidence-node").count() == focused
+                page.locator("#insideAssessment [data-inspect-evidence]").click()
+                assert page.locator("#completionEvidence").evaluate("e=>e.open")
+                page.locator("#graphPanel").evaluate(
+                    "e=>window.scrollBy(0,e.getBoundingClientRect().top-200)"
+                )
+                if os.getenv("PETROMIND_SCREENSHOTS"):
+                    page.screenshot(
+                        path=str(
+                            Path(os.environ["PETROMIND_SCREENSHOTS"])
+                            / f"{width}-ordered-map.png"
+                        )
+                    )
+                page.locator("#captureRestart").click()
+                assert page.locator("#insideAssessment").inner_text() == ""
+                assert page.locator("#completionEvidence #graphPanel").count() == 1
+                page.close()
+            browser.close()
+        assert not errors, errors
+    finally:
+        server.shutdown()
+        server.server_close()

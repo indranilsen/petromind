@@ -1681,7 +1681,11 @@ function renderPlatform() {
   const previouslyFinished = $("insidePanel").dataset.completed === "true";
   $("insidePanel").dataset.completed = String(finished);
   $("completionEvidenceTitle").hidden = !finished;
-  if (finished && !previouslyFinished) $("completionEvidence").open = false;
+  if (finished && !previouslyFinished) {
+    $("completionEvidence").open = false;
+    $("graphPanel").open = true;
+    showAllEvidence = false;
+  }
   if (!finished) $("completionEvidence").open = true;
   const box = $("operatorResult");
   box.replaceChildren();
@@ -1700,6 +1704,8 @@ function renderPlatform() {
       ),
       el("p", `Recorded execution status: ${stopped}`, "fine-print"),
     );
+  // Return the one shared map before rebuilding the completed finding.
+  $("completionEvidence").querySelector(".investigation-columns").append($("graphPanel"));
   $("insideAssessment").replaceChildren();
   if (ready && result) {
     renderFinalFinding($("insideAssessment"), result, events);
@@ -1901,7 +1907,7 @@ function renderFinalFinding(box, result, events) {
     ),
   );
   next.append(requests);
-  box.append(next);
+  box.append(next, $("graphPanel"));
   const inspect = el("button", "Inspect supporting evidence →", "primary");
   inspect.dataset.inspectEvidence = "true";
   box.append(inspect);
