@@ -5172,6 +5172,8 @@ select {
   border-color: #578579;
 }
 .journey-next p {
+  /* Status copy changes must not move the timeline below this guide. */
+  min-height: 4.8em;
   max-width: 720px;
   font-size: 14px;
   line-height: 1.6;
@@ -5265,16 +5267,7 @@ select {
   color: #a2b9c0;
   line-height: 1.6;
 }
-#historicalWorkspace[data-workflow-stage="diagnosis"] .console-layout {
-  grid-template-columns: 1fr;
-}
-#historicalWorkspace[data-workflow-stage="diagnosis"] .operator-panel {
-  order: -1;
-}
-#historicalWorkspace[data-workflow-stage="diagnosis"] .classifier-handoff {
-  grid-template-columns: 1fr 1fr;
-  align-items: start;
-}
+/* Keep telemetry in the same grid position as evidence gates open and close. */
 #historicalWorkspace[data-workflow-stage="diagnosis"] .handoff-alert {
   border-top: 3px solid #e3b876;
 }
@@ -5331,12 +5324,14 @@ select {
   .journey-steps li::before {
     display: block;
   }
+  .journey-next p {
+    min-height: 9.6em;
+  }
   .journey-next button {
     width: 100%;
   }
   .pressure-overview,
-  .investigation-brief,
-  #historicalWorkspace[data-workflow-stage="diagnosis"] .classifier-handoff {
+  .investigation-brief {
     grid-template-columns: 1fr;
   }
   .investigation-brief {
@@ -5350,23 +5345,6 @@ select {
   scroll-margin-top: 100px;
 }
 
-@media (min-width: 741px) {
-  #historicalWorkspace[data-workflow-stage="diagnosis"] .classifier-handoff {
-    grid-template-areas: "alert alert" "classifier why" "classifier launch";
-  }
-  #historicalWorkspace[data-workflow-stage="diagnosis"] #checkpointAlert {
-    grid-area: alert;
-  }
-  #historicalWorkspace[data-workflow-stage="diagnosis"] #diagnosisCard {
-    grid-area: classifier;
-  }
-  #historicalWorkspace[data-workflow-stage="diagnosis"] #investigationNext {
-    grid-area: why;
-  }
-  #historicalWorkspace[data-workflow-stage="diagnosis"] #investigationLaunch {
-    grid-area: launch;
-  }
-}
 #classifierHandoff,
 #pressureOverview {
   scroll-margin-top: 100px;
@@ -5757,3 +5735,8 @@ select {
   }
 }
 .sensor-term.tooltip-dismissed .sensor-tooltip { display:none; }
+
+/* The counter reserves digit space while the slider keeps a stable width. */
+#sampleCounter {
+  font-variant-numeric: tabular-nums;
+}
