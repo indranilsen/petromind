@@ -260,8 +260,8 @@ def load_synthetic(directory):
             "host_final_digest": previous,
         },
         "scope": "Controlled synthetic M1 hydraulics, not Petrobras measurements; edited replay pacing, not original event timing.",
-        "editorial_conclusion": "Increased hydraulic resistance established under the synthetic model. Specific cause remains unidentified.",
-        "conclusion_basis": "Editorial summary of an explicit accepted premise; not an additional atomic Muse verdict.",
+        "editorial_conclusion": "Hydraulic evidence supports increased effective resistance under synthetic model M1. The specific cause remains unidentified.",
+        "conclusion_basis": "Scoped editorial interpretation of received evidence, not an additional or upgraded atomic Muse verdict. The accepted aggregate remains PARTIALLY_SUPPORTED; the hydrate-cause finding remains NOT_ESTABLISHED.",
         "selection": "Post-hoc showcase selection, not an unbiased accuracy estimate. Graph lookup followed sensor acquisition.",
         "independent_human_review": False,
     }

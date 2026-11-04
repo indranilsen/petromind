@@ -8,8 +8,9 @@ classifier stage. Home / Demo / Technology remain the only pages.
 ## Run locally (macOS)
 
 Check out this PR's `demo/synthetic-hydraulic-replay` branch. It is based on
-main including the owner's merged PR #38; its existing findings/evidence
-controls are preserved. This task did not modify or merge PR #38.
+main including the owner's merged PR #38 and PR #39. Its existing findings,
+evidence controls and slider-stability behavior are preserved. Neither PR was
+modified or merged by this task.
 
 ```bash
 source .venv312/bin/activate
@@ -81,16 +82,31 @@ calls; it does not add scientific activity. All per-event timestamps are
 explicitly unavailable. Its fixed 1.8-second pacing is editorial, not original
 wall-clock playback. The original six-request run took 62.58 seconds.
 
-The final headline is an **editorial summary of an explicit accepted premise**:
-“Pressures plus flow show increased effective R_L with stable separator.” It is
-not a new atomic verdict. All three original accepted atomic findings, the
-PARTIALLY_SUPPORTED aggregate, exact numbers and recommendations remain
-inspectable unchanged. Hydrate material as the cause is NOT_ESTABLISHED.
+The final headline is:
 
-The model-conditional positive conclusion is increased effective section-L
-resistance, not deposit identity. The UI does not silently regrade the original
-assessment. The separately computed 2.41–2.59× bound is not attributed to Muse;
-this minimal integration omits the bound to avoid another calculation path.
+> Hydraulic evidence supports increased effective resistance under synthetic model M1. The specific cause remains unidentified.
+
+This is a **scoped editorial evidence interpretation**, not a new or upgraded
+atomic Muse verdict. The final panel separates:
+
+1. **What the hydraulic evidence supports:** Muse requested production flow and
+   separator pressure; flow fell and separator pressure remained approximately
+   stable. Under M1, the received pressures and flow support increased effective
+   resistance in section L.
+2. **What Muse did not establish:** the supplied evidence does not distinguish
+   hydrate, scale or debris as the obstruction material. The accepted hydrate-cause
+   finding remains NOT_ESTABLISHED.
+3. **What evidence would help next:** the exact recorded deposit sampling/material
+   assay request, explicitly described as an evidence category, not a validated
+   field procedure.
+4. **Exact scientific assessment:** the unchanged aggregate PARTIALLY_SUPPORTED,
+   every original atomic finding, verdict, premise, citation and numeric observation.
+
+The exact accepted premise, available in its own disclosure, is:
+“Pressures plus flow show increased effective R_L with stable separator.”
+The plain-language interpretation is not substituted for this quotation. No
+SUPPORTED resistance atom is added. The separately calculated 2.41–2.59× interval
+remains omitted from the UI; it is not attributed to Muse.
 
 ## Evidence and integrity boundaries
 
@@ -154,27 +170,31 @@ private datasets that are unavailable in the implementation environment.
 - 35–50 s: Inspect M1 and the returned graph/documents. “The governing relation
   links pressure difference to resistance times flow squared. The source scopes
   also tell us what these hydraulics cannot identify.”
-- 50–75 s: Show final findings. “Muse's accepted premise identifies greater
-  effective resistance under M1. Hydrate, scale and debris remain indistinguishable.
-  That is a meaningful physical inference with a clearly bounded conclusion.”
+- 50–75 s: Show final findings. “The hydraulic evidence supports greater
+  effective resistance under M1. That is the scoped interpretation of an accepted
+  Muse premise—not a new positive atomic verdict. The material remains unidentified.”
 
 Do not say Muse predeclared this experiment, graph context selected the sensors,
 this is Petrobras telemetry, or a material/root cause was proved. If anything
 fails, use the unchanged standalone captured video segment and label it as
 previously recorded activity; never fake a live response.
 
-## Implementation verification receipt
+## Final integration verification receipt
 
-- Final isolated checkout of merged main (including PR #38) plus this feature,
+- Integrated main **357e674a04991391e49622a00cf585bdf9428f48**, including PR #39.
+  Three-way app.js merge completed without textual conflicts; preserve the explicit
+  scroll opt-in, stable sample-counter widths and removal of stage-dependent grid
+  reordering. Incoming style.css and slider regression tests are unchanged from main.
+- Final isolated checkout of merged main (including PR #38 and PR #39) plus this feature,
   with Chromium and the unchanged owner-supplied synthetic package:
-  **659 tests passed, 14 subtests passed; no skipped tests**. Earlier broader
-  workspace runs also included unrelated research-branch tests; those counts are
-  not used as this PR's test count.
+  **661 tests passed, 14 subtests passed; no skipped tests** (113.72 seconds).
+  Targeted synthetic and PR #39 pointer-drag regressions: **13 passed**.
 - Actual synthetic package: nine source commitments, original seven-entry host
   chain, five charged sensors and exact final accepted assessment verified.
-- Desktop 1440×900 and mobile 390×844: actual synthetic replay, three → four → five
+- Desktop 1440×900, tablet 1024×768 and mobile 390×844: actual synthetic replay, three → four → five
   received sensors, six tool requests, source inspection, no page overflow,
-  completion/restart, historical/synthetic switching, no JavaScript errors and no
+  completion, pause/resume/restart, exact-assessment equality, historical/synthetic
+  switching, no JavaScript errors and no
   paid requests.
 - Existing historical browser journeys pass with software fixtures. The owner's
   actual 3W dataset, monitoring bundle and saved-v5 run are not present here.
@@ -186,6 +206,8 @@ previously recorded activity; never fake a live response.
 Actual supplied synthetic recording; no generated model responses:
 
 ![Desktop introduction](images/synthetic-investigation/desktop-introduction.webp)
-![Desktop accepted findings](images/synthetic-investigation/desktop-findings.webp)
+![Desktop scoped findings](images/synthetic-investigation/desktop-findings.webp)
+![Tablet introduction](images/synthetic-investigation/tablet-introduction.webp)
+![Tablet scoped findings](images/synthetic-investigation/tablet-findings.webp)
 ![Mobile introduction](images/synthetic-investigation/mobile-introduction.webp)
-![Mobile accepted findings](images/synthetic-investigation/mobile-findings.webp)
+![Mobile scoped findings](images/synthetic-investigation/mobile-findings.webp)

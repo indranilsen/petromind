@@ -2,7 +2,7 @@
 (() => {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const names = { "P-TPT": "Tree pressure", "P-MON-CKP": "Pressure before choke",
+  const names = { "P-TPT": "Tree pressure", "P-MON-CKP": "Pressure before the choke",
     "T-TPT": "Tree temperature", "SYN-Q-PROD": "Production flow", "SYN-P-SEP": "Separator pressure" };
   let data, loading, active = false, cursor = 0, timer, started = false, selected = null;
   const node = (tag, text, cls) => {
@@ -78,7 +78,7 @@
     const mobile = svgElement("svg", { viewBox: "0 0 350 290", role: "img", "aria-label": "Synthetic M1: tree, section L, before choke, choke and separator in series" });
     mobile.classList.add("synthetic-system-mobile");
     mobile.append(svgElement("path", {d:"M32 25 V255",stroke:"#6b9ba7","stroke-width":6,fill:"none"}));
-    [["Tree pressure", "P-TPT · node U"], ["Section L", "Resistance under investigation"], ["Pressure before choke", "P-MON-CKP · node D"], ["Production choke", "Choke K"], ["Separator pressure", "SYN-P-SEP · node S"]].forEach(([title,sub],i) => {
+    [["Tree pressure", "P-TPT · node U"], ["Section L", "Resistance under investigation"], ["Pressure before the choke", "P-MON-CKP · node D"], ["Production choke", "Choke K"], ["Separator pressure", "SYN-P-SEP · node S"]].forEach(([title,sub],i) => {
       const y=25+i*57;
       mobile.append(svgElement("circle",{cx:32,cy:y,r:9,fill:"#a1e6d3"}));
       mobile.append(svgElement("text",{x:58,y:y-1,fill:"#e8f3f5","font-size":15},title));
@@ -148,7 +148,7 @@
   }
   function evidencePanel(g) {
     const section = node("section", undefined, "synthetic-evidence");
-    section.append(node("h2", "Evidence graph · only received relationships"), node("p", "Select a source, measurement or finding to inspect its original content.", "fine-print"));
+    section.append(node("h2", "Supporting engineering context"), node("p", "The evidence graph contains only received relationships and citation links. Select a source, measurement or finding to inspect its original content.", "fine-print"));
     const drawing = node("div", undefined, "synthetic-graph-drawing");
     drawing.append(graphDrawing(g)); section.append(drawing);
     const cards = node("div", undefined, "synthetic-evidence-nodes");
@@ -173,9 +173,14 @@
   }
   function eventCard(e, i) {
     const li = node("li", undefined, "synthetic-event"); li.dataset.kind = e.kind;
+    const sensor = e.sensor || e.arguments?.sensor;
+    let title = e.title || "Investigation complete";
+    if (e.tool === "query_sensor") title = `${e.kind === "tool_request" ? "Muse requests" : "Muse receives"} ${(names[sensor] || sensor).toLowerCase()}`;
+    if (e.tool === "lookup_graph") title = e.kind === "tool_request" ? "Muse looks up supporting engineering context" : "Supporting engineering context returned";
+    if (e.tool === "read_document") title = e.kind === "tool_request" ? "Muse requests a source document" : "Source document returned";
     if (e.tool) li.dataset.tool = e.tool;
-    li.append(node("small", e.kind === "tool_request" ? "ACTUAL RECORDED REQUEST" : e.kind === "tool_result" ? "ACTUAL RETURNED EVIDENCE" : e.kind === "completion" ? "RECORDED COMPLETION" : "ORIGINAL RECEIVED CONTEXT"), node("h3", e.title || "Investigation complete"));
-    if (e.kind === "tool_request") li.append(node("code", e.tool + "(" + JSON.stringify(e.arguments) + ")"));
+    li.append(node("small", e.kind === "tool_request" ? "ACTUAL RECORDED REQUEST" : e.kind === "tool_result" ? "ACTUAL RETURNED EVIDENCE" : e.kind === "completion" ? "RECORDED COMPLETION" : "ORIGINAL RECEIVED CONTEXT"), node("h3", title));
+    if (sensor) li.title = sensor; // Canonical ID remains available without dominating the story.
     if (e.measurement) li.append(node("p", measurementLabel(e.sensor, e.measurement)));
     if (e.documents) for (const d of e.documents) {
       li.append(node("p", d.summary || d.identifiability));
@@ -189,14 +194,25 @@
   }
   function finalPanel() {
     const section = node("section", undefined, "synthetic-final"); section.id = "syntheticFinal";
-    section.append(node("p", "EVIDENCE-BACKED CONCLUSION · SYNTHETIC M1", "eyebrow"), node("h2", data.editorial_conclusion), node("p", data.conclusion_basis, "fine-print"));
+    section.append(node("p", "SCOPED HYDRAULIC INTERPRETATION · SYNTHETIC M1", "eyebrow"),
+      node("h2", data.editorial_conclusion),
+      node("p", "Evidence interpretation, not an additional or upgraded Muse verdict.", "fine-print"));
     const f = data.assessment.findings[2];
-    section.append(node("h3", "What Muse established"), node("blockquote", f.premises[0]),
-      node("p", "Exact accepted Muse premise. R_L means effective resistance in section L; it does not name the material."),
-      node("h3", "What remains unknown"), node("p", `${f.statement} — ${f.verdict.replaceAll("_", " ")}`), node("p", f.justification),
-      node("h3", "What would be needed next"), node("p", `${f.next_evidence.target}: ${f.next_evidence.purpose}`),
-      node("p", "Captured recommendation, not an available operational procedure. No validated material-discriminating test is supplied.", "fine-print"));
-    const original = node("details"); original.append(node("summary", "Inspect every original accepted finding"));
+    section.append(node("h3", "What the hydraulic evidence supports"),
+      node("p", "Muse requested production flow and separator pressure. Flow decreased, while separator pressure remained approximately stable."),
+      node("p", "Under the declared synthetic model M1, the received pressure and flow measurements support an increase in effective resistance in section L."));
+    const premise = node("details");
+    premise.append(node("summary", "Accepted Muse premise · exact wording"), node("blockquote", f.premises[0]),
+      node("p", "R_L means effective resistance in section L. This is a premise in the accepted assessment, not a separate SUPPORTED resistance verdict.", "fine-print"));
+    section.append(premise, node("h3", "What Muse did not establish"),
+      node("p", "The evidence does not identify hydrate obstruction as the specific cause. Hydrate, scale and debris cannot be distinguished as the obstruction material from the supplied evidence alone."),
+      node("p", `Original hydrate-cause finding: ${f.verdict}`, "fine-print"),
+      node("h3", "What evidence would help next"),
+      node("p", `${f.next_evidence.target}: ${f.next_evidence.purpose}`),
+      node("p", "This recorded request names a category of additional evidence, not an available, validated field procedure. No validated material-discriminating test is supplied.", "fine-print"));
+    const original = node("details"); original.id = "syntheticScientificAssessment";
+    original.append(node("summary", "Exact scientific assessment"),
+      node("p", `Original aggregate verdict: ${data.assessment.verdict}`), node("p", data.conclusion_basis, "fine-print"));
     data.assessment.findings.forEach((finding) => {
       const block = node("div", undefined, "synthetic-atomic");
       block.append(node("h3", finding.statement), node("strong", finding.verdict), node("p", finding.justification));
@@ -207,7 +223,8 @@
       }));
       original.append(block);
     });
-    original.append(node("pre", JSON.stringify(data.assessment, null, 2))); section.append(original);
+    const exact = node("pre", JSON.stringify(data.assessment, null, 2)); exact.id = "syntheticOriginalAssessment";
+    original.append(exact); section.append(original);
     return section;
   }
   function render() {
@@ -216,11 +233,11 @@
     const root = $("syntheticContent"); root.hidden = false;
     const intro = node("div", undefined, "synthetic-intro");
     intro.append(node("p", "CONTROLLED SYNTHETIC PHYSICS · CAPTURED MUSE SPARK", "eyebrow"), node("h2", "A larger pressure gap. More flow—or greater resistance?"),
-      node("p", "The pressure difference across a production section grew. A hydrate restriction is one proposed explanation. Muse requests flow and separator pressure to investigate what the hydraulic evidence establishes."),
-      node("p", "Synthetic evidence question · no recorded monitoring alarm or statistical classifier. The question is editorial framing, not a predeclared Muse plan.", "fine-print"));
+      node("p", "The pressure difference increased, but pressure alone could not distinguish increased flow from increased resistance. Watch Muse request production flow and separator pressure to investigate the competing explanations."),
+      node("p", "Synthetic model M1 relates pressure differences, production flow and effective resistance under declared assumptions.", "fine-print"));
     const content = [intro];
     if (!started) {
-      content.push(button("Watch Muse investigate", start, "primary"), node("p", "Previously completed recording · six model requests · five sensors total · no new API call", "fine-print"), schematic());
+      content.push(button("Watch Muse investigate", start, "primary"), node("p", "Previously completed synthetic Muse investigation · five sensors total · no new live run", "fine-print"), schematic());
     } else {
       const controls = node("div", undefined, "synthetic-controls");
       const completed = cursor === data.events.length;
@@ -244,7 +261,7 @@
       const transcript = node("details"); transcript.append(node("summary", "Inside Muse · full recorded sequence"));
       const list = node("ol", undefined, "synthetic-conversation"); events.forEach((e, i) => list.append(eventCard(e, i))); transcript.append(list);
       layout.append(transcript, evidencePanel(graph(events))); content.push(layout);
-      const scope = node("details"); scope.append(node("summary", "Synthetic assumptions, provenance and limitations"), node("p", data.scope), node("p", data.selection), node("pre", JSON.stringify(data.model, null, 2)));
+      const scope = node("details"); scope.append(node("summary", "Synthetic assumptions, provenance and limitations"), node("p", "This scenario has no recorded monitoring alarm or statistical classifier. The initial competing-explanation question is editorial framing, not a predeclared Muse experiment."), node("p", data.scope), node("p", data.selection), node("pre", JSON.stringify(data.model, null, 2)));
       content.push(scope);
     }
     root.replaceChildren(...content);

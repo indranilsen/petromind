@@ -259,7 +259,19 @@ def test_original_verified_recording():
     public = adapter.load_synthetic(os.environ["PETROMIND_SYNTHETIC_SHOWCASE"])
     assert public["id"] == "c-7a91" and public["recording"]["requests"] == 6
     assert len(public["assessment"]["findings"]) == 3
+    original = json.loads(
+        (
+            Path(os.environ["PETROMIND_SYNTHETIC_SHOWCASE"])
+            / "original-host-audit.UNCHANGED.json"
+        ).read_text()
+    )[-1]["result"]["assessment"]
+    assert public["assessment"] == original
+    assert public["assessment"]["verdict"] == "PARTIALLY_SUPPORTED"
     assert public["assessment"]["findings"][2]["verdict"] == "NOT_ESTABLISHED"
+    assert public["editorial_conclusion"].startswith(
+        "Hydraulic evidence supports increased effective resistance"
+    )
+    assert "upgraded atomic Muse verdict" in public["conclusion_basis"]
 
 
 @pytest.mark.skipif(
@@ -289,7 +301,11 @@ def test_browser_synthetic_and_historical_switching(capture, showcase, tmp_path)
                 executable_path=os.getenv("PETROMIND_CHROMIUM"),
                 args=["--no-sandbox", "--disable-dev-shm-usage"],
             )
-            for width, height, label in [(1440, 900, "desktop"), (390, 844, "mobile")]:
+            for width, height, label in [
+                (1440, 900, "desktop"),
+                (1024, 768, "tablet"),
+                (390, 844, "mobile"),
+            ]:
                 page = browser.new_page(
                     viewport={"width": width, "height": height}, reduced_motion="reduce"
                 )
@@ -319,8 +335,46 @@ def test_browser_synthetic_and_historical_switching(capture, showcase, tmp_path)
                 page.clock.install()
                 page.get_by_role("button", name="Watch Muse investigate").click()
                 assert page.locator(".synthetic-sensors button").count() == 3
-                page.clock.run_for(3700)
+                page.get_by_role("button", name="Pause investigation replay").click()
+                initial_counter = page.locator(".synthetic-controls span").inner_text()
+                page.clock.run_for(10000)
+                assert (
+                    page.locator(".synthetic-controls span").inner_text()
+                    == initial_counter
+                )
+                page.locator("#scenarioSelect").select_option("historical")
+                assert page.locator("#historicalWorkspace").is_visible()
+                page.locator("#scenarioSelect").select_option("synthetic")
+                page.get_by_role("button", name="Resume investigation replay").click()
+                page.clock.run_for(1800)  # Requested flow is not returned yet.
+                assert page.locator(".synthetic-sensors button").count() == 3
+                assert (
+                    "production flow"
+                    in page.locator("#syntheticCurrentActivity").inner_text()
+                )
+                page.clock.run_for(1800)
                 assert page.locator(".synthetic-sensors button").count() == 4
+                page.clock.run_for(1800)  # Separator request alone adds no measurement.
+                assert page.locator(".synthetic-sensors button").count() == 4
+                page.clock.run_for(1800)
+                assert page.locator(".synthetic-sensors button").count() == 5
+                assert (
+                    page.locator('.synthetic-evidence-nodes [data-kind="fact"]').count()
+                    == 0
+                )
+                page.clock.run_for(1800)  # Graph requested, not returned.
+                assert (
+                    page.locator('.synthetic-evidence-nodes [data-kind="fact"]').count()
+                    == 0
+                )
+                page.clock.run_for(1800)
+                expected_facts = sum(
+                    len(e.get("facts", [])) for e in app.synthetic["events"]
+                )
+                assert (
+                    page.locator('.synthetic-evidence-nodes [data-kind="fact"]').count()
+                    == expected_facts
+                )
                 page.clock.run_for(40000)
                 page.locator("#syntheticFinal").wait_for()
                 assert page.locator(".synthetic-sensors button").count() == 5
@@ -357,7 +411,7 @@ def test_browser_synthetic_and_historical_switching(capture, showcase, tmp_path)
                     )
 
                 assert (
-                    "Specific cause remains unidentified"
+                    "The specific cause remains unidentified"
                     in page.locator("#syntheticFinal").inner_text()
                 )
                 assert (
@@ -366,6 +420,38 @@ def test_browser_synthetic_and_historical_switching(capture, showcase, tmp_path)
                     ).count()
                     == 1
                 )
+                assert page.locator("#syntheticFinal h2").inner_text() == (
+                    "Hydraulic evidence supports increased effective resistance under synthetic model M1. "
+                    "The specific cause remains unidentified."
+                )
+                assert page.locator("#syntheticFinal > h3").all_text_contents() == [
+                    "What the hydraulic evidence supports",
+                    "What Muse did not establish",
+                    "What evidence would help next",
+                ]
+                page.get_by_text(
+                    "Accepted Muse premise · exact wording", exact=True
+                ).click()
+                assert (
+                    app.synthetic["assessment"]["findings"][2]["premises"][0]
+                    in page.locator("#syntheticFinal blockquote").inner_text()
+                )
+                page.get_by_text(
+                    "Accepted Muse premise · exact wording", exact=True
+                ).click()
+                page.get_by_text("Exact scientific assessment", exact=True).click()
+                assert (
+                    json.loads(
+                        page.locator("#syntheticOriginalAssessment").inner_text()
+                    )
+                    == app.synthetic["assessment"]
+                )
+                assert (
+                    "PARTIALLY_SUPPORTED"
+                    in page.locator("#syntheticScientificAssessment").inner_text()
+                )
+                page.get_by_text("Exact scientific assessment", exact=True).click()
+
                 page.locator(
                     '.synthetic-evidence-nodes button[data-evidence-id="model:M1"]'
                 ).click()

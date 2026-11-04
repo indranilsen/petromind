@@ -230,6 +230,11 @@ function renderTelemetry() {
     r.mode !== "endpoints"
       ? `Sample ${index + 1} of ${w.positions}`
       : `Captured endpoint ${index + 1} of ${w.positions}`;
+  // Reserve counter widths so changing digits cannot resize the drag track.
+  $("sampleCounter").style.minWidth = `${11 + 2 * String(w.positions).length}ch`;
+  $("clock").style.minWidth = w.elapsed_seconds
+    ? `${3 + 2 * Math.max(8, elapsedLabel(w.elapsed_seconds.at(-1)).length)}ch`
+    : "";
   $("clock").textContent = w.elapsed_seconds
     ? `${elapsedLabel(w.elapsed_seconds[index])} / ${elapsedLabel(w.elapsed_seconds.at(-1))}`
     : "Timestamps unavailable";
@@ -926,7 +931,7 @@ function renderJourney() {
     }
     if (!ready) {
       resetPlayback();
-      setReplayPosition(target, false);
+      setReplayPosition(target, true);
       return;
     }
     if (stage === 2) {
@@ -955,7 +960,7 @@ function renderJourney() {
       });
     }
   };
-  $("journeySeekNote").hidden = ready;
+  $("journeySeekNote").style.visibility = ready ? "hidden" : "visible";
 }
 function syncWorkflow() {
   if (!checkpointReached())
@@ -995,7 +1000,7 @@ function syncWorkflow() {
         : "Checkpoint reached → Statistical diagnosis → Muse investigation",
   }[state.stage];
 }
-function setReplayPosition(position, follow = true) {
+function setReplayPosition(position, scrollToAlert = false) {
   const wasReady = checkpointReached(),
     wasAlerted = anomalyReached();
   index = Math.max(0, Math.min(c().replay.workflow.positions - 1, position));
@@ -1004,7 +1009,7 @@ function setReplayPosition(position, follow = true) {
   }
   renderPlatform();
   if (
-    follow &&
+    scrollToAlert &&
     ((!wasReady && checkpointReached()) || (!wasAlerted && anomalyReached())) &&
     pageName === "demo" &&
     workspaceView === "operator" &&
