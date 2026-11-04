@@ -36,19 +36,19 @@ def test_technology_publishes_unchanged_frozen_counts_and_percentages():
     parser = Results()
     parser.feed((WEB / "index.html").read_text())
     assert [s.strip().replace(" / ", "/") for s in parser.rows] == [
-        "Conventional adaptive",
+        "Adaptive Investigation",
         "20/33",
         "60.6%",
-        "Conventional fixed",
+        "Fixed Investigation",
         "13/33",
         "39.4%",
-        "Muse sensor-only",
+        "Sensor-only",
         "4/33",
         "12.1%",
-        "Muse + equipment graph",
+        "Sensor + Equipment Graph",
         "1/33",
         "3.0%",
-        "Muse + GraphRAG",
+        "Sensor + GraphRAG",
         "5/33",
         "15.2%",
     ]

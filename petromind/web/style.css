@@ -5740,3 +5740,21 @@ select {
 #sampleCounter {
   font-variant-numeric: tabular-nums;
 }
+
+/* Experimental labels share the canonical table text and wrap at narrow widths. */
+#technologyPage .tech-score-name {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+#technologyPage .tech-score-name small {
+  white-space: normal;
+}
+@media (max-width: 740px) {
+  #technologyPage .tech-score-name {
+    display: block;
+  }
+  #technologyPage .tech-score-name small {
+    margin-top: 6px;
+  }
+}

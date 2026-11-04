@@ -3057,22 +3057,25 @@ function buildTechScores() {
           c.textContent.trim(),
         ),
         [correct, total] = count.split("/").map(Number);
+      const description = row.dataset.description;
       const b = el(
         "button",
         undefined,
         "tech-score-row " + (i < 2 ? "tech-stat-score" : "tech-muse-score"),
       );
+      b.title = `${name}: ${description}`;
       b.type = "button";
       b.dataset.correct = correct;
       b.dataset.total = total;
       b.dataset.accuracy = accuracy;
       b.setAttribute(
         "aria-label",
-        `${name}: ${correct} of ${total} correct, ${accuracy} accuracy. Scale 0 to 100 percent.`,
+        `${name}: ${description} ${correct} of ${total} correct, ${accuracy} correct-classification rate. Scale 0 to 100 percent.`,
       );
       const label = el("span", undefined, "tech-score-name");
       label.append(
         el("strong", name),
+        el("small", description),
         el("small", `${correct} / ${total} correct`),
       );
       const chart = svg("svg", {
@@ -3104,7 +3107,7 @@ function buildTechScores() {
           .querySelectorAll(".tech-score-row")
           .forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
         $("techScoreDetail").textContent =
-          `${name}: ${correct}/${total} correct (${accuracy}). Frozen classification benchmark; not claim-auditor accuracy.`;
+          `${name}: ${correct}/${total} correct (${accuracy}). ${description} Frozen classification benchmark; not claim-auditor accuracy.`;
       };
       return b;
     }),
