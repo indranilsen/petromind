@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise three-page PetroMind, captured events and optional mocked live streaming."""
+"""Exercise PetroMind navigation, captured events and optional mocked live streaming."""
 
 import argparse
 import json
@@ -760,7 +760,7 @@ def main():
         for width, height, label in [(1440, 900, "desktop"), (390, 844, "mobile")]:
             page.set_viewport_size({"width": width, "height": height})
             page.locator(".site-nav a").nth(0).click()
-            assert page.locator(".site-nav a").count() == 3
+            assert page.locator(".site-nav a").count() == 4
             assert (
                 "A fault prediction is a start"
                 in page.locator("#homePage h1").inner_text()
@@ -844,7 +844,7 @@ def main():
                 page.locator("#nextScene").click()  # review, not another execution
                 assert page.locator("#eventFeed li").count() == count
                 page.locator("#operatorView").click()
-                page.locator(".site-nav a").nth(2).click()
+                page.locator('.site-nav a[href="/technology"]').click()
                 page.locator(".site-nav a").nth(1).click()
                 assert page.locator("#slider").input_value() == str(maximum)
                 page.locator("#handoffDetails > summary").click()
@@ -854,16 +854,14 @@ def main():
                     == case["audits"]["grounded"]["output"]
                 )
                 page.keyboard.press("Escape")
-                assert page.locator(
-                    '#scenarioSelect option[value="synthetic"]'
-                ).evaluate("e => e.disabled")
+                assert page.locator("#scenarioSelect").count() == 0
             page.locator("#caseSelect").select_option("0")
             assert_monitoring(page)
             reach_checkpoint(page)
             assert page.locator("#eventFeed li").count() == len(
                 payload["cases"][0]["investigation_events"]["grounded"]
             )
-            page.locator(".site-nav a").nth(2).click()
+            page.locator('.site-nav a[href="/technology"]').click()
             page.locator(".architecture-node").first.click()
             assert "Real replay" in page.locator("#architectureDetail").inner_text()
             assert "60.6%" in page.locator("#technologyPage").inner_text()

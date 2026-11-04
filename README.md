@@ -386,3 +386,13 @@ It precommits expectations before Python executes a sensor-budgeted test, then
 checks numeric interpretation separately from physical inference. See the
 [execution status and limitations](docs/milestone5-status.md). No live scientific
 capability or improvement is claimed from offline/mock tests.
+
+### Optional Extension page
+
+**HOME | DEMO | EXTENSION | TECHNOLOGY**
+
+Demo remains the historical Petrobras 3W experience. The separate **Extension**
+page at `/extension` replays the verified synthetic hydraulic investigation with
+its own before/after story and collapsed technical evidence. Keep the existing
+`--synthetic-replay .petromind/PetroMind-Synthetic-Showcase` server argument.
+No new API calls are made. See [setup and focused verification](docs/synthetic-investigation-demo.md).

@@ -4,8 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>PetroMind · Industrial diagnosis investigation</title>
+    <link rel="stylesheet" href="/synthetic.css" />
     <link rel="stylesheet" href="/style.css" />
     <script defer src="/investigation.js"></script>
+    <script defer src="/synthetic.js"></script>
     <script defer src="/app.js"></script>
   </head>
   <body>
@@ -16,6 +18,7 @@
       <nav class="site-nav" aria-label="Main navigation">
         <a href="/" class="page-link">HOME</a
         ><a href="/demo" class="page-link">DEMO</a
+        ><a href="/extension" class="page-link">EXTENSION</a
         ><a href="/technology" class="page-link">TECHNOLOGY</a>
       </nav>
       <span class="header-caption">Industrial evidence assessment</span>
@@ -134,13 +137,6 @@
         </div>
         <div class="workspace-selectors">
           <label
-            >SCENARIO<select id="scenarioSelect">
-              <option value="historical">Historical incident · real 3W</option>
-              <option value="synthetic" disabled>
-                Synthetic challenge · unavailable
-              </option>
-            </select></label
-          ><label
             >INCIDENT<select id="caseSelect">
               <option value="0">01 · Pressure measurements</option>
               <option value="1">02 · Pressure-pattern comparison</option>
@@ -153,17 +149,6 @@
           <button id="operatorView" class="tab active">Operator Console</button
           ><button id="insideView" class="tab">Inside Muse</button>
         </div>
-      </div>
-      <div id="syntheticNotice" class="notice" hidden>
-        <h2>Synthetic challenge is not enabled.</h2>
-        <p>
-          No physics-validated synthetic scenario or fitted statistical-model
-          bundle is supplied here. Only historical development incidents are
-          available. No synthetic measurements or root causes are sent to Muse.
-        </p>
-        <button id="returnHistorical" class="quiet">
-          Use historical incident →
-        </button>
       </div>
       <div id="historicalWorkspace" data-workflow-stage="monitoring">
         <section class="journey-guide" aria-label="Guided incident walkthrough">
@@ -671,6 +656,12 @@
             </div>
           </details>
         </section>
+      </div>
+    </section>
+    <section id="extensionPage" class="site-page" hidden aria-label="Extension · synthetic investigation">
+      <div id="syntheticNotice" class="synthetic-workspace">
+        <p id="syntheticLoadStatus" role="status">Loading the previously recorded synthetic investigation…</p>
+        <div id="syntheticContent" hidden></div>
       </div>
     </section>
     <section id="technologyPage" class="site-page" hidden>
