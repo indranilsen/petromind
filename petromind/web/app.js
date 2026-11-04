@@ -2408,7 +2408,7 @@ const architectureData = [
   [
     "Telemetry",
     "Real replay / synthetic boundary",
-    "Verified private mapping selects a real 600-sample window. All allowlisted viewer channels remain separate from Muse’s frozen packet. Synthetic scenario mode is deferred.",
+    "Verified private mapping selects a real 600-sample window. Viewer telemetry stays separate from Muse’s frozen packet. The optional synthetic M1 recording uses its own validated replay contract; it is not Petrobras data or a new live run.",
   ],
   [
     "Statistical engine",
