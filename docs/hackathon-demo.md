@@ -1,4 +1,4 @@
-# Demo video script and recording plan
+# PetroMind — Beyond Prediction, Toward Understanding: recording plan
 
 The three-minute edit below is an editorial target, **not a verified contest
 video-duration rule**. Confirm the signed-in submission form's limit before
@@ -20,14 +20,14 @@ visible. Do not call captured activity a new live execution.
 
 | Time | Action | Suggested narration |
 | --- | --- | --- |
-| 0:00–0:20 | Home → Demo. Begin with the first recorded sample. | “Industrial equipment produces many measurements, but a plausible fault prediction is not a proven cause. PetroMind lets an engineer investigate that distinction.” |
+| 0:00–0:20 | Home → Demo. Begin with the first recorded sample. | “PetroMind explores whether AI can move beyond recognizing anomalies to investigating their physical causes. Our primary demo uses real Petrobras oil-well sensor measurements and Meta Muse Spark. A prediction is not a proven cause.” |
 | 0:20–0:40 | Play briefly, then click Jump to recorded alert. | “This is real Petrobras 3W telemetry. Sensors update from recorded samples, including missing readings. Our fixed monitor detected sustained pressure deviation against its earlier measured reference. It is a demonstration heuristic, not a validated industrial alarm.” |
 | 0:40–0:55 | Show evidence accumulation, then click Continue to classifier. | “An anomaly does not identify a fault. The original 600-sample diagnosis window must finish; we have not moved it to manufacture an early prediction.” |
 | 0:55–1:15 | Show the four handoff cards: alert, classifier, why investigate, and continue. | “The statistical machine-learning classifier proposed service-line hydrate—ice-like material that can restrict flow. The recorded pressures rose. That still does not establish what caused the change.” |
 | 1:15–1:45 | Choose the recorded mode, then click Investigate with Muse Spark. Let automatic replay unfold. | “This is a genuine previously recorded Muse investigation. Muse received its fixed, budgeted summaries—not all the telemetry the viewer can explore. These are actual public tool records, not a private reasoning transcript.” |
 | 1:45–2:10 | Pause on returned facts; show the focused graph and inspect one source. Use Show all evidence only if asked. | “Muse queried documented engineering context and compared permitted training incidents. The graph shows the actual returned facts and cited evidence. Generic equipment associations are not the installed topology of this particular well. Similarity is not causal proof.” |
 | 2:10–2:40 | Resume; read the concise measured/documented/causal takeaway. Expand one missing premise. | “Muse accepts the measured increases but identifies the unsupported step: no supplied verified criterion establishes that this pressure pattern specifically proves hydrate. We need applicable documentation or validated discriminating evidence, not a more confident explanation.” |
-| 2:40–3:00 | Briefly show the second captured case or Technology results. | “The second audit supports a narrow comparison with a published pressure-pattern example, without turning that match into root cause. Conventional methods outperformed direct Muse classification in our benchmark. Muse’s role here is auditable evidence investigation and uncertainty, not a claimed accuracy improvement.” |
+| 2:40–3:00 | Briefly show the second captured case or Technology results. | “The second audit supports a narrow comparison with a published pressure-pattern example, without turning that match into root cause. The adaptive statistical sensor-selection baseline achieved 20/33; it did not use Muse or GraphRAG. Muse’s role here is auditable evidence investigation and uncertainty, not a claimed classification improvement.” |
 
 A 50-minute historical clip cannot play in full during a three-minute walkthrough.
 Scrubbing is honest navigation through recorded samples, not invented time-series
@@ -53,7 +53,7 @@ installed locally, replay needs no Meta API connection.
 
 - Validate the full recorded journey with `demo_claim_audit.py check --capture ...
   --monitoring ...`; the runbook supplies complete commands.
-- Confirm the chosen mode. Keep Home / Demo / Technology and Operator Console /
+- Confirm the chosen mode. Keep Home / Demo / Extension / Technology and Operator Console /
   Inside Muse, not a debug console, as the visible product.
 - Know the two computed alert positions (14:32 / 31:02) and original diagnosis
   readiness (39:59). Do not show private annotation labels or incident paths.
@@ -67,3 +67,15 @@ For a verified saved v5 run, explain the two causal questions in one sentence:
 always produces the pattern is a separate question.” Only report the verdicts
 actually recorded for those questions. Never advertise the expected five-finding
 example as verified until the local import and inspection succeed.
+
+## Optional Extension shot
+
+Show `/extension` only as a separate **Demo Extension · Synthetic Physics Scenario**.
+Its controlled pressure/flow/resistance example illustrates reasoning under the
+supplied model, not real Petrobras telemetry or validation of the 33-incident study.
+Keep its recorded mode and material-identity limitation visible. The primary
+industrial story remains the real-data `/demo`.
+
+Use the [current submission copy](hackathon-submission.md) for names and claims.
+The 20/33 result must not be narrated as “Muse with Sensors + GraphRAG”; its
+statistical implementation is documented in the [evaluation definitions](evaluation.md#compared-configurations).

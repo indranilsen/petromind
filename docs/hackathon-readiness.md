@@ -2,8 +2,10 @@
 
 **Monitoring → anomaly → statistical diagnosis → Muse investigation → source-backed
 assessment.** This is a local demonstration of evidence auditing, not validated
-industrial early warning or root-cause certification. Home / Demo / Technology
-remain the only pages. Synthetic Challenge is deferred.
+industrial early warning or root-cause certification. Navigation is
+**HOME | DEMO | EXTENSION | TECHNOLOGY**. The primary Demo uses real Petrobras
+3W measurements; the separate [Extension](synthetic-investigation-demo.md) uses
+controlled synthetic physics.
 
 For the v5 atomic/composite verdict contract and offline verification, see
 [atomic assessments](atomic-assessment.md). Previous live protocols must not be reused.
@@ -15,7 +17,6 @@ Use Python 3.12 (offline CI also covers 3.10), then install:
 ```bash
 python -m venv .venv312
 source .venv312/bin/activate
-python -m pip install --upgrade pip
 python -m pip install -e '.[test,agent,audit]'
 ```
 
@@ -87,8 +88,9 @@ this is a specificity limitation, not verified early fault detection.
 Click Investigate once. Captured public events unfold automatically with explicitly
 artificial presentation pacing. The transcript and graph expose only already
 revealed records. Pause/resume, restart or show the completed recorded assessment.
-The final assessment is brought into view automatically. Mobile keeps the
-conversation primary; expand the graph to inspect source facts. A citation or
+The final assessment is brought into view automatically. Its next-evidence
+requirements lead into the focused evidence map, then the supporting-evidence
+button. The full graph remains optional. A citation or
 similar analogue does not prove physical entailment.
 
 For a network/API failure, show the actual stopped state, then explicitly switch

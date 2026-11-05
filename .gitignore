@@ -16,3 +16,11 @@ dist/
 .petromind/
 # Real telemetry-derived review images stay local, not in public PRs.
 docs/screenshots/causal-monitoring/
+# Local development/test caches; scientific outputs remain explicitly managed.
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+playwright-report/
+test-results/
+node_modules/

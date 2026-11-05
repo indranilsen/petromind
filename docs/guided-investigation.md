@@ -1,3 +1,9 @@
+> **Historical implementation snapshot.** This document records an earlier UI
+> iteration; references to three pages or a deferred synthetic mode are not current.
+> Use the [project README](../README.md), [documentation index](README.md) and
+> [current setup runbook](hackathon-readiness.md). Original implementation and
+> verification details below are retained for provenance.
+
 # PetroMind: a guided physical investigation
 
 Current three-page product and replay/live commands: [platform-demo.md](platform-demo.md).

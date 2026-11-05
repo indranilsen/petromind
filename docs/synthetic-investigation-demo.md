@@ -10,12 +10,12 @@ navigation and refresh work.
 
 ## Run locally
 
-Use the existing PR #40 branch, `demo/synthetic-hydraulic-replay`:
+Use merged `main` and your existing verified replay artifacts:
 
 ```bash
 git fetch origin
-git switch demo/synthetic-hydraulic-replay
-git pull --ff-only
+git switch main
+git pull --ff-only origin main
 source .venv312/bin/activate
 
 python scripts/demo_claim_audit.py serve \
@@ -116,6 +116,9 @@ physical certification. Keep the unchanged standalone recorded video as fallback
   resistance interpretation is better supported, while material identity remains unknown.
 - 50–60 s: optionally open Inspect the evidence to show exact source and assessment
   provenance. Do not lead with the technical graph or imply a new live run.
+
+The following images preserve the PR #40 presentation before the submission-copy
+cleanup; their original recorded evidence is unchanged.
 
 ![Extension mystery](images/synthetic-investigation/extension-mystery.webp)
 ![Extension before/after conclusion](images/synthetic-investigation/extension-conclusion.webp)

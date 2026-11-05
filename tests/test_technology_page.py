@@ -48,7 +48,7 @@ def test_technology_publishes_unchanged_frozen_counts_and_percentages():
         "Sensor + Equipment Graph",
         "1/33",
         "3.0%",
-        "Sensor + GraphRAG",
+        "GraphRAG",
         "5/33",
         "15.2%",
     ]

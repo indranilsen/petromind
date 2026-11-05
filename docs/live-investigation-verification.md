@@ -1,3 +1,9 @@
+> **Historical implementation snapshot.** This document records an earlier UI
+> iteration; references to three pages or a deferred synthetic mode are not current.
+> Use the [project README](../README.md), [documentation index](README.md) and
+> [current setup runbook](hackathon-readiness.md). Original implementation and
+> verification details below are retained for provenance.
+
 > Historical verification details below describe the earlier refinement. For the current full recorded journey, readiness status and exact commands, use [the readiness runbook](hackathon-readiness.md).
 
 # Replay and bounded live investigation refinement

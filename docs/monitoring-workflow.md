@@ -1,3 +1,9 @@
+> **Historical implementation snapshot.** This document records an earlier UI
+> iteration; references to three pages or a deferred synthetic mode are not current.
+> Use the [project README](../README.md), [documentation index](README.md) and
+> [current setup runbook](hackathon-readiness.md). Original implementation and
+> verification details below are retained for provenance.
+
 > This document describes the unchanged **default checkpoint mode**. For the new optional prefix-only anomaly monitor with broader recorded history, use [run instructions](monitoring/run.md) and read the [actual two-clip findings](monitoring/feasibility-v1.md). The checkpoint remains the fallback when monitoring is not explicitly enabled; it is not relabeled as an alarm.
 
 # Monitoring → checkpoint → statistical diagnosis → Muse investigation
